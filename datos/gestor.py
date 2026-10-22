@@ -6,6 +6,8 @@ RUTA_USUARIOS = os.path.join("datos", "usuarios.json")
 RUTA_LOG_DEVS = os.path.join("datos", "log_desarrolladores.json")
 RUTA_LOG_TIENDAS = os.path.join("datos", "log_tiendas.json")
 RUTA_LOG_CLIENTES = os.path.join("datos", "log_clientes.json")
+RUTA_PROMOCIONES = os.path.join("datos", "promociones.json")
+
 
 def cargar_usuarios():
     if not os.path.exists(RUTA_USUARIOS):
@@ -74,3 +76,17 @@ def cargar_log_tiendas():
 
 def cargar_log_clientes():
     return _cargar_log(RUTA_LOG_CLIENTES)
+
+#PROMOCIONES
+def cargar_promociones():
+    if not os.path.exists(RUTA_PROMOCIONES):
+        return []
+    try:
+        with open(RUTA_PROMOCIONES, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+def guardar_promociones(lista_promos):
+    with open(RUTA_PROMOCIONES, "w", encoding="utf-8") as f:
+        json.dump(lista_promos, f, ensure_ascii=False, indent=4)

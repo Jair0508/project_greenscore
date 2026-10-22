@@ -76,3 +76,30 @@ class VentanaVecino:
         for reg in reversed(historial):
             if reg.get("dni_cliente") == self.id_usuario:
                 self.tabla.insert("", "end", values=(reg.get("fecha"), reg.get("tipo"), reg.get("puntos"), reg.get("detalle")))
+
+
+    #Catálogo de tarjetas de promoción
+    def cargar_catalogo_promociones(self, frame_contenedor):
+        from datos.gestor import cargar_promociones
+        promos = cargar_promociones()
+
+        if not promos:
+            tk.Label(frame_contenedor, text="No hay promociones disponibles en este momento.", font=("Arial", 10, "italic"), bg="white").pack(pady=20)
+            return
+
+        for promo in promos:
+            card = tk.Frame(frame_contenedor, bg="#FFF8E1", bd=1, relief="solid", padx=10, pady=10)
+            card.pack(fill="x", pady=5, padx=5)
+
+            tk.Label(card, text=f"🏪 {promo['tienda_nombre']}", font=("Arial", 8, "bold"), fg="#E65100", bg="#FFF8E1").pack(anchor="w")
+            tk.Label(card, text=promo["titulo"], font=("Arial", 11, "bold"), bg="#FFF8E1").pack(anchor="w")
+            tk.Label(card, text=promo["descripcion"], font=("Arial", 9), fg="#424242", bg="#FFF8E1").pack(anchor="w")
+            
+            # Muestra costo en S/ y en PTS
+            tk.Label(
+                card, 
+                text=f"Precio: S/ {promo['precio_soles']:.2f}  ➔  {promo['puntos']} PTS", 
+                font=("Arial", 10, "bold"), 
+                fg="#2E7D32", 
+                bg="#FFF8E1"
+            ).pack(anchor="w", pady=(4, 0))

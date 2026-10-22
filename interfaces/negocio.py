@@ -95,3 +95,99 @@ class VentanaNegocio:
 
             messagebox.showinfo("Éxito", "El canje se ha registrado correctamente.")
             self.consultar_vecino()
+
+    #Añadimos el formulario de promociones
+    def dialogo_publicar_promocion(self):
+        win_promo = tk.Toplevel(self.root)
+        win_promo.title("Publicar Oferta / Promoción")
+        win_promo.geometry("380x420")
+        win_promo.resizable(False, False)
+        win_promo.grab_set()
+
+        if hasattr(self.root, 'icon_img'):
+            win_promo.iconphoto(False, self.root.icon_img)
+
+        # 1. Título (Máx 25 caracteres)
+        tk.Label(win_promo, text="Título de Promoción (Máx 25 caract.):", font=("Arial", 9, "bold")).pack(anchor="w", padx=20, pady=(15, 2))
+        ent_titulo = tk.Entry(win_promo, font=("Arial", 10))
+        ent_titulo.pack(fill="x", padx=20)
+
+        # 2. Precio en Soles + Conversión a Puntos
+        tk.Label(win_promo, text="Precio Normal en Soles (S/):", font=("Arial", 9, "bold")).pack(anchor="w", padx=20, pady=(10, 2))
+        ent_precio = tk.Entry(win_promo, font=("Arial", 10))
+        ent_precio.pack(fill="x", padx=20)
+
+        lbl_pts_equiv = tk.Label(win_promo, text="Equivalente: 0.0 PTS", font=("Arial", 10, "bold"), fg="#2E7D32")
+        lbl_pts_equiv.pack(anchor="w", padx=20, pady=4)
+
+        # Cálculo dinámico de puntos
+        def calcular_pts_event(event=None):
+            try:
+                monto_soles = float(ent_precio.get().strip())
+                pts = round(monto_soles / 0.10, 1) # 1 PTS = S/ 0.10
+                lbl_pts_equiv.config(text=f"Equivalente: {pts} PTS")
+            except ValueError:
+                lbl_pts_equiv.config(text="Equivalente: 0.0 PTS")
+
+        ent_precio.bind("<KeyRelease>", calcular_pts_event)
+
+        # 3. Descripción (Máx 25 caracteres)
+        tk.Label(win_promo, text="Descripción Corta (Máx 25 caract.):", font=("Arial", 9, "bold")).pack(anchor="w", padx=20, pady=(10, 2))
+        ent_desc = tk.Entry(win_promo, font=("Arial", 10))
+        ent_desc.pack(fill="x", padx=20)
+
+        # 4. Imagen (Opcional)
+        ruta_foto = {"path": ""}
+        lbl_foto_estado = tk.Label(win_promo, text="Imagen: No seleccionada", font=("Arial", 8, "italic"), fg="#757575")
+        
+        def seleccionar_imagen():
+            from tkinter import filedialog
+            file_path = filedialog.askopenfilename(
+                title="Seleccionar foto del producto",
+                filetypes=[("Imágenes", "*.png *.jpg *.jpeg")]
+            )
+            if file_path:
+                ruta_foto["path"] = file_path
+                lbl_foto_estado.config(text=f"Imagen: {os.path.basename(file_path)}", fg="#2E7D32")
+
+        tk.Button(win_promo, text="📷 Subir Foto (Opcional)", bg="#1976D2", fg="white", command=seleccionar_imagen, relief="flat").pack(pady=(10, 2))
+        lbl_foto_estado.pack()
+
+        # Guardar Promoción con Validaciones
+        def guardar_promo():
+            titulo = ent_titulo.get().strip()
+            desc = ent_desc.get().strip()
+            precio_str = ent_precio.get().strip()
+
+            if len(titulo) == 0 or len(titulo) > 25:
+                messagebox.showerror("Error", "El título es obligatorio y debe tener como máximo 25 caracteres.")
+                return
+
+            if len(desc) == 0 or len(desc) > 25:
+                messagebox.showerror("Error", "La descripción es obligatoria y debe tener como máximo 25 caracteres.")
+                return
+
+            try:
+                precio_soles = float(precio_str)
+                pts_requeridos = round(precio_soles / 0.10, 1)
+            except ValueError:
+                messagebox.showerror("Error", "Ingrese un precio válido en soles.")
+                return
+
+            # Cargar y guardar en JSON
+            promos = cargar_promociones()
+            promos.append({
+                "tienda_id": self.id_usuario,
+                "tienda_nombre": self.nombre_negocio,
+                "titulo": titulo,
+                "descripcion": desc,
+                "precio_soles": precio_soles,
+                "puntos": pts_requeridos,
+                "foto": ruta_foto["path"]
+            })
+            guardar_promociones(promos)
+
+            messagebox.showinfo("Éxito", "¡Promoción publicada correctamente!")
+            win_promo.destroy()
+
+        tk.Button(win_promo, text="💾 Publicar Oferta", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), command=guardar_promo, relief="flat", pady=6).pack(pady=15)
