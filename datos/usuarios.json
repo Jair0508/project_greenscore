@@ -1,0 +1,45 @@
+{
+    "admin1": {
+        "rol": "admin",
+        "nombre": "Administrador Desarrollador",
+        "correo": "green.s12.3@gmail.com",
+        "clave": "1234",
+        "telefono": "987654321"
+    },
+    "negocio1": {
+        "rol": "negocio",
+        "nombre": "Bodega Don Pepe",
+        "clave": "123",
+        "telefono": "912345678"
+    },
+    "71234567": {
+        "rol": "vecino",
+        "nombre": "Carlos Mendoza",
+        "clave": "123",
+        "telefono": "955443322",
+        "puntos": 150
+    },
+    "72645864": {
+        "rol": "vecino",
+        "nombre": "Maria Castillo Herrera",
+        "clave": "hola",
+        "puntos": 0,
+        "telefono": "915365425"
+    },
+    "75246852": {
+        "rol": "negocio",
+        "nombre": "Bodega Luchito",
+        "correo": "lui.smarket@gmail.com",
+        "telefono": "945382455",
+        "clave": "12345",
+        "puntos": "N/A"
+    },
+    "68452135": {
+        "rol": "vecino",
+        "nombre": "Mario Herrera",
+        "correo": "mario.12@gmail.com",
+        "telefono": "946525476",
+        "clave": "123456",
+        "puntos": 1
+    }
+}

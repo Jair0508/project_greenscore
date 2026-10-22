@@ -1,0 +1,30 @@
+[
+    {
+        "fecha": "2026-10-22 00:00:06",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta 75246852 (NEGOCIO)"
+    },
+    {
+        "fecha": "2026-10-22 00:08:20",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "EDITAR_DATOS",
+        "objetivo": "Actualizó datos personales de 75246852"
+    },
+    {
+        "fecha": "2026-10-22 00:26:32",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta 68452135 (VECINO)"
+    },
+    {
+        "fecha": "2026-10-22 00:48:14",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 1 pts a 68452135 por Plástico"
+    }
+]
