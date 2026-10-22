@@ -41,5 +41,13 @@
         "telefono": "946525476",
         "clave": "123456",
         "puntos": 11.0
+    },
+    "0885": {
+        "rol": "desarrollador",
+        "nombre": "Magui",
+        "correo": "m.ht@gmail.com",
+        "telefono": "945358265",
+        "clave": "1234",
+        "puntos": "N/A"
     }
 }

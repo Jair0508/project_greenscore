@@ -33,5 +33,12 @@
         "autor_nombre": "Administrador Desarrollador",
         "accion": "SUMAR_PUNTOS",
         "objetivo": "Abonó 10.0 pts a 68452135 por Componentes informáticos (Placas)"
+    },
+    {
+        "fecha": "2026-10-22 17:57:49",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta 0885 (DESARROLLADOR)"
     }
 ]
