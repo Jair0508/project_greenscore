@@ -7,7 +7,8 @@ from datos.gestor import (
     registrar_accion_tienda, 
     registrar_accion_cliente,
     cargar_promociones, 
-    guardar_promociones
+    guardar_promociones,
+    eliminar_promocion
 )
 
 COLOR_FONDO_TIENDA = "#FFF3E0"
@@ -160,6 +161,63 @@ class VentanaNegocio:
 
         except Exception as e:
             messagebox.showerror("Error de Interfaz", f"Detalle al cargar Tienda: {str(e)}")
+
+    def dialogo_mis_promociones(self):
+            win_list = tk.Toplevel(self.root)
+            win_list.title("Mis Ofertas Publicadas")
+            win_list.geometry("580x450")
+            win_list.resizable(False, False)
+            win_list.grab_set()
+
+            if hasattr(self.root, 'icon_img'):
+                win_list.iconphoto(False, self.root.icon_img)
+
+            frame_container = tk.Frame(win_list, bg="white")
+            frame_container.pack(fill="both", expand=True, padx=10, pady=10)
+
+            win_list.referencias_img = []
+
+            def refrescar():
+                for w in frame_container.winfo_children(): w.destroy()
+                win_list.referencias_img.clear()
+                promos = cargar_promociones()
+                mis_promos = [(i, p) for i, p in enumerate(promos) if p.get("tienda_id") == self.id_usuario]
+
+                if not mis_promos:
+                    tk.Label(frame_container, text="No tienes promociones activas actualmente.", font=("Arial", 10, "italic"), bg="white").pack(pady=40)
+                    return
+
+                for idx, p in mis_promos:
+                    card = tk.Frame(frame_container, bg="#FFF8E1", bd=1, relief="solid", padx=10, pady=8)
+                    card.pack(fill="x", pady=4)
+
+                    # Foto
+                    ruta_foto = p.get("foto", "")
+                    if ruta_foto and os.path.exists(ruta_foto):
+                        try:
+                            from PIL import Image, ImageTk
+                            img = Image.open(ruta_foto).resize((60, 60), Image.Resampling.LANCZOS)
+                            img_tk = ImageTk.PhotoImage(img)
+                            win_list.referencias_img.append(img_tk)
+                            tk.Label(card, image=img_tk, bg="#FFF8E1").pack(side="left", padx=(0, 10))
+                        except Exception:
+                            tk.Label(card, text="📷", font=("Arial", 12), bg="#FFE0B2", width=5, height=3).pack(side="left", padx=(0, 10))
+                    else:
+                        tk.Label(card, text="📷", font=("Arial", 12), bg="#FFE0B2", width=5, height=3).pack(side="left", padx=(0, 10))
+
+                    txt_info = f"📌 {p['titulo']} ({p['puntos']} PTS / S/ {p['precio_soles']:.2f})\n📝 {p['descripcion']}"
+                    tk.Label(card, text=txt_info, font=("Arial", 9, "bold"), bg="#FFF8E1", justify="left").pack(side="left", anchor="w")
+
+                    def borrar(i=idx):
+                        if messagebox.askyesno("Eliminar Promoción", "¿Deseas eliminar permanentemente esta oferta?"):
+                            if eliminar_promocion(i, self.id_usuario, self.nombre_negocio):
+                                messagebox.showinfo("Éxito", "La promoción ha sido eliminada.")
+                                refrescar()
+
+                    tk.Button(card, text="🗑️ Eliminar", bg="#C62828", fg="white", font=("Arial", 8, "bold"), relief="flat", command=borrar, cursor="hand2").pack(side="right", padx=5)
+
+            refrescar()
+
 
     def aplicar_icono(self):
         ruta_png = os.path.join("img", "logo.png")

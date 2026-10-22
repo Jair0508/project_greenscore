@@ -1,7 +1,13 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import os
-from datos.gestor import cargar_usuarios, cargar_log_clientes, cargar_mensajes_chat, guardar_mensaje_chat
+from datos.gestor import (
+    cargar_usuarios, 
+    cargar_log_clientes, 
+    cargar_mensajes_chat, 
+    guardar_mensaje_chat,
+    cargar_promociones
+)
 
 COLOR_FONDO_VECINO = "#E8F5E9"
 
@@ -18,7 +24,7 @@ class VentanaVecino:
 
         self.aplicar_icono()
 
-        # Cargar Fondo
+        # Cargar Imagen de Fondo (Fondo_vecino.png)
         ruta_fondo = os.path.join("img", "fondo_vecino.png")
         if os.path.exists(ruta_fondo):
             try:
@@ -58,13 +64,19 @@ class VentanaVecino:
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill="both", expand=True, padx=15, pady=5)
 
+        tab_promos = ttk.Frame(notebook)
         tab_reciclaje = ttk.Frame(notebook)
         tab_movimientos = ttk.Frame(notebook)
         tab_chat = ttk.Frame(notebook)
 
+        notebook.add(tab_promos, text="🛍️ Catálogo de Ofertas")
         notebook.add(tab_reciclaje, text="♻️ Historial de Reciclaje (Detallado)")
         notebook.add(tab_movimientos, text="📊 Movimientos de Puntos (+ / -)")
         notebook.add(tab_chat, text="💬 Soporte / Chat con Devs y Admin")
+
+        # --- 1. CATÁLOGO DE PROMOCIONES / OFERTAS ---
+        self.frame_promos_scroll = tk.Frame(tab_promos, bg="white")
+        self.frame_promos_scroll.pack(fill="both", expand=True, padx=5, pady=5)
 
         # --- FUNCIÓN AUXILIAR DE TABLAS ---
         def crear_tabla_scroll(parent, cols, config):
@@ -87,7 +99,7 @@ class VentanaVecino:
                 tabla.column(col, width=w, minwidth=70, stretch=True)
             return tabla
 
-        # 1. TABLA DETALLADA DE RECICLAJE
+        # 2. TABLA DETALLADA DE RECICLAJE
         cols_rec = ("fecha", "material", "peso", "puntos")
         config_rec = [
             ("fecha", "Fecha / Hora", 160),
@@ -97,7 +109,7 @@ class VentanaVecino:
         ]
         self.tabla_reciclaje = crear_tabla_scroll(tab_reciclaje, cols_rec, config_rec)
 
-        # 2. TABLA DE MOVIMIENTOS
+        # 3. TABLA DE MOVIMIENTOS
         cols_mov = ("fecha", "tipo", "puntos", "detalle")
         config_mov = [
             ("fecha", "Fecha / Hora", 160),
@@ -107,7 +119,7 @@ class VentanaVecino:
         ]
         self.tabla_movimientos = crear_tabla_scroll(tab_movimientos, cols_mov, config_mov)
 
-        # 3. CANAL DE CHAT CON DEVS Y ADMIN
+        # 4. CANAL DE CHAT CON DEVS Y ADMIN
         frame_chat_box = tk.Frame(tab_chat, bg="white", padx=10, pady=10)
         frame_chat_box.pack(fill="both", expand=True, padx=5, pady=5)
 
@@ -143,6 +155,9 @@ class VentanaVecino:
         self.datos = usuarios.get(self.id_usuario, {})
         self.lbl_puntos.config(text=f"{self.datos.get('puntos', 0)} PTS")
 
+        # Cargar Promociones
+        self.cargar_catalogo_promociones()
+
         # Limpiar Tablas
         for item in self.tabla_reciclaje.get_children(): self.tabla_reciclaje.delete(item)
         for item in self.tabla_movimientos.get_children(): self.tabla_movimientos.delete(item)
@@ -155,13 +170,10 @@ class VentanaVecino:
                 fecha = reg.get("fecha", "-")
                 detalle = reg.get("detalle", "")
 
-                # Insertar en movimientos generales
                 self.tabla_movimientos.insert("", "end", values=(fecha, tipo, puntos, detalle))
 
-                # Parsear e insertar en historial de reciclaje si corresponde
                 if tipo == "ABONO_RECICLAJE" and "Reciclaje de" in detalle:
                     try:
-                        # Extraer material y peso desde detalle: "Reciclaje de Material (X.X kg)"
                         info = detalle.replace("Reciclaje de ", "").replace(" kg)", "")
                         partes = info.split(" (")
                         material = partes[0]
@@ -173,6 +185,58 @@ class VentanaVecino:
 
         # Cargar Chat
         self.cargar_chat()
+
+    def cargar_catalogo_promociones(self):
+            for w in self.frame_promos_scroll.winfo_children():
+                w.destroy()
+
+            promos = cargar_promociones()
+            if not promos:
+                tk.Label(
+                    self.frame_promos_scroll, 
+                    text="🛍️ No hay promociones disponibles en este momento.", 
+                    font=("Arial", 11, "italic"), 
+                    bg="white", 
+                    fg="#757575"
+                ).pack(pady=40)
+                return
+
+            self.referencias_img_vecino = []  # Mantiene las imágenes en memoria para evitar que el Garbage Collector las borre
+
+            from interfaces.utils import obtener_imagen_miniatura
+
+            for p in promos:
+                card = tk.Frame(self.frame_promos_scroll, bg="#FFF8E1", bd=1, relief="solid", padx=10, pady=10)
+                card.pack(fill="x", pady=5, padx=5)
+
+                # --- RENDERIZADO DE FOTO CON TKINTER NATIVO ---
+                ruta_foto = p.get("foto", "")
+                img_tk = obtener_imagen_miniatura(ruta_foto, ancho=75, alto=75)
+
+                if img_tk:
+                    self.referencias_img_vecino.append(img_tk)
+                    lbl_img = tk.Label(card, image=img_tk, bg="#FFF8E1")
+                    lbl_img.pack(side="left", padx=(0, 12))
+                else:
+                    lbl_no_img = tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#FFE0B2", width=10, height=4)
+                    lbl_no_img.pack(side="left", padx=(0, 12))
+
+                # --- DETALLES DE LA OFERTA ---
+                frame_info = tk.Frame(card, bg="#FFF8E1")
+                frame_info.pack(side="left", fill="both", expand=True)
+
+                tk.Label(frame_info, text=f"🏪 {p.get('tienda_nombre', 'Tienda Afiliada')}", font=("Arial", 9, "bold"), fg="#E65100", bg="#FFF8E1").pack(anchor="w")
+                tk.Label(frame_info, text=f"📌 {p.get('titulo', 'Oferta')}", font=("Arial", 11, "bold"), bg="#FFF8E1").pack(anchor="w", pady=(2, 0))
+                tk.Label(frame_info, text=f"📝 {p.get('descripcion', '')}", font=("Arial", 9), fg="#424242", bg="#FFF8E1").pack(anchor="w")
+                
+                tk.Label(
+                    frame_info, 
+                    text=f"Precio Normal: S/ {p.get('precio_soles', 0):.2f}  ➔  Costo: {p.get('puntos', 0)} PTS", 
+                    font=("Arial", 10, "bold"), 
+                    fg="#2E7D32", 
+                    bg="#FFF8E1"
+                ).pack(anchor="w", pady=(4, 0))
+
 
     def cargar_chat(self):
         self.txt_chat.config(state="normal")

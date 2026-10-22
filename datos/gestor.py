@@ -79,6 +79,9 @@ def cargar_log_tiendas():
 def cargar_log_clientes():
     return _cargar_log(RUTA_LOG_CLIENTES)
 
+
+
+
 #PROMOCIONES
 def cargar_promociones():
     if not os.path.exists(RUTA_PROMOCIONES):
@@ -92,6 +95,28 @@ def cargar_promociones():
 def guardar_promociones(lista_promos):
     with open(RUTA_PROMOCIONES, "w", encoding="utf-8") as f:
         json.dump(lista_promos, f, ensure_ascii=False, indent=4)
+
+def eliminar_promocion(index_promo, tienda_id, tienda_nombre):
+    promos = cargar_promociones()
+    if 0 <= index_promo < len(promos):
+        promo_removida = promos.pop(index_promo)
+        guardar_promociones(promos)
+        
+        # Registrar auditoría para Administradores y Desarrolladores
+        try:
+            from datos.gestor import registrar_accion_tienda
+            registrar_accion_tienda(
+                tienda_id, 
+                tienda_nombre, 
+                "SISTEMA", 
+                0, 
+                f"ELIMINAR_PROMO: '{promo_removida.get('titulo')}'"
+            )
+        except Exception:
+            pass
+        return True
+    return False
+
 
 #CHAT USUARIO A DESARROLLADORES
 def cargar_mensajes_chat():

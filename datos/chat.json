@@ -5,5 +5,12 @@
         "autor": "Mario Herrera",
         "rol": "vecino",
         "mensaje": "Hola"
+    },
+    {
+        "fecha": "2026-10-22 18:31:36",
+        "dni_cliente": "68452135",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "Buenos días"
     }
 ]
