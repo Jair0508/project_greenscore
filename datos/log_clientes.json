@@ -5,5 +5,12 @@
         "tipo": "ABONO_RECICLAJE",
         "puntos": 1,
         "detalle": "Reciclaje de Plástico (0.15 kg)"
+    },
+    {
+        "fecha": "2026-10-22 15:36:42",
+        "dni_cliente": "68452135",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 10.0,
+        "detalle": "Reciclaje de Componentes informáticos (Placas) (0.5 kg)"
     }
 ]
