@@ -40,14 +40,14 @@
         "correo": "mario.12@gmail.com",
         "telefono": "946525476",
         "clave": "123456",
-        "puntos": 1
+        "puntos": 11.0
     },
-    "952089997": {
-        "rol": "vecino",
-        "nombre": "Sebastian",
-        "correo": "sebas67@gmail.com",
-        "telefono": "952089997",
-        "clave": "pro67",
-        "puntos": 56000
+    "0885": {
+        "rol": "desarrollador",
+        "nombre": "Magui",
+        "correo": "m.ht@gmail.com",
+        "telefono": "945358265",
+        "clave": "1234",
+        "puntos": "N/A"
     }
 }

@@ -7,31 +7,10 @@
         "detalle": "Reciclaje de Plástico (0.15 kg)"
     },
     {
-        "fecha": "2026-10-22 19:39:39",
+        "fecha": "2026-10-22 15:36:42",
         "dni_cliente": "68452135",
         "tipo": "ABONO_RECICLAJE",
-        "puntos": 50,
-        "detalle": "Reciclaje de Plástico (5.0 kg)"
-    },
-    {
-        "fecha": "2026-10-22 19:41:53",
-        "dni_cliente": "68452135",
-        "tipo": "REDUCCION_ADMIN",
-        "puntos": -50,
-        "detalle": "Ajuste manual de administración"
-    },
-    {
-        "fecha": "2026-10-22 19:45:38",
-        "dni_cliente": "952089997",
-        "tipo": "ABONO_RECICLAJE",
-        "puntos": 50000,
-        "detalle": "Reciclaje de Plástico (5000.0 kg)"
-    },
-    {
-        "fecha": "2026-10-22 19:46:02",
-        "dni_cliente": "952089997",
-        "tipo": "ABONO_RECICLAJE",
-        "puntos": 6000,
-        "detalle": "Reciclaje de Metal (400.0 kg)"
+        "puntos": 10.0,
+        "detalle": "Reciclaje de Componentes informáticos (Placas) (0.5 kg)"
     }
 ]

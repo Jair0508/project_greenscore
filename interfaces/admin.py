@@ -3,7 +3,8 @@ from tkinter import ttk, messagebox, simpledialog
 import os
 from datos.gestor import (
     cargar_usuarios, guardar_usuarios, registrar_accion_dev, 
-    cargar_log_devs, cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente
+    cargar_log_devs, cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente,
+    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat
 )
 from logica.modelos import Material
 
@@ -54,38 +55,42 @@ class VentanaAdmin:
             text=" Acciones de Gestión ", 
             font=("Arial", 10, "bold"), 
             padx=10, 
-            pady=8, 
+            pady=6, 
             bg="white"
         )
-        frame_acciones.pack(fill="x", padx=15, pady=8)
+        frame_acciones.pack(fill="x", padx=15, pady=6)
 
         btn_box = tk.Frame(frame_acciones, bg="white")
         btn_box.pack(fill="x")
 
-        tk.Button(btn_box, text="➕ Crear Cuenta", bg="#2E7D32", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_crear_cuenta, cursor="hand2").pack(side="left", padx=4, pady=4)
-        tk.Button(btn_box, text="❌ Eliminar Cuenta", bg="#C62828", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_eliminar_cuenta, cursor="hand2").pack(side="left", padx=4, pady=4)
-        tk.Button(btn_box, text="♻️ Sumar Puntos", bg="#1976D2", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_registrar_reciclaje, cursor="hand2").pack(side="left", padx=4, pady=4)
-        tk.Button(btn_box, text="➖ Restar Puntos", bg="#D32F2F", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_reducir_puntos, cursor="hand2").pack(side="left", padx=4, pady=4)
-        tk.Button(btn_box, text="🔑 Renovar Clave", bg="#F57C00", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_cambiar_clave, cursor="hand2").pack(side="left", padx=4, pady=4)
-        tk.Button(btn_box, text="✏️ Editar Datos", bg="#00897B", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_editar_datos, cursor="hand2").pack(side="left", padx=4, pady=4)
+        tk.Button(btn_box, text="➕ Crear Cuenta", bg="#2E7D32", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_crear_cuenta, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="❌ Eliminar Cuenta", bg="#C62828", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_eliminar_cuenta, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="♻️ Sumar Puntos", bg="#1976D2", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_registrar_reciclaje, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="➖ Restar Puntos", bg="#D32F2F", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_reducir_puntos, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="🔑 Renovar Clave", bg="#F57C00", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_cambiar_clave, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="✏️ Editar Datos", bg="#00897B", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_editar_datos, cursor="hand2").pack(side="left", padx=3, pady=2)
 
         # 4. CONTROL DE PESTAÑAS
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill="both", expand=True, padx=15, pady=5)
 
         tab_usuarios = ttk.Frame(notebook)
+        tab_promos = ttk.Frame(notebook)
         tab_log_tiendas = ttk.Frame(notebook)
         tab_log_clientes = ttk.Frame(notebook)
+        tab_chat = ttk.Frame(notebook)
 
-        notebook.add(tab_usuarios, text="👥 Datos Personales Cuentas")
-        notebook.add(tab_log_tiendas, text="🏪 Registros / Actividad Tiendas")
-        notebook.add(tab_log_clientes, text="♻️ Registros / Actividad Clientes")
+        notebook.add(tab_usuarios, text="👥 Cuentas")
+        notebook.add(tab_promos, text="🛍️ Promociones Activas")
+        notebook.add(tab_log_tiendas, text="🏪 Actividad Tiendas")
+        notebook.add(tab_log_clientes, text="♻️ Actividad Clientes")
+        notebook.add(tab_chat, text="💬 Soporte Vecinal")
 
         if self.es_admin_supremo:
             self.tab_log_devs = ttk.Frame(notebook)
-            notebook.add(self.tab_log_devs, text="🕵️ Actividad Desarrolladores (Solo Admin)")
+            notebook.add(self.tab_log_devs, text="🕵️ Actividad Devs (Solo Admin)")
 
-        # FUNCIÓN AUXILIAR PARA TABLAS CON SCROLLBARS
+        # FUNCIÓN AUXILIAR DE TABLAS
         def crear_tabla_con_scroll(parent, columnas, configuracion_columnas):
             frame_tabla = ttk.Frame(parent)
             frame_tabla.pack(fill="both", expand=True, padx=5, pady=5)
@@ -114,52 +119,109 @@ class VentanaAdmin:
 
             return tabla
 
-        # TABLAS
+        # 1. TABLA USUARIOS
         cols_usr = ("id", "nombre", "rol", "telefono", "correo", "puntos")
         config_usr = [
             ("id", "DNI / ID", 110),
-            ("nombre", "Nombre / Comercio", 220),
-            ("rol", "Rol", 100),
-            ("telefono", "Celular", 120),
-            ("correo", "Correo Electrónico", 240),
-            ("puntos", "Puntos", 90)
+            ("nombre", "Nombre / Comercio", 200),
+            ("rol", "Rol", 90),
+            ("telefono", "Celular", 110),
+            ("correo", "Correo Electrónico", 220),
+            ("puntos", "Puntos", 80)
         ]
         self.tabla_usr = crear_tabla_con_scroll(tab_usuarios, cols_usr, config_usr)
 
+
+# --- PESTAÑA: PROMOCIONES ACTIVAS ---
+        # 1. Botón superior para abrir la vista visual con fotos
+        tk.Button(
+            tab_promos, 
+            text="🖼️ Abrir Vista Visual con Fotos", 
+            bg="#1976D2", 
+            fg="white", 
+            font=("Arial", 9, "bold"), 
+            relief="flat", 
+            command=self.dialogo_ver_promociones_con_foto, 
+            cursor="hand2",
+            padx=10,
+            pady=4
+        ).pack(anchor="e", padx=5, pady=(5, 0))
+
+        # 2. Configuración y creación de la tabla
+        cols_pr = ("tienda", "titulo", "precio_soles", "puntos", "descripcion")
+        config_pr = [
+            ("tienda", "Comercio / Tienda", 180),
+            ("titulo", "Título Oferta", 180),
+            ("precio_soles", "Precio (S/)", 100),
+            ("puntos", "Costo (PTS)", 100),
+            ("descripcion", "Descripción", 250)
+        ]
+        self.tabla_promos = crear_tabla_con_scroll(tab_promos, cols_pr, config_pr)
+
+
+
+        # 3. TABLA LOG TIENDAS
         cols_tnd = ("fecha", "tienda_id", "tienda_nombre", "dni_cliente", "puntos")
         config_tnd = [
-            ("fecha", "Fecha / Hora", 160),
-            ("tienda_id", "ID Tienda", 110),
-            ("tienda_nombre", "Nombre Comercio", 200),
-            ("dni_cliente", "DNI Cliente", 120),
-            ("puntos", "Pts Descontados", 120)
+            ("fecha", "Fecha / Hora", 150),
+            ("tienda_id", "ID Tienda", 100),
+            ("tienda_nombre", "Nombre Comercio", 180),
+            ("dni_cliente", "DNI Cliente / Ref", 130),
+            ("puntos", "Pts / Detalle", 140)
         ]
         self.tabla_tnd = crear_tabla_con_scroll(tab_log_tiendas, cols_tnd, config_tnd)
 
+        # 4. TABLA LOG CLIENTES
         cols_cli = ("fecha", "dni_cliente", "tipo", "puntos", "detalle")
         config_cli = [
-            ("fecha", "Fecha / Hora", 160),
-            ("dni_cliente", "DNI Cliente", 120),
-            ("tipo", "Tipo Operación", 140),
-            ("puntos", "Puntos (+/-)", 110),
-            ("detalle", "Detalle de Operación", 300)
+            ("fecha", "Fecha / Hora", 150),
+            ("dni_cliente", "DNI Cliente", 110),
+            ("tipo", "Tipo Operación", 130),
+            ("puntos", "Puntos (+/-)", 100),
+            ("detalle", "Detalle de Operación", 280)
         ]
         self.tabla_cli = crear_tabla_con_scroll(tab_log_clientes, cols_cli, config_cli)
 
+        # 5. TABLA LOG DEVS (Solo Admin)
         if self.es_admin_supremo:
             cols_dev = ("fecha", "autor_id", "autor_nombre", "accion", "objetivo")
             config_dev = [
-                ("fecha", "Fecha / Hora", 160),
-                ("autor_id", "ID Dev/Admin", 120),
-                ("autor_nombre", "Nombre Dev", 180),
-                ("accion", "Acción Ejecutada", 160),
-                ("objetivo", "Usuario / Cuenta Afectada", 250)
+                ("fecha", "Fecha / Hora", 150),
+                ("autor_id", "ID Dev/Admin", 110),
+                ("autor_nombre", "Nombre Dev", 160),
+                ("accion", "Acción Ejecutada", 150),
+                ("objetivo", "Usuario / Cuenta Afectada", 230)
             ]
             self.tabla_dev = crear_tabla_con_scroll(self.tab_log_devs, cols_dev, config_dev)
 
+        # 6. CANAL DE CHAT CON VECINOS
+        frame_chat_box = tk.Frame(tab_chat, bg="white", padx=10, pady=10)
+        frame_chat_box.pack(fill="both", expand=True)
+
+        frame_top_chat = tk.Frame(frame_chat_box, bg="white")
+        frame_top_chat.pack(fill="x", pady=(0, 5))
+
+        tk.Label(frame_top_chat, text="Seleccionar Vecino por DNI:", font=("Arial", 9, "bold"), bg="white").pack(side="left", padx=5)
+        self.ent_dni_chat = tk.Entry(frame_top_chat, font=("Arial", 10), width=15)
+        self.ent_dni_chat.pack(side="left", padx=5)
+        
+        tk.Button(frame_top_chat, text="🔍 Cargar Chat", bg="#1976D2", fg="white", font=("Arial", 8, "bold"), relief="flat", command=self.cargar_chat_vecino).pack(side="left", padx=5)
+
+        self.txt_chat = tk.Text(frame_chat_box, state="disabled", font=("Arial", 10), bg="#F9F9F9", wrap="word")
+        self.txt_chat.pack(fill="both", expand=True, pady=5)
+
+        frame_input_chat = tk.Frame(frame_chat_box, bg="white")
+        frame_input_chat.pack(fill="x")
+
+        self.ent_msg_admin = tk.Entry(frame_input_chat, font=("Arial", 10), bg="#F0F0F0")
+        self.ent_msg_admin.pack(side="left", fill="x", expand=True, padx=(0, 5), ipady=3)
+        self.ent_msg_admin.bind("<Return>", lambda e: self.responder_chat_vecino())
+
+        tk.Button(frame_input_chat, text="Responder ✉️", bg="#2E7D32", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.responder_chat_vecino).pack(side="right")
+
         self.actualizar_tablas()
 
-        tk.Button(self.root, text="🚪 Cerrar Sesión", bg="#757575", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self.cerrar_sesion_cb, cursor="hand2", pady=4).pack(pady=8)
+        tk.Button(self.root, text="🚪 Cerrar Sesión", bg="#757575", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self.cerrar_sesion_cb, cursor="hand2", pady=4).pack(pady=6)
 
     def aplicar_icono(self):
         ruta_png = os.path.join("img", "logo.png")
@@ -204,23 +266,86 @@ class VentanaAdmin:
         return resultado["valor"]
 
     def actualizar_tablas(self):
+        # 1. Usuarios
         for item in self.tabla_usr.get_children(): self.tabla_usr.delete(item)
         usuarios = cargar_usuarios()
         for uid, datos in usuarios.items():
             self.tabla_usr.insert("", "end", values=(uid, datos.get("nombre", "-"), datos.get("rol", "-").upper(), datos.get("telefono", "-"), datos.get("correo", "-"), datos.get("puntos", "N/A")))
 
+        # 2. Promociones Activas
+        for item in self.tabla_promos.get_children(): self.tabla_promos.delete(item)
+        for p in cargar_promociones():
+            self.tabla_promos.insert("", "end", values=(
+                p.get("tienda_nombre", "Tienda"), 
+                p.get("titulo", "-"), 
+                f"S/ {p.get('precio_soles', 0):.2f}", 
+                f"{p.get('puntos', 0)} PTS", 
+                p.get("descripcion", "-")
+            ))
+
+        # 3. Log Tiendas
         for item in self.tabla_tnd.get_children(): self.tabla_tnd.delete(item)
         for log in reversed(cargar_log_tiendas()):
             self.tabla_tnd.insert("", "end", values=(log.get("fecha"), log.get("tienda_id"), log.get("tienda_nombre"), log.get("dni_cliente"), log.get("puntos_descontados")))
 
+        # 4. Log Clientes
         for item in self.tabla_cli.get_children(): self.tabla_cli.delete(item)
         for log in reversed(cargar_log_clientes()):
             self.tabla_cli.insert("", "end", values=(log.get("fecha"), log.get("dni_cliente"), log.get("tipo"), log.get("puntos"), log.get("detalle")))
 
+        # 5. Log Devs
         if self.es_admin_supremo:
             for item in self.tabla_dev.get_children(): self.tabla_dev.delete(item)
             for log in reversed(cargar_log_devs()):
                 self.tabla_dev.insert("", "end", values=(log.get("fecha"), log.get("autor_id"), log.get("autor_nombre"), log.get("accion"), log.get("objetivo")))
+
+    def cargar_chat_vecino(self):
+        dni = self.ent_dni_chat.get().strip()
+        if not dni:
+            messagebox.showwarning("Atención", "Ingrese el DNI del vecino para cargar su conversación.")
+            return
+
+        self.txt_chat.config(state="normal")
+        self.txt_chat.delete("1.0", tk.END)
+
+        mensajes = cargar_mensajes_chat()
+        msg_cliente = [m for m in mensajes if m.get("dni_cliente") == dni]
+
+        if not msg_cliente:
+            self.txt_chat.insert(tk.END, f"💬 No hay mensajes registrados con el DNI {dni}.\n\n")
+        else:
+            for m in msg_cliente:
+                autor = m.get("autor", "Usuario")
+                rol = m.get("rol", "").upper()
+                texto = m.get("mensaje", "")
+                fecha = m.get("fecha", "")
+
+                etiqueta = f"[{fecha}] {autor} ({rol}):\n"
+                self.txt_chat.insert(tk.END, etiqueta)
+                self.txt_chat.insert(tk.END, f"{texto}\n\n")
+
+        self.txt_chat.see(tk.END)
+        self.txt_chat.config(state="disabled")
+
+    def responder_chat_vecino(self):
+        dni = self.ent_dni_chat.get().strip()
+        texto = self.ent_msg_admin.get().strip()
+
+        if not dni:
+            messagebox.showwarning("Atención", "Ingrese el DNI del vecino antes de enviar el mensaje.")
+            return
+        if not texto: return
+
+        rol_autor = "admin" if self.es_admin_supremo else "desarrollador"
+        guardar_mensaje_chat(
+            dni_cliente=dni,
+            autor_nombre=self.datos_sesion.get("nombre", "Soporte"),
+            rol_autor=rol_autor,
+            mensaje=texto
+        )
+
+        self.ent_msg_admin.delete(0, tk.END)
+        self.cargar_chat_vecino()
 
     def dialogo_crear_cuenta(self):
         win_modal = tk.Toplevel(self.root)
@@ -311,7 +436,7 @@ class VentanaAdmin:
 
         win_modal = tk.Toplevel(self.root)
         win_modal.title("Sumar Puntos")
-        win_modal.geometry("300x220")
+        win_modal.geometry("320x230")
         win_modal.grab_set()
 
         if hasattr(self.root, 'icon_img'):
@@ -328,7 +453,7 @@ class VentanaAdmin:
                 mat = cb_mat.get()
                 puntos = Material.calcular_puntos(mat, peso)
                 
-                usuarios[dni]["puntos"] += puntos
+                usuarios[dni]["puntos"] = round(usuarios[dni]["puntos"] + puntos, 1)
                 guardar_usuarios(usuarios)
                 
                 registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "SUMAR_PUNTOS", f"Abonó {puntos} pts a {dni} por {mat}")
@@ -351,17 +476,20 @@ class VentanaAdmin:
             return
             
         pts_str = self.pedir_texto_custom("Restar Puntos", f"Puntos actuales: {usuarios[dni]['puntos']}\nCantidad a restar:")
-        if pts_str and pts_str.isdigit():
-            pts = int(pts_str)
-            if pts > 0 and usuarios[dni]["puntos"] >= pts:
-                usuarios[dni]["puntos"] -= pts
-                guardar_usuarios(usuarios)
-                registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "RESTAR_PUNTOS", f"Restó {pts} pts a {dni}")
-                registrar_accion_cliente(dni, "REDUCCION_ADMIN", -pts, "Ajuste manual de administración")
-                self.actualizar_tablas()
-                messagebox.showinfo("Éxito", f"Se restaron {pts} puntos.")
-            else:
-                messagebox.showerror("Error", "Puntos insuficientes o cantidad inválida.")
+        if pts_str:
+            try:
+                pts = float(pts_str)
+                if pts > 0 and usuarios[dni]["puntos"] >= pts:
+                    usuarios[dni]["puntos"] = round(usuarios[dni]["puntos"] - pts, 1)
+                    guardar_usuarios(usuarios)
+                    registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "RESTAR_PUNTOS", f"Restó {pts} pts a {dni}")
+                    registrar_accion_cliente(dni, "REDUCCION_ADMIN", -pts, "Ajuste manual de administración")
+                    self.actualizar_tablas()
+                    messagebox.showinfo("Éxito", f"Se restaron {pts} puntos.")
+                else:
+                    messagebox.showerror("Error", "Puntos insuficientes o cantidad inválida.")
+            except ValueError:
+                messagebox.showerror("Error", "Ingrese una cantidad numérica válida.")
 
     def dialogo_cambiar_clave(self):
         uid = self.pedir_texto_custom("Renovar Clave", "Ingrese DNI/ID de la cuenta:")
@@ -396,3 +524,45 @@ class VentanaAdmin:
             messagebox.showinfo("Éxito", "Datos actualizados.")
         else:
             messagebox.showerror("Error", "Usuario no encontrado.")
+
+
+    #Ver promociones con foto
+    def dialogo_ver_promociones_con_foto(self):
+        win_promos = tk.Toplevel(self.root)
+        win_promos.title("Vista Detallada de Ofertas en Sistema")
+        win_promos.geometry("620x500")
+        win_promos.grab_set()
+
+        if hasattr(self.root, 'icon_img'):
+            win_promos.iconphoto(False, self.root.icon_img)
+
+        frame_main = tk.Frame(win_promos, bg="white")
+        frame_main.pack(fill="both", expand=True, padx=10, pady=10)
+
+        win_promos.referencias_img = []
+        promos = cargar_promociones()
+
+        if not promos:
+            tk.Label(frame_main, text="No hay promociones registradas en el sistema.", font=("Arial", 11, "italic"), bg="white").pack(pady=40)
+            return
+
+        for p in promos:
+            card = tk.Frame(frame_main, bg="#F5F5F5", bd=1, relief="solid", padx=10, pady=8)
+            card.pack(fill="x", pady=5)
+
+            # Foto
+            ruta_foto = p.get("foto", "")
+            if ruta_foto and os.path.exists(ruta_foto):
+                try:
+                    from PIL import Image, ImageTk
+                    img = Image.open(ruta_foto).resize((65, 65), Image.Resampling.LANCZOS)
+                    img_tk = ImageTk.PhotoImage(img)
+                    win_promos.referencias_img.append(img_tk)
+                    tk.Label(card, image=img_tk, bg="#F5F5F5").pack(side="left", padx=(0, 10))
+                except Exception:
+                    tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#E0E0E0", width=8, height=4).pack(side="left", padx=(0, 10))
+            else:
+                tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#E0E0E0", width=8, height=4).pack(side="left", padx=(0, 10))
+
+            info_text = f"🏪 Tienda: {p.get('tienda_nombre')} (ID: {p.get('tienda_id')})\n📌 Título: {p.get('titulo')}\n📝 Detalle: {p.get('descripcion')}\n💰 Precio: S/ {p.get('precio_soles', 0):.2f} ➔ {p.get('puntos', 0)} PTS"
+            tk.Label(card, text=info_text, font=("Arial", 9), bg="#F5F5F5", justify="left").pack(side="left", anchor="w")

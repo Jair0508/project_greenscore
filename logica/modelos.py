@@ -13,14 +13,27 @@ class Vecino(Usuario):
         self.puntos = puntos
 
 class Material:
+    # Tarifas expresadas en puntos por kilogramo (S/ 0.10 = 1 punto)
     TASAS = {
-        "Plástico": 10,
-        "Vidrio": 5,
-        "Cartón": 8,
-        "Metal": 15
+        "Botellas PET (Agua/Gaseosa)": 6.0,
+        "Tapas plásticas (PP/HDPE)": 8.0,
+        "Cartón corrugado (Cajas)": 2.0,
+        "Papel de cuaderno blanco (Limpio)": 7.0,
+        "Cuadernos usados / Impresiones": 4.0,
+        "Papel periódico": 3.0,
+        "Revistas (Papel couche/plastificado)": 2.0,
+        "Latas de aluminio (Gaseosa/Cerveza)": 25.0,
+        "Latas de conservas (Hojalata/Fierro)": 2.0,
+        "Cables viejos (Cobre/Plástico)": 30.0,
+        "Componentes informáticos (Placas)": 20.0
     }
 
     @staticmethod
-    def calcular_puntos(tipo_material, peso_kg):
-        puntos_por_kg = Material.TASAS.get(tipo_material, 0)
-        return int(peso_kg * puntos_por_kg)
+    def calcular_puntos(nombre_material, peso_kg):
+        """
+        Calcula los puntos generados según el tipo de material y peso en kg.
+        Retorna el resultado redondeado a 1 decimal para permitir fracciones de punto.
+        """
+        tasa = Material.TASAS.get(nombre_material, 0.0)
+        puntos = tasa * peso_kg
+        return round(puntos, 1)
