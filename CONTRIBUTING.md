@@ -6,7 +6,7 @@ Este documento explica **qué cambió en el repo, por qué, y qué debes hacer t
 
 ## 🎯 ¿Por qué este documento?
 
-En las últimas semanas tuvimos varios dolores de cabeza al mergear ramas:
+Tuvimos varios dolores de cabeza al mergear ramas:
 
 - Conflictos de merge en archivos `.pyc` (binarios, imposibles de resolver "a mano")
 - Riesgo de que cada quien tenga una versión distinta de **Pillow** instalada y le truene algo que a otro no
@@ -63,7 +63,7 @@ pip install -r requirements.txt
 
 ---
 
-## ⚠️ Gotcha importante: `.gitignore` NO ignora archivos que YA estaban trackeados
+## ⚠️ importante: `.gitignore` NO ignora archivos que YA estaban trackeados
 
 Este es el error más común y confuso con Git. Si un archivo **ya fue commiteado alguna vez**, agregarlo al `.gitignore` **no hace que Git deje de vigilarlo**. Vas a seguir viendo cambios en `git status` como si el `.gitignore` no existiera.
 
