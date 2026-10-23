@@ -40,5 +40,145 @@
         "autor_nombre": "Administrador Desarrollador",
         "accion": "CREAR_CUENTA",
         "objetivo": "Creó cuenta 0885 (DESARROLLADOR)"
+    },
+    {
+        "fecha": "2026-10-23 00:20:18",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó la suspensión del usuario 71234567"
+    },
+    {
+        "fecha": "2026-10-23 00:22:20",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 0885. Motivo: canjeo rapido de puntos"
+    },
+    {
+        "fecha": "2026-10-23 00:23:33",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó la suspensión del usuario 0885"
+    },
+    {
+        "fecha": "2026-10-23 00:25:35",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 0885. Motivo: porque si"
+    },
+    {
+        "fecha": "2026-10-23 00:26:04",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó la suspensión del usuario 0885"
+    },
+    {
+        "fecha": "2026-10-23 00:26:25",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 68452135. Motivo: porque si"
+    },
+    {
+        "fecha": "2026-10-23 00:26:47",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 60.0 pts a 68452135 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-10-23 00:27:22",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó la suspensión del usuario 68452135"
+    },
+    {
+        "fecha": "2026-10-23 00:33:20",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 68452135. Motivo: porque si"
+    },
+    {
+        "fecha": "2026-10-23 00:34:00",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "EDITAR_DATOS",
+        "objetivo": "Actualizó datos personales de 68452135"
+    },
+    {
+        "fecha": "2026-10-23 01:00:51",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó suspensión a 68452135. Motivo Admin: porque quiero, no lo vuelvas a hacer bb"
+    },
+    {
+        "fecha": "2026-10-23 01:07:27",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 68452135. Motivo: porque si"
+    },
+    {
+        "fecha": "2026-10-23 01:08:22",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó suspensión a 68452135. Motivo Admin: ya bb"
+    },
+    {
+        "fecha": "2026-10-23 01:11:47",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 68452135. Motivo: porque si bb"
+    },
+    {
+        "fecha": "2026-10-23 01:12:36",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó suspensión a 68452135. Motivo Admin: ya bb"
+    },
+    {
+        "fecha": "2026-10-23 01:25:23",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 600000.0 pts a 68452135 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-10-23 01:26:42",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "RESTAR_PUNTOS",
+        "objetivo": "Restó 6000.0 pts a 68452135"
+    },
+    {
+        "fecha": "2026-10-23 01:27:19",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "RESTAR_PUNTOS",
+        "objetivo": "Restó 594000.0 pts a 68452135"
+    },
+    {
+        "fecha": "2026-10-23 02:01:59",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta 952089997 (VECINO)"
+    },
+    {
+        "fecha": "2026-10-23 02:03:13",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 60000.0 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
     }
 ]

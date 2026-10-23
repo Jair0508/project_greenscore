@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox, simpledialog
+from tkinter import ttk, messagebox, simpledialog
 import os
 from datos.gestor import cargar_usuarios, guardar_usuarios, registrar_accion_cliente
 from interfaces.admin import VentanaAdmin
@@ -17,11 +17,9 @@ class AppPrincipal:
 
     def aplicar_estilos_base(self):
         self.root.config(bg=COLOR_FONDO_APP)
-        # Carga el ícono directamente desde la carpeta img/
         ruta_png = os.path.join("img", "logo.png")
         try:
             if os.path.exists(ruta_png):
-                # Es recomendable guardar una referencia de la imagen para evitar que el recolector de basura la elimine
                 self.root.icon_img = tk.PhotoImage(file=ruta_png)
                 self.root.iconphoto(False, self.root.icon_img)
         except Exception as e:
@@ -34,7 +32,7 @@ class AppPrincipal:
     def mostrar_login(self):
         self.limpiar_pantalla()
         self.root.title("EcoPuntos - Inicio de Sesión")
-        self.root.geometry("400x450")
+        self.root.geometry("420x510")
         self.root.resizable(False, False)
 
         # 1. CARGAR IMAGEN DE FONDO (fondo_ingreso.png)
@@ -47,7 +45,7 @@ class AppPrincipal:
             except Exception as e:
                 print(f"Error al cargar imagen de fondo: {e}")
 
-        # 2. MARCO CONTENEDOR SUTIL
+        # 2. MARCO CONTENEDOR
         frame_box = tk.Frame(
             self.root, 
             bg="#FFFFFF", 
@@ -56,7 +54,7 @@ class AppPrincipal:
             padx=20, 
             pady=20
         )
-        frame_box.pack(pady=40, padx=30, fill="both")
+        frame_box.pack(pady=30, padx=30, fill="both")
 
         tk.Label(
             frame_box, 
@@ -68,11 +66,11 @@ class AppPrincipal:
 
         tk.Label(frame_box, text="Usuario / DNI:", font=("Arial", 10, "bold"), fg="#37474F", bg="#FFFFFF").pack(anchor="w", pady=(5, 2))
         self.ent_user = tk.Entry(frame_box, font=("Arial", 11), bg="#F5F5F5", relief="flat", highlightthickness=1, highlightbackground="#CCCCCC")
-        self.ent_user.pack(fill="x", pady=(0, 12), ipady=3)
+        self.ent_user.pack(fill="x", pady=(0, 10), ipady=3)
 
         tk.Label(frame_box, text="Contraseña:", font=("Arial", 10, "bold"), fg="#37474F", bg="#FFFFFF").pack(anchor="w", pady=(5, 2))
         self.ent_pass = tk.Entry(frame_box, show="*", font=("Arial", 11), bg="#F5F5F5", relief="flat", highlightthickness=1, highlightbackground="#CCCCCC")
-        self.ent_pass.pack(fill="x", pady=(0, 18), ipady=3)
+        self.ent_pass.pack(fill="x", pady=(0, 14), ipady=3)
 
         btn_ingresar = tk.Button(
             frame_box, 
@@ -85,7 +83,7 @@ class AppPrincipal:
             relief="flat",
             pady=6
         )
-        btn_ingresar.pack(fill="x", pady=(0, 10))
+        btn_ingresar.pack(fill="x", pady=(0, 8))
 
         btn_registro = tk.Button(
             frame_box, 
@@ -98,8 +96,20 @@ class AppPrincipal:
             relief="flat",
             pady=5
         )
-        btn_registro.pack(fill="x")
+        btn_registro.pack(fill="x", pady=(0, 6))
 
+        # BOTÓN DE RECUPERACIÓN DE CONTRASEÑA
+        btn_olvido = tk.Button(
+            frame_box,
+            text="❓ ¿Olvidaste tu contraseña?",
+            bg="#FFFFFF",
+            fg="#D32F2F",
+            font=("Arial", 8, "bold"),
+            command=self.dialogo_recuperar_clave,
+            cursor="hand2",
+            relief="flat"
+        )
+        btn_olvido.pack(fill="x")
 
     def registrar_nuevo_usuario(self):
         dni = simpledialog.askstring("Registro de Vecino", "Ingrese su DNI (Usuario):", parent=self.root)
@@ -119,6 +129,12 @@ class AppPrincipal:
         telefono = simpledialog.askstring("Registro de Vecino", "Ingrese su Número de Celular:", parent=self.root)
         if not telefono: return
 
+        pregunta = simpledialog.askstring("Seguridad", "Pregunta Secreta (ej: ¿Nombre de tu primera mascota?):", parent=self.root)
+        if not pregunta: return
+
+        respuesta = simpledialog.askstring("Seguridad", "Respuesta a tu pregunta secreta:", parent=self.root)
+        if not respuesta: return
+
         clave = simpledialog.askstring("Registro de Vecino", "Cree una Contraseña:", show="*", parent=self.root)
         if not clave: return
 
@@ -128,11 +144,66 @@ class AppPrincipal:
             "correo": correo,
             "telefono": telefono,
             "clave": clave,
-            "puntos": 0
+            "puntos": 0,
+            "pregunta_secreta": pregunta,
+            "respuesta_secreta": respuesta.strip().lower()
         }
         guardar_usuarios(usuarios)
         registrar_accion_cliente(dni, "REGISTRO", 0, "Cuenta creada voluntariamente por cliente")
         messagebox.showinfo("¡Registro Exitoso!", f"Bienvenido(a) {nombre}. Tu cuenta ha sido creada.")
+
+    def dialogo_recuperar_clave(self):
+        dni = simpledialog.askstring("Recuperar Contraseña", "Ingrese su DNI / Usuario:", parent=self.root)
+        if not dni: return
+
+        usuarios = cargar_usuarios()
+        if dni not in usuarios:
+            messagebox.showerror("Error", "El DNI ingresado no está registrado en el sistema.")
+            return
+
+        user_data = usuarios[dni]
+        pregunta = user_data.get("pregunta_secreta", "")
+        respuesta_correcta = user_data.get("respuesta_secreta", "")
+
+        if not pregunta or not respuesta_correcta:
+            messagebox.showwarning(
+                "Seguridad", 
+                "Su cuenta no tiene configurada una pregunta secreta.\nPor favor contacte al administrador a través del chat de soporte."
+            )
+            return
+
+        # Modal para responder la pregunta secreta
+        win_rec = tk.Toplevel(self.root)
+        win_rec.title("Verificación de Seguridad")
+        win_rec.geometry("380x230")
+        win_rec.grab_set()
+
+        if hasattr(self.root, 'icon_img'):
+            win_rec.iconphoto(False, self.root.icon_img)
+
+        tk.Label(win_rec, text="Pregunta de Seguridad:", font=("Arial", 10, "bold")).pack(pady=(15, 2))
+        tk.Label(win_rec, text=f"\"{pregunta}\"", font=("Arial", 10, "italic"), fg="#1976D2", wraplength=340).pack(pady=(0, 10))
+
+        tk.Label(win_rec, text="Su Respuesta:").pack()
+        ent_resp = tk.Entry(win_rec, font=("Arial", 10), width=30)
+        ent_resp.pack(pady=4)
+        ent_resp.focus_set()
+
+        def verificar_y_restablecer():
+            resp_user = ent_resp.get().strip().lower()
+            if resp_user != respuesta_correcta:
+                messagebox.showerror("Error de Seguridad", "Respuesta incorrecta. No se puede restablecer la contraseña.")
+                return
+
+            nueva_clave = simpledialog.askstring("Nueva Contraseña", "Ingrese su nueva contraseña:", show="*", parent=win_rec)
+            if not nueva_clave: return
+
+            usuarios[dni]["clave"] = nueva_clave
+            guardar_usuarios(usuarios)
+            win_rec.destroy()
+            messagebox.showinfo("Éxito", "¡Su contraseña ha sido actualizada correctamente! Ya puede iniciar sesión.")
+
+        tk.Button(win_rec, text="Validar y Cambiar Clave", bg="#2E7D32", fg="white", font=("Arial", 9, "bold"), command=verificar_y_restablecer, relief="flat", pady=4).pack(pady=15)
 
     def validar_login(self):
         usuario = self.ent_user.get().strip()

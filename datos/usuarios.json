@@ -17,7 +17,10 @@
         "nombre": "Carlos Mendoza",
         "clave": "123",
         "telefono": "955443322",
-        "puntos": 150
+        "puntos": 150,
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
     },
     "72645864": {
         "rol": "vecino",
@@ -39,8 +42,13 @@
         "nombre": "Mario Herrera",
         "correo": "mario.12@gmail.com",
         "telefono": "946525476",
-        "clave": "123456",
-        "puntos": 11.0
+        "clave": "31072020",
+        "puntos": 71.0,
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": "",
+        "pregunta_secreta": "fecha de cumpleaños",
+        "respuesta_secreta": "31071999"
     },
     "0885": {
         "rol": "desarrollador",
@@ -48,6 +56,20 @@
         "correo": "m.ht@gmail.com",
         "telefono": "945358265",
         "clave": "1234",
-        "puntos": "N/A"
+        "puntos": "N/A",
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
+    },
+    "952089997": {
+        "rol": "vecino",
+        "nombre": "sebas",
+        "correo": "sebas67@gmail.com",
+        "telefono": "952999999",
+        "clave": "pro67",
+        "puntos": 60000.0,
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
     }
 }

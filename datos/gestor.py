@@ -136,8 +136,34 @@ def guardar_mensaje_chat(dni_cliente, autor_nombre, rol_autor, mensaje):
         "dni_cliente": dni_cliente,
         "autor": autor_nombre,
         "rol": rol_autor,
-        "mensaje": mensaje
+        "mensaje": mensaje,
+        "leido": False  # <--- NUEVO: Inicializa el mensaje como no leído
     }
     mensajes.append(nuevo_msg)
     with open(RUTA_CHAT, "w", encoding="utf-8") as f:
         json.dump(mensajes, f, ensure_ascii=False, indent=4)
+
+def marcar_chat_como_leido(dni_cliente, rol_lector):
+    """Marca como leídos los mensajes pendientes según quién los esté leyendo."""
+    if not os.path.exists(RUTA_CHAT):
+        return
+    mensajes = cargar_mensajes_chat()
+    modificado = False
+    
+    for m in mensajes:
+        if m.get("dni_cliente") == dni_cliente:
+            # Si lee el admin/dev, marcamos como leídos los mensajes enviados por el vecino
+            if rol_lector in ["admin", "desarrollador"] and m.get("rol") == "vecino" and not m.get("leido", True):
+                m["leido"] = True
+                modificado = True
+            # Si lee el vecino, marcamos como leídos los mensajes enviados por el admin/dev
+            elif rol_lector == "vecino" and m.get("rol") in ["admin", "desarrollador"] and not m.get("leido", True):
+                m["leido"] = True
+                modificado = True
+                
+    if modificado:
+        try:
+            with open(RUTA_CHAT, "w", encoding="utf-8") as f:
+                json.dump(mensajes, f, indent=4, ensure_ascii=False)
+        except Exception:
+            pass
