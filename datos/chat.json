@@ -12,5 +12,45 @@
         "autor": "Administrador Desarrollador",
         "rol": "admin",
         "mensaje": "Buenos días"
+    },
+    {
+        "fecha": "2026-10-23 01:04:06",
+        "dni_cliente": "68452135",
+        "autor": "Mario Herrera",
+        "rol": "vecino",
+        "mensaje": "waza",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-23 01:11:47",
+        "dni_cliente": "68452135",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: porque si bb",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-23 01:12:36",
+        "dni_cliente": "68452135",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: ya bb",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-23 02:02:20",
+        "dni_cliente": "952089997",
+        "autor": "sebas",
+        "rol": "vecino",
+        "mensaje": "puto",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-23 02:02:51",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "+999 puntos bro",
+        "leido": false
     }
 ]

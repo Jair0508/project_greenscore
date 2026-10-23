@@ -12,5 +12,40 @@
         "tipo": "ABONO_RECICLAJE",
         "puntos": 10.0,
         "detalle": "Reciclaje de Componentes informáticos (Placas) (0.5 kg)"
+    },
+    {
+        "fecha": "2026-10-23 00:26:47",
+        "dni_cliente": "68452135",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 60.0,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (10.0 kg)"
+    },
+    {
+        "fecha": "2026-10-23 01:25:23",
+        "dni_cliente": "68452135",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 600000.0,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (100000.0 kg)"
+    },
+    {
+        "fecha": "2026-10-23 01:26:42",
+        "dni_cliente": "68452135",
+        "tipo": "REDUCCION_ADMIN",
+        "puntos": -6000.0,
+        "detalle": "Ajuste manual de administración"
+    },
+    {
+        "fecha": "2026-10-23 01:27:19",
+        "dni_cliente": "68452135",
+        "tipo": "REDUCCION_ADMIN",
+        "puntos": -594000.0,
+        "detalle": "Ajuste manual de administración"
+    },
+    {
+        "fecha": "2026-10-23 02:03:13",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 60000.0,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (10000.0 kg)"
     }
 ]

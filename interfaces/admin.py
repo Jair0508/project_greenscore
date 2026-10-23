@@ -4,7 +4,7 @@ import os
 from datos.gestor import (
     cargar_usuarios, guardar_usuarios, registrar_accion_dev, 
     cargar_log_devs, cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente,
-    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat
+    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido
 )
 from logica.modelos import Material
 
@@ -20,7 +20,7 @@ class VentanaAdmin:
 
         titulo_rol = "SUPER ADMINISTRADOR" if self.es_admin_supremo else "DESARROLLADOR"
         self.root.title(f"EcoPuntos - Panel de {titulo_rol}")
-        self.root.geometry("950x680")
+        self.root.geometry("980x680")
         self.root.resizable(False, False)
 
         self.aplicar_icono()
@@ -47,30 +47,42 @@ class VentanaAdmin:
             fg="white", 
             bg=color_header, 
             pady=10
-        ).pack()
+        ).pack(side="left", padx=15)
 
         # 3. BOTONES DE ACCIÓN DE GESTIÓN
         frame_acciones = tk.LabelFrame(
             self.root, 
             text=" Acciones de Gestión ", 
             font=("Arial", 10, "bold"), 
-            padx=10, 
-            pady=6, 
+            padx=5, 
+            pady=4, 
             bg="white"
         )
         frame_acciones.pack(fill="x", padx=15, pady=6)
 
-        btn_box = tk.Frame(frame_acciones, bg="white")
-        btn_box.pack(fill="x")
+        canvas_btn = tk.Canvas(frame_acciones, bg="white", height=38, highlightthickness=0)
+        scroll_btn = ttk.Scrollbar(frame_acciones, orient="horizontal", command=canvas_btn.xview)
+        
+        btn_box = tk.Frame(canvas_btn, bg="white")
+        btn_box.bind("<Configure>", lambda e: canvas_btn.configure(scrollregion=canvas_btn.bbox("all")))
 
+        canvas_btn.create_window((0, 0), window=btn_box, anchor="nw")
+        canvas_btn.configure(xscrollcommand=scroll_btn.set)
+
+        canvas_btn.pack(fill="x", expand=True)
+        scroll_btn.pack(fill="x")
+
+        # Botones de Acción
         tk.Button(btn_box, text="➕ Crear Cuenta", bg="#2E7D32", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_crear_cuenta, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="❌ Eliminar Cuenta", bg="#C62828", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_eliminar_cuenta, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="🛑 Suspender Cuenta", bg="#D32F2F", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_suspender_cuenta, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="✅ Levantar Suspensión", bg="#28A745", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_levantar_suspension, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="♻️ Sumar Puntos", bg="#1976D2", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_registrar_reciclaje, cursor="hand2").pack(side="left", padx=3, pady=2)
-        tk.Button(btn_box, text="➖ Restar Puntos", bg="#D32F2F", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_reducir_puntos, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="➖ Restar Puntos", bg="#C2185B", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_reducir_puntos, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="🔑 Renovar Clave", bg="#F57C00", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_cambiar_clave, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="✏️ Editar Datos", bg="#00897B", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_editar_datos, cursor="hand2").pack(side="left", padx=3, pady=2)
 
-        # 4. CONTROL DE PESTAÑAS
+        # 4. CONTROL DE PESTAÑAS PRINCIPALES
         notebook = ttk.Notebook(self.root)
         notebook.pack(fill="both", expand=True, padx=15, pady=5)
 
@@ -78,13 +90,13 @@ class VentanaAdmin:
         tab_promos = ttk.Frame(notebook)
         tab_log_tiendas = ttk.Frame(notebook)
         tab_log_clientes = ttk.Frame(notebook)
-        tab_chat = ttk.Frame(notebook)
+        tab_soporte_general = ttk.Frame(notebook) # Pestaña Principal de Soporte
 
-        notebook.add(tab_usuarios, text="👥 Cuentas")
+        notebook.add(tab_usuarios, text="👥 Cuentas y Suspensiones")
         notebook.add(tab_promos, text="🛍️ Promociones Activas")
         notebook.add(tab_log_tiendas, text="🏪 Actividad Tiendas")
         notebook.add(tab_log_clientes, text="♻️ Actividad Clientes")
-        notebook.add(tab_chat, text="💬 Soporte Vecinal")
+        notebook.add(tab_soporte_general, text="🔔 Soporte (Bandeja)")
 
         if self.es_admin_supremo:
             self.tab_log_devs = ttk.Frame(notebook)
@@ -120,20 +132,19 @@ class VentanaAdmin:
             return tabla
 
         # 1. TABLA USUARIOS
-        cols_usr = ("id", "nombre", "rol", "telefono", "correo", "puntos")
+        cols_usr = ("id", "nombre", "rol", "estado", "puntos", "rango", "justificacion")
         config_usr = [
-            ("id", "DNI / ID", 110),
-            ("nombre", "Nombre / Comercio", 200),
-            ("rol", "Rol", 90),
-            ("telefono", "Celular", 110),
-            ("correo", "Correo Electrónico", 220),
-            ("puntos", "Puntos", 80)
+            ("id", "DNI / ID", 90),
+            ("nombre", "Nombre / Comercio", 160),
+            ("rol", "Rol", 75),
+            ("estado", "Estado / Motivo", 150),
+            ("puntos", "Puntos", 65),
+            ("rango", "Rango Ecológico", 170),
+            ("justificacion", "Justificación Cliente", 180)
         ]
         self.tabla_usr = crear_tabla_con_scroll(tab_usuarios, cols_usr, config_usr)
 
-
-# --- PESTAÑA: PROMOCIONES ACTIVAS ---
-        # 1. Botón superior para abrir la vista visual con fotos
+        # 2. PESTAÑA: PROMOCIONES ACTIVAS
         tk.Button(
             tab_promos, 
             text="🖼️ Abrir Vista Visual con Fotos", 
@@ -147,7 +158,6 @@ class VentanaAdmin:
             pady=4
         ).pack(anchor="e", padx=5, pady=(5, 0))
 
-        # 2. Configuración y creación de la tabla
         cols_pr = ("tienda", "titulo", "precio_soles", "puntos", "descripcion")
         config_pr = [
             ("tienda", "Comercio / Tienda", 180),
@@ -157,8 +167,6 @@ class VentanaAdmin:
             ("descripcion", "Descripción", 250)
         ]
         self.tabla_promos = crear_tabla_con_scroll(tab_promos, cols_pr, config_pr)
-
-
 
         # 3. TABLA LOG TIENDAS
         cols_tnd = ("fecha", "tienda_id", "tienda_nombre", "dni_cliente", "puntos")
@@ -194,34 +202,201 @@ class VentanaAdmin:
             ]
             self.tabla_dev = crear_tabla_con_scroll(self.tab_log_devs, cols_dev, config_dev)
 
-        # 6. CANAL DE CHAT CON VECINOS
-        frame_chat_box = tk.Frame(tab_chat, bg="white", padx=10, pady=10)
-        frame_chat_box.pack(fill="both", expand=True)
+        # =========================================================================
+        # 6. SUB-PESTAÑAS DE SOPORTE (3 APARTADOS: VECINOS, NEGOCIOS, DESARROLLADORES)
+        # =========================================================================
+        sub_notebook_soporte = ttk.Notebook(tab_soporte_general)
+        sub_notebook_soporte.pack(fill="both", expand=True, padx=5, pady=5)
 
-        frame_top_chat = tk.Frame(frame_chat_box, bg="white")
-        frame_top_chat.pack(fill="x", pady=(0, 5))
+        self.tab_chat_vecinos = ttk.Frame(sub_notebook_soporte)
+        self.tab_chat_negocios = ttk.Frame(sub_notebook_soporte)
+        self.tab_chat_devs = ttk.Frame(sub_notebook_soporte)
 
-        tk.Label(frame_top_chat, text="Seleccionar Vecino por DNI:", font=("Arial", 9, "bold"), bg="white").pack(side="left", padx=5)
-        self.ent_dni_chat = tk.Entry(frame_top_chat, font=("Arial", 10), width=15)
-        self.ent_dni_chat.pack(side="left", padx=5)
-        
-        tk.Button(frame_top_chat, text="🔍 Cargar Chat", bg="#1976D2", fg="white", font=("Arial", 8, "bold"), relief="flat", command=self.cargar_chat_vecino).pack(side="left", padx=5)
+        sub_notebook_soporte.add(self.tab_chat_vecinos, text="👤 Vecinos")
+        sub_notebook_soporte.add(self.tab_chat_negocios, text="🏪 Negocios")
+        sub_notebook_soporte.add(self.tab_chat_devs, text="💻 Desarrolladores")
 
-        self.txt_chat = tk.Text(frame_chat_box, state="disabled", font=("Arial", 10), bg="#F9F9F9", wrap="word")
-        self.txt_chat.pack(fill="both", expand=True, pady=5)
+        self.chats_ui = {}
 
-        frame_input_chat = tk.Frame(frame_chat_box, bg="white")
-        frame_input_chat.pack(fill="x")
+        for rol_tipo, tab_widget in [("vecino", self.tab_chat_vecinos), ("negocio", self.tab_chat_negocios), ("desarrollador", self.tab_chat_devs)]:
+            frame_box = tk.Frame(tab_widget, bg="white", padx=10, pady=10)
+            frame_box.pack(fill="both", expand=True)
 
-        self.ent_msg_admin = tk.Entry(frame_input_chat, font=("Arial", 10), bg="#F0F0F0")
-        self.ent_msg_admin.pack(side="left", fill="x", expand=True, padx=(0, 5), ipady=3)
-        self.ent_msg_admin.bind("<Return>", lambda e: self.responder_chat_vecino())
+            frame_top = tk.Frame(frame_box, bg="white")
+            frame_top.pack(fill="x", pady=(0, 5))
 
-        tk.Button(frame_input_chat, text="Responder ✉️", bg="#2E7D32", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.responder_chat_vecino).pack(side="right")
+            tk.Label(frame_top, text="✉️ Seleccionar:", font=("Arial", 9, "bold"), bg="white").pack(side="left", padx=5)
+            
+            cb = ttk.Combobox(frame_top, font=("Arial", 10), width=38, state="readonly")
+            cb.pack(side="left", padx=5)
+            cb.bind("<<ComboboxSelected>>", lambda e, r=rol_tipo: self.cargar_chat_seleccionado(r))
+
+            tk.Button(
+                frame_top, text="🔄 Actualizar", bg="#1976D2", fg="white", 
+                font=("Arial", 8, "bold"), relief="flat", 
+                command=lambda r=rol_tipo: self.llenar_combo_chats_por_rol(r), cursor="hand2"
+            ).pack(side="left", padx=5)
+
+            # Cuadro de texto con barra de desplazamiento vertical (Scrollbar)
+            frame_txt = tk.Frame(frame_box, bg="white")
+            frame_txt.pack(fill="both", expand=True, pady=5)
+
+            scroll_txt = ttk.Scrollbar(frame_txt, orient="vertical")
+            scroll_txt.pack(side="right", fill="y")
+
+            txt = tk.Text(frame_txt, state="disabled", font=("Arial", 10), bg="#F9F9F9", wrap="word", yscrollcommand=scroll_txt.set)
+            txt.pack(side="left", fill="both", expand=True)
+            scroll_txt.config(command=txt.yview)
+
+            frame_input = tk.Frame(frame_box, bg="white")
+            frame_input.pack(fill="x", pady=(5, 0))
+
+            ent = tk.Entry(frame_input, font=("Arial", 10), bg="#F0F0F0")
+            ent.pack(side="left", fill="x", expand=True, padx=(0, 5), ipady=3)
+            ent.bind("<Return>", lambda e, r=rol_tipo: self.responder_chat_por_rol(r))
+
+            tk.Button(
+                frame_input, text="Responder ✉️", bg="#2E7D32", fg="white", 
+                font=("Arial", 9, "bold"), relief="flat", 
+                command=lambda r=rol_tipo: self.responder_chat_por_rol(r), cursor="hand2"
+            ).pack(side="right")
+
+            self.chats_ui[rol_tipo] = {
+                "cb": cb,
+                "txt": txt,
+                "ent": ent,
+                "mapeo": {}
+            }
 
         self.actualizar_tablas()
+        self.llenar_todos_los_combos()
+        self.verificar_mensajes_nuevos_al_iniciar()
 
         tk.Button(self.root, text="🚪 Cerrar Sesión", bg="#757575", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self.cerrar_sesion_cb, cursor="hand2", pady=4).pack(pady=6)
+
+    def obtener_rango_vecino(self, puntos):
+        try:
+            pts = float(puntos)
+        except (ValueError, TypeError):
+            pts = 0.0
+
+        if pts > 300:
+            return "👑 Leyenda Suprema"
+        elif pts > 150:
+            return "🌳 Guerrero Verde"
+        elif pts > 50:
+            return "🌿 Reciclador Activo"
+        else:
+            return "🌱 Eco-Novato"
+
+    def llenar_todos_los_combos(self):
+        for rol in ["vecino", "negocio", "desarrollador"]:
+            self.llenar_combo_chats_por_rol(rol)
+
+    def llenar_combo_chats_por_rol(self, rol_tipo):
+        mensajes = cargar_mensajes_chat()
+        usuarios = cargar_usuarios()
+        
+        ui = self.chats_ui[rol_tipo]
+        cb = ui["cb"]
+        mapeo = ui["mapeo"]
+        
+        opciones = []
+        mapeo.clear()
+
+        for uid, datos in usuarios.items():
+            rol_usuario = datos.get("rol", "")
+            if rol_usuario == rol_tipo or (rol_tipo == "desarrollador" and rol_usuario in ["admin", "desarrollador"]):
+                if uid == self.id_usuario:
+                    continue
+
+                nombre_usuario = datos.get("nombre", "Usuario")
+                tiene_pendientes = any(m.get("dni_cliente") == uid and m.get("rol") == rol_usuario and not m.get("leido", True) for m in mensajes)
+                
+                icono_alerta = "🔔 [NUEVO] " if tiene_pendientes else "💬 "
+                texto_item = f"{icono_alerta}{nombre_usuario} (ID: {uid})"
+                
+                opciones.append(texto_item)
+                mapeo[texto_item] = uid
+
+        cb['values'] = opciones
+        if opciones:
+            cb.current(0)
+            self.cargar_chat_seleccionado(rol_tipo)
+        else:
+            cb.set(f"No hay usuarios registrados en {rol_tipo.capitalize()}")
+            ui["txt"].config(state="normal")
+            ui["txt"].delete("1.0", tk.END)
+            ui["txt"].insert(tk.END, "💬 No hay registros disponibles.\n")
+            ui["txt"].config(state="disabled")
+
+    def cargar_chat_seleccionado(self, rol_tipo):
+        ui = self.chats_ui[rol_tipo]
+        seleccion = ui["cb"].get()
+        if not seleccion or "No hay" in seleccion: return
+        
+        dni = ui["mapeo"].get(seleccion)
+        if not dni: return
+
+        rol_lector = "admin" if self.es_admin_supremo else "desarrollador"
+        marcar_chat_como_leido(dni, rol_lector)
+
+        txt = ui["txt"]
+        txt.config(state="normal")
+        txt.delete("1.0", tk.END)
+
+        mensajes = cargar_mensajes_chat()
+        msg_cliente = [m for m in mensajes if m.get("dni_cliente") == dni]
+
+        if not msg_cliente:
+            txt.insert(tk.END, f"💬 No hay mensajes previos con este usuario. Escribe abajo para iniciar la conversación.\n\n")
+        else:
+            for m in msg_cliente:
+                autor = m.get("autor", "Usuario")
+                rol = m.get("rol", "").upper()
+                texto = m.get("mensaje", "")
+                fecha = m.get("fecha", "")
+                leido = m.get("leido", True)
+
+                check_leido = " (✓ Leído)" if leido else " (🔔 Nuevo)"
+                etiqueta = f"[{fecha}] {autor} ({rol}){check_leido}:\n"
+                txt.insert(tk.END, etiqueta)
+                txt.insert(tk.END, f"{texto}\n\n")
+
+        txt.see(tk.END)
+        txt.config(state="disabled")
+
+    def responder_chat_por_rol(self, rol_tipo):
+        ui = self.chats_ui[rol_tipo]
+        seleccion = ui["cb"].get()
+        if not seleccion or "No hay" in seleccion:
+            messagebox.showwarning("Atención", "Seleccione una conversación válida de la bandeja primero.")
+            return
+
+        dni = ui["mapeo"].get(seleccion)
+        texto = ui["ent"].get().strip()
+        if not texto: return
+
+        rol_autor = "admin" if self.es_admin_supremo else "desarrollador"
+        guardar_mensaje_chat(
+            dni_cliente=dni,
+            autor_nombre=self.datos_sesion.get("nombre", "Soporte"),
+            rol_autor=rol_autor,
+            mensaje=texto
+        )
+
+        ui["ent"].delete(0, tk.END)
+        self.cargar_chat_seleccionado(rol_tipo)
+        self.llenar_combo_chats_por_rol(rol_tipo)
+
+    def verificar_mensajes_nuevos_al_iniciar(self):
+        mensajes = cargar_mensajes_chat()
+        hay_nuevos = any(m.get("rol") in ["vecino", "negocio", "desarrollador"] and not m.get("leido", False) for m in mensajes)
+        if hay_nuevos:
+            messagebox.showwarning(
+                "💬 Nuevos Mensajes", 
+                "¡Tienes mensajes nuevos pendientes por leer y responder en la pestaña 'Soporte (Bandeja)'!"
+            )
 
     def aplicar_icono(self):
         ruta_png = os.path.join("img", "logo.png")
@@ -266,13 +441,35 @@ class VentanaAdmin:
         return resultado["valor"]
 
     def actualizar_tablas(self):
-        # 1. Usuarios
         for item in self.tabla_usr.get_children(): self.tabla_usr.delete(item)
         usuarios = cargar_usuarios()
         for uid, datos in usuarios.items():
-            self.tabla_usr.insert("", "end", values=(uid, datos.get("nombre", "-"), datos.get("rol", "-").upper(), datos.get("telefono", "-"), datos.get("correo", "-"), datos.get("puntos", "N/A")))
+            suspendido = datos.get("suspendido", False)
+            if suspendido:
+                motivo = datos.get("motivo_suspension", "Anómalo")
+                estado_txt = f"🔴 Suspendido: {motivo}"
+            else:
+                estado_txt = "🟢 Activo"
 
-        # 2. Promociones Activas
+            puntos = datos.get("puntos", "N/A")
+            if datos.get("rol") == "vecino":
+                rango_txt = self.obtener_rango_vecino(puntos)
+            else:
+                rango_txt = "N/A (Personal)"
+
+            justificacion = datos.get("justificacion_cliente", "")
+            justif_txt = justificacion if justificacion else "-"
+
+            self.tabla_usr.insert("", "end", values=(
+                uid, 
+                datos.get("nombre", "-"), 
+                datos.get("rol", "-").upper(), 
+                estado_txt, 
+                puntos,
+                rango_txt,
+                justif_txt
+            ))
+
         for item in self.tabla_promos.get_children(): self.tabla_promos.delete(item)
         for p in cargar_promociones():
             self.tabla_promos.insert("", "end", values=(
@@ -283,69 +480,92 @@ class VentanaAdmin:
                 p.get("descripcion", "-")
             ))
 
-        # 3. Log Tiendas
         for item in self.tabla_tnd.get_children(): self.tabla_tnd.delete(item)
         for log in reversed(cargar_log_tiendas()):
             self.tabla_tnd.insert("", "end", values=(log.get("fecha"), log.get("tienda_id"), log.get("tienda_nombre"), log.get("dni_cliente"), log.get("puntos_descontados")))
 
-        # 4. Log Clientes
         for item in self.tabla_cli.get_children(): self.tabla_cli.delete(item)
         for log in reversed(cargar_log_clientes()):
             self.tabla_cli.insert("", "end", values=(log.get("fecha"), log.get("dni_cliente"), log.get("tipo"), log.get("puntos"), log.get("detalle")))
 
-        # 5. Log Devs
         if self.es_admin_supremo:
             for item in self.tabla_dev.get_children(): self.tabla_dev.delete(item)
             for log in reversed(cargar_log_devs()):
                 self.tabla_dev.insert("", "end", values=(log.get("fecha"), log.get("autor_id"), log.get("autor_nombre"), log.get("accion"), log.get("objetivo")))
 
-    def cargar_chat_vecino(self):
-        dni = self.ent_dni_chat.get().strip()
-        if not dni:
-            messagebox.showwarning("Atención", "Ingrese el DNI del vecino para cargar su conversación.")
+    def dialogo_suspender_cuenta(self):
+        uid = self.pedir_texto_custom("Suspender Cuenta", "Ingrese DNI / ID del usuario a suspender:")
+        if not uid: return
+
+        usuarios = cargar_usuarios()
+        if uid not in usuarios:
+            messagebox.showerror("Error", "La cuenta no existe en el sistema.")
             return
 
-        self.txt_chat.config(state="normal")
-        self.txt_chat.delete("1.0", tk.END)
+        motivo = self.pedir_texto_custom("Motivo de Suspensión", f"Ingrese el motivo para {usuarios[uid]['nombre']}:")
+        if not motivo: return
 
-        mensajes = cargar_mensajes_chat()
-        msg_cliente = [m for m in mensajes if m.get("dni_cliente") == dni]
-
-        if not msg_cliente:
-            self.txt_chat.insert(tk.END, f"💬 No hay mensajes registrados con el DNI {dni}.\n\n")
-        else:
-            for m in msg_cliente:
-                autor = m.get("autor", "Usuario")
-                rol = m.get("rol", "").upper()
-                texto = m.get("mensaje", "")
-                fecha = m.get("fecha", "")
-
-                etiqueta = f"[{fecha}] {autor} ({rol}):\n"
-                self.txt_chat.insert(tk.END, etiqueta)
-                self.txt_chat.insert(tk.END, f"{texto}\n\n")
-
-        self.txt_chat.see(tk.END)
-        self.txt_chat.config(state="disabled")
-
-    def responder_chat_vecino(self):
-        dni = self.ent_dni_chat.get().strip()
-        texto = self.ent_msg_admin.get().strip()
-
-        if not dni:
-            messagebox.showwarning("Atención", "Ingrese el DNI del vecino antes de enviar el mensaje.")
-            return
-        if not texto: return
+        usuarios[uid]["suspendido"] = True
+        usuarios[uid]["motivo_suspension"] = motivo
+        guardar_usuarios(usuarios)
 
         rol_autor = "admin" if self.es_admin_supremo else "desarrollador"
         guardar_mensaje_chat(
-            dni_cliente=dni,
-            autor_nombre=self.datos_sesion.get("nombre", "Soporte"),
+            dni_cliente=uid,
+            autor_nombre=self.datos_sesion.get("nombre", "Administración"),
             rol_autor=rol_autor,
-            mensaje=texto
+            mensaje=f"🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: {motivo}"
         )
 
-        self.ent_msg_admin.delete(0, tk.END)
-        self.cargar_chat_vecino()
+        registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "SUSPENDER_CUENTA", f"Suspendió al usuario {uid}. Motivo: {motivo}")
+        self.actualizar_tablas()
+        self.llenar_todos_los_combos()
+        messagebox.showinfo("Éxito", f"La cuenta de {usuarios[uid]['nombre']} ha sido suspendida correctamente.")
+
+    def dialogo_levantar_suspension(self):
+        uid = self.pedir_texto_custom("Levantar Suspensión", "Ingrese DNI / ID del usuario a reactivar:")
+        if not uid: return
+
+        usuarios = cargar_usuarios()
+        if uid not in usuarios:
+            messagebox.showerror("Error", "La cuenta no existe.")
+            return
+
+        if not usuarios[uid].get("suspendido", False):
+            messagebox.showinfo("Información", "Esta cuenta ya se encuentra activa.")
+            return
+
+        motivo_reactivacion = self.pedir_texto_custom(
+            "Motivo de Reactivación", 
+            f"Ingrese el motivo por el cual levanta la suspensión a {usuarios[uid]['nombre']}:"
+        )
+        if not motivo_reactivacion:
+            messagebox.showwarning("Atención", "Debe ingresar un motivo para reactivar la cuenta.")
+            return
+
+        usuarios[uid]["suspendido"] = False
+        usuarios[uid]["motivo_suspension"] = ""
+        usuarios[uid]["justificacion_cliente"] = ""
+        guardar_usuarios(usuarios)
+
+        rol_autor = "admin" if self.es_admin_supremo else "desarrollador"
+        guardar_mensaje_chat(
+            dni_cliente=uid,
+            autor_nombre=self.datos_sesion.get("nombre", "Administración"),
+            rol_autor=rol_autor,
+            mensaje=f"✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: {motivo_reactivacion}"
+        )
+
+        registrar_accion_dev(
+            self.id_usuario, 
+            self.datos_sesion.get("nombre"), 
+            "ACTIVAR_CUENTA", 
+            f"Levantó suspensión a {uid}. Motivo Admin: {motivo_reactivacion}"
+        )
+
+        self.actualizar_tablas()
+        self.llenar_todos_los_combos()
+        messagebox.showinfo("Éxito", f"Se ha levantado la suspensión de {usuarios[uid]['nombre']}.\nMotivo: {motivo_reactivacion}")
 
     def dialogo_crear_cuenta(self):
         win_modal = tk.Toplevel(self.root)
@@ -392,12 +612,14 @@ class VentanaAdmin:
                 return
 
             usuarios[uid] = {
-                "rol": rol, "nombre": nom, "correo": correo or "-", "telefono": tel or "-", "clave": clave, "puntos": 0 if rol == "vecino" else "N/A"
+                "rol": rol, "nombre": nom, "correo": correo or "-", "telefono": tel or "-", "clave": clave, "puntos": 0 if rol == "vecino" else "N/A",
+                "suspendido": False, "motivo_suspension": "", "justificacion_cliente": ""
             }
             guardar_usuarios(usuarios)
             registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "CREAR_CUENTA", f"Creó cuenta {uid} ({rol.upper()})")
             
             self.actualizar_tablas()
+            self.llenar_todos_los_combos()
             win_modal.destroy()
             messagebox.showinfo("Éxito", f"Cuenta de tipo '{rol.upper()}' creada.")
 
@@ -423,6 +645,7 @@ class VentanaAdmin:
             guardar_usuarios(usuarios)
             registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "ELIMINAR_CUENTA", f"Eliminó la cuenta {uid} ({nom_removido})")
             self.actualizar_tablas()
+            self.llenar_todos_los_combos()
             messagebox.showinfo("Éxito", "Cuenta eliminada.")
 
     def dialogo_registrar_reciclaje(self):
@@ -432,6 +655,13 @@ class VentanaAdmin:
         usuarios = cargar_usuarios()
         if dni not in usuarios or usuarios[dni]["rol"] != "vecino":
             messagebox.showerror("Error", "DNI no corresponde a un vecino.")
+            return
+
+        if usuarios[dni].get("suspendido", False):
+            messagebox.showwarning(
+                "Cuenta Suspendida", 
+                f"No se pueden sumar puntos. La cuenta de {usuarios[dni]['nombre']} se encuentra SUSPENDIDA."
+            )
             return
 
         win_modal = tk.Toplevel(self.root)
@@ -474,6 +704,13 @@ class VentanaAdmin:
         if dni not in usuarios or usuarios[dni]["rol"] != "vecino":
             messagebox.showerror("Error", "Vecino no encontrado.")
             return
+
+        if usuarios[dni].get("suspendido", False):
+            messagebox.showwarning(
+                "Cuenta Suspendida", 
+                f"No se pueden restar puntos. La cuenta de {usuarios[dni]['nombre']} se encuentra SUSPENDIDA."
+            )
+            return
             
         pts_str = self.pedir_texto_custom("Restar Puntos", f"Puntos actuales: {usuarios[dni]['puntos']}\nCantidad a restar:")
         if pts_str:
@@ -509,24 +746,30 @@ class VentanaAdmin:
         uid = self.pedir_texto_custom("Editar Datos", "Ingrese DNI/ID:")
         if not uid: return
         usuarios = cargar_usuarios()
-        if uid in usuarios:
-            nuevo_nom = self.pedir_texto_custom("Editar", "Nuevo Nombre:")
-            nuevo_correo = self.pedir_texto_custom("Editar", "Nuevo Correo:")
-            nuevo_tel = self.pedir_texto_custom("Editar", "Nuevo Celular:")
-            
-            if nuevo_nom: usuarios[uid]["nombre"] = nuevo_nom
-            if nuevo_correo: usuarios[uid]["correo"] = nuevo_correo
-            if nuevo_tel: usuarios[uid]["telefono"] = nuevo_tel
-
-            guardar_usuarios(usuarios)
-            registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "EDITAR_DATOS", f"Actualizó datos personales de {uid}")
-            self.actualizar_tablas()
-            messagebox.showinfo("Éxito", "Datos actualizados.")
-        else:
+        if uid not in usuarios:
             messagebox.showerror("Error", "Usuario no encontrado.")
+            return
 
+        if usuarios[uid].get("suspendido", False):
+            messagebox.showwarning(
+                "Cuenta Suspendida", 
+                f"No se pueden editar los datos. La cuenta de {usuarios[uid]['nombre']} se encuentra SUSPENDIDA."
+            )
+            return
 
-    #Ver promociones con foto
+        nuevo_nom = self.pedir_texto_custom("Editar", "Nuevo Nombre:")
+        nuevo_correo = self.pedir_texto_custom("Editar", "Nuevo Correo:")
+        nuevo_tel = self.pedir_texto_custom("Editar", "Nuevo Celular:")
+        
+        if nuevo_nom: usuarios[uid]["nombre"] = nuevo_nom
+        if nuevo_correo: usuarios[uid]["correo"] = nuevo_correo
+        if nuevo_tel: usuarios[uid]["telefono"] = nuevo_tel
+
+        guardar_usuarios(usuarios)
+        registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "EDITAR_DATOS", f"Actualizó datos personales de {uid}")
+        self.actualizar_tablas()
+        messagebox.showinfo("Éxito", "Datos actualizados.")
+
     def dialogo_ver_promociones_con_foto(self):
         win_promos = tk.Toplevel(self.root)
         win_promos.title("Vista Detallada de Ofertas en Sistema")
@@ -550,7 +793,6 @@ class VentanaAdmin:
             card = tk.Frame(frame_main, bg="#F5F5F5", bd=1, relief="solid", padx=10, pady=8)
             card.pack(fill="x", pady=5)
 
-            # Foto
             ruta_foto = p.get("foto", "")
             if ruta_foto and os.path.exists(ruta_foto):
                 try:
