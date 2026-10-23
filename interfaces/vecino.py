@@ -22,7 +22,7 @@ class VentanaVecino:
         # Header
         frame_top = tk.Frame(root, bg="#2E7D32")
         frame_top.pack(fill="x")
-        tk.Label(frame_top, text=f"👤 Hola, {datos.get('nombre', 'Vecino')}", font=("Arial", 13, "bold"), fg="white", bg="#2E7D32", py=8).pack()
+        tk.Label(frame_top, text=f"👤 Hola, {datos.get('nombre', 'Vecino')}", font=("Arial", 13, "bold"), fg="white", bg="#2E7D32", pady=8).pack()
 
         # Tarjeta Saldo
         frame_card = tk.LabelFrame(root, text="Tarjeta de Puntos Ecológicos", font=("Arial", 10, "bold"), padx=15, pady=10, bg=COLOR_FONDO_VECINO)

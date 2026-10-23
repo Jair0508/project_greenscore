@@ -26,5 +26,40 @@
         "autor_nombre": "Administrador Desarrollador",
         "accion": "SUMAR_PUNTOS",
         "objetivo": "Abonó 1 pts a 68452135 por Plástico"
+    },
+    {
+        "fecha": "2026-10-22 19:39:39",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 50 pts a 68452135 por Plástico"
+    },
+    {
+        "fecha": "2026-10-22 19:41:53",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "RESTAR_PUNTOS",
+        "objetivo": "Restó 50 pts a 68452135"
+    },
+    {
+        "fecha": "2026-10-22 19:44:59",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta 952089997 (VECINO)"
+    },
+    {
+        "fecha": "2026-10-22 19:45:38",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 50000 pts a 952089997 por Plástico"
+    },
+    {
+        "fecha": "2026-10-22 19:46:02",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 6000 pts a 952089997 por Metal"
     }
 ]

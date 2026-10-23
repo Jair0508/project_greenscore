@@ -41,5 +41,13 @@
         "telefono": "946525476",
         "clave": "123456",
         "puntos": 1
+    },
+    "952089997": {
+        "rol": "vecino",
+        "nombre": "Sebastian",
+        "correo": "sebas67@gmail.com",
+        "telefono": "952089997",
+        "clave": "pro67",
+        "puntos": 56000
     }
 }
