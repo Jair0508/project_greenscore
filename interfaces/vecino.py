@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, simpledialog
 import os
 from datos.gestor import (
     cargar_usuarios, 
@@ -7,8 +7,11 @@ from datos.gestor import (
     cargar_mensajes_chat, 
     guardar_mensaje_chat,
     cargar_promociones,
+    guardar_promociones,
     guardar_usuarios,
-    marcar_chat_como_leido
+    marcar_chat_como_leido,
+    registrar_accion_tienda,
+    registrar_accion_cliente
 )
 
 COLOR_FONDO_VECINO = "#E8F5E9"
@@ -79,7 +82,20 @@ class VentanaVecino:
         self.lbl_rango = tk.Label(row_pts_rango, text=f"Rango: {rango_actual}", font=("Arial", 10, "bold"), fg="#E65100", bg="#FFF8E1", padx=8, relief="solid", bd=1)
         self.lbl_rango.pack(side="left")
 
+        # Botón de Actualizar y Guía
         tk.Button(frame_card, text="🔄 Actualizar", bg="#1976D2", fg="white", font=("Arial", 9, "bold"), relief="flat", command=self.actualizar_todo, cursor="hand2").pack(side="right")
+        
+        tk.Button(
+            frame_card, 
+            text="📋 Guía de Entrega", 
+            bg="#0288D1", 
+            fg="white", 
+            font=("Arial", 9, "bold"), 
+            relief="flat", 
+            command=self.mostrar_guia_condiciones, 
+            cursor="hand2",
+            padx=8
+        ).pack(side="right", padx=(0, 8))
 
         # Control de Pestañas
         notebook = ttk.Notebook(self.root)
@@ -89,15 +105,15 @@ class VentanaVecino:
         tab_reciclaje = ttk.Frame(notebook)
         tab_movimientos = ttk.Frame(notebook)
         tab_chat = ttk.Frame(notebook)
-        tab_seguridad = ttk.Frame(notebook)  # <--- NUEVA PESTAÑA
+        tab_seguridad = ttk.Frame(notebook)
 
         notebook.add(tab_promos, text="🛍️ Catálogo de Ofertas")
         notebook.add(tab_reciclaje, text="♻️ Historial de Reciclaje (Detallado)")
         notebook.add(tab_movimientos, text="📊 Movimientos de Puntos (+ / -)")
         notebook.add(tab_chat, text="💬 Soporte / Chat con Devs y Admin")
-        notebook.add(tab_seguridad, text="🔐 Seguridad y Recuperación")  # <--- AGREGADA
+        notebook.add(tab_seguridad, text="🔐 Seguridad y Recuperación")
 
-        # --- 1. CATÁLOGO DE PROMOCIONES / OFERTAS ---
+        # --- 1. CATÁLOGO DE PROMOCIONES / OFERTAS CON CANJE Y ESTRELLAS ---
         self.frame_promos_scroll = tk.Frame(tab_promos, bg="white")
         self.frame_promos_scroll.pack(fill="both", expand=True, padx=5, pady=5)
 
@@ -212,7 +228,6 @@ class VentanaVecino:
                 usuarios[self.id_usuario]["respuesta_secreta"] = nueva_r.lower()
                 guardar_usuarios(usuarios)
                 
-                # Actualizar datos locales y etiqueta visual
                 self.datos = usuarios[self.id_usuario]
                 self.lbl_pregunta_actual.config(text=f"\"{nueva_p}\"")
                 
@@ -237,43 +252,156 @@ class VentanaVecino:
         ).pack(anchor="w")
 
         self.actualizar_todo()
-
-        # 🔔 Verificar si hay respuestas nuevas del admin/dev al iniciar sesión
         self.verificar_mensajes_nuevos_vecino()
 
         # Botón Cerrar Sesión
         tk.Button(self.root, text="🚪 Cerrar Sesión", bg="#757575", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self.cerrar_sesion_cb, cursor="hand2", pady=4).pack(pady=8)
 
+    def canjear_oferta(self, promo_index):
+        """Procesa el canje de la oferta, descuenta puntos, reduce stock y abre reseña con estrellas."""
+        promos = cargar_promociones()
+        if promo_index < 0 or promo_index >= len(promos):
+            messagebox.showerror("Error", "La promoción ya no está disponible.")
+            return
+
+        promo = promos[promo_index]
+        costo_pts = promo.get("puntos", 0)
+        stock_actual = promo.get("stock", 10)
+        tienda_id = promo.get("tienda_id")
+        tienda_nombre = promo.get("tienda_nombre", "Bodega")
+
+        usuarios = cargar_usuarios()
+        saldo_vecino = usuarios.get(self.id_usuario, {}).get("puntos", 0.0)
+
+        if saldo_vecino < costo_pts:
+            messagebox.showerror("Puntos Insuficientes", f"No tienes suficientes puntos.\nNecesitas {costo_pts} PTS y tienes {saldo_vecino} PTS.")
+            return
+
+        if isinstance(stock_actual, int) and stock_actual <= 0:
+            messagebox.showwarning("Agotado", "Lo sentimos, esta oferta ya no tiene stock disponible.")
+            return
+
+        if not messagebox.askyesno("Confirmar Canje", f"¿Canjear '{promo['titulo']}' por {costo_pts} PTS en {tienda_nombre}?"):
+            return
+
+        # 1. Descontar puntos al vecino
+        usuarios[self.id_usuario]["puntos"] = round(saldo_vecino - costo_pts, 1)
+        guardar_usuarios(usuarios)
+
+        # 2. Reducir stock o eliminar si llega a 0
+        if isinstance(stock_actual, int):
+            promo["stock"] = stock_actual - 1
+            if promo["stock"] <= 0:
+                promos.pop(promo_index)
+            else:
+                promos[promo_index] = promo
+            guardar_promociones(promos)
+
+        # 3. Registrar logs
+        try:
+            registrar_accion_tienda(tienda_id, tienda_nombre, self.id_usuario, costo_pts)
+            registrar_accion_cliente(self.id_usuario, "CANJE_OFERTA", -costo_pts, f"Canje de '{promo['titulo']}' en {tienda_nombre}")
+        except Exception as e:
+            print(f"Error registrando logs de canje: {e}")
+
+        messagebox.showinfo("¡Canje Exitoso!", f"Has adquirido '{promo['titulo']}' correctamente.\n\nTus puntos han sido descontados. ¡Preséntate en {tienda_nombre} con tu DNI para reclamarlo!")
+        
+        # 4. Abrir ventana de calificación con estrellas
+        self.dialogo_calificar_tienda(tienda_id, tienda_nombre)
+        self.actualizar_todo()
+
+    def dialogo_calificar_tienda(self, tienda_id, tienda_nombre):
+        """Muestra una ventana modal para que el vecino califique con estrellas y reseña."""
+        win_cal = tk.Toplevel(self.root)
+        win_cal.title(f"Calificar a {tienda_nombre}")
+        win_cal.geometry("380x360")
+        win_cal.resizable(False, False)
+        win_cal.grab_set()
+
+        if hasattr(self.root, 'icon_img'):
+            win_cal.iconphoto(False, self.root.icon_img)
+
+        tk.Label(win_cal, text=f"⭐ Califica tu experiencia ⭐", font=("Arial", 12, "bold"), fg="#E65100").pack(pady=(15, 5))
+        tk.Label(win_cal, text=f"¿Qué tal te pareció la atención en {tienda_nombre}?", font=("Arial", 9), fg="#555").pack(pady=(0, 10))
+
+        tk.Label(win_cal, text="Selecciona Estrellas:", font=("Arial", 9, "bold")).pack(anchor="w", padx=20)
+        cb_estrellas = ttk.Combobox(win_cal, values=["⭐⭐⭐⭐⭐ (5/5 - Excelente)", "⭐⭐⭐⭐ (4/5 - Muy Bueno)", "⭐⭐⭐ (3/5 - Bueno)", "⭐⭐ (2/5 - Regular)", "⭐ (1/5 - Malo)"], state="readonly", width=35)
+        cb_estrellas.pack(padx=20, pady=5)
+        cb_estrellas.current(0)
+
+        tk.Label(win_cal, text="Deja un comentario o reseña:", font=("Arial", 9, "bold")).pack(anchor="w", padx=20, pady=(10, 2))
+        txt_comentario = tk.Text(win_cal, width=40, height=4, font=("Arial", 9))
+        txt_comentario.pack(padx=20, pady=5)
+
+        def enviar_calificacion():
+            comentario = txt_comentario.get("1.0", tk.END).strip()
+            estrellas_str = cb_estrellas.get()
+
+            # Guardar la reseña en un log del cliente o enviar mensaje al chat de la tienda
+            detalle_resena = f"Calificación: {estrellas_str} | Reseña: {comentario if comentario else 'Sin comentarios'}"
+            registrar_accion_cliente(self.id_usuario, "RESEÑA_TIENDA", 0, f"Reseña para {tienda_nombre}: {detalle_resena}")
+            
+            messagebox.showinfo("Gracias", "¡Tu calificación y reseña han sido enviadas con éxito!")
+            win_cal.destroy()
+
+        tk.Button(win_cal, text="Enviar Calificación 📤", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), command=enviar_calificacion, relief="flat", pady=6).pack(pady=15)
+
+    def mostrar_guia_condiciones(self):
+        ventana_guia = tk.Toplevel(self.root)
+        ventana_guia.title("📋 Condiciones para Entregar tus Materiales - EcoPuntos")
+        ventana_guia.geometry("580x520")
+        ventana_guia.resizable(False, False)
+        ventana_guia.grab_set()
+
+        frame_head = tk.Frame(ventana_guia, bg="#2E7D32", pady=12)
+        frame_head.pack(fill="x")
+        tk.Label(frame_head, text="🌱 Requisitos para Validar tus Puntos", font=("Arial", 13, "bold"), fg="white", bg="#2E7D32").pack()
+        tk.Label(frame_head, text="Asegúrate de cumplir con estos estándares para evitar rechazos en el centro de acopio.", font=("Arial", 9), fg="#E8F5E9", bg="#2E7D32").pack()
+
+        canvas = tk.Canvas(ventana_guia, bg="#F5F5F5", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(ventana_guia, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas, bg="#F5F5F5", padx=15, pady=10)
+
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        materiales_info = [
+            {"titulo": "🧴 PLÁSTICO (PET / PEAD - Botellas y Envases)", "color": "#1E88E5", "puntos": ["✔️ Limpios y 100% secos.", "✔️ Aplastados o compactados.", "✔️ Sin tapas ni etiquetas pesadas."]},
+            {"titulo": "📦 CARTÓN Y PAPEL", "color": "#F57C00", "puntos": ["✔️ Completamente secos.", "✔️ Desarmados y plegados.", "✔️ Sin cintas ni broches."]},
+            {"titulo": "🍾 VIDRIO", "color": "#388E3C", "puntos": ["✔️ Enjuagados y sin tapas.", "✔️ Botellas ENTERAS.", "⚠️ NO vidrios rotos."]},
+            {"titulo": "🥫 METAL Y LATAS", "color": "#7B1FA2", "puntos": ["✔️ Sin restos de comida.", "✔️ Latas aplastadas.", "✔️ Libres de tóxicos."]}
+        ]
+
+        for mat in materiales_info:
+            card = tk.LabelFrame(scroll_frame, text=f" {mat['titulo']} ", font=("Arial", 10, "bold"), fg=mat["color"], bg="white", bd=1, relief="solid", padx=10, pady=8)
+            card.pack(fill="x", pady=6)
+            for p in mat["puntos"]:
+                tk.Label(card, text=p, font=("Arial", 9), bg="white", anchor="w", justify="left").pack(fill="x", anchor="w", pady=2)
+
+        tk.Button(ventana_guia, text="Entendido 👍", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), relief="flat", command=ventana_guia.destroy, cursor="hand2", pady=6).pack(fill="x", padx=15, pady=8)
+
     def obtener_rango_vecino(self, puntos):
-        """Calcula el rango/insignia ecológico según los puntos acumulados."""
         try:
             pts = float(puntos)
         except (ValueError, TypeError):
             pts = 0.0
 
-        if pts > 300:
-            return "👑 Leyenda Ecológica Suprema"
-        elif pts > 150:
-            return "🌳 Guerrero Verde"
-        elif pts > 50:
-            return "🌿 Reciclador Activo"
-        else:
-            return "🌱 Eco-Novato"
+        if pts > 300: return "👑 Leyenda Ecológica Suprema"
+        elif pts > 150: return "🌳 Guerrero Verde"
+        elif pts > 50: return "🌿 Reciclador Activo"
+        else: return "🌱 Eco-Novato"
 
     def verificar_mensajes_nuevos_vecino(self):
-        """Verifica si el admin/dev ha respondido al vecino y hay mensajes sin leer."""
         mensajes = cargar_mensajes_chat()
         msg_cliente = [m for m in mensajes if m.get("dni_cliente") == self.id_usuario]
-        hay_nuevos = any(m.get("rol") in ["admin", "desarrollador"] and not m.get("leido", False) for m in msg_cliente)
-        
-        if hay_nuevos:
-            messagebox.showinfo(
-                "💬 Respuesta de Soporte", 
-                "¡Tienes nuevas respuestas de la administración o soporte en tu chat!"
-            )
+        if any(m.get("rol") in ["admin", "desarrollador"] and not m.get("leido", False) for m in msg_cliente):
+            messagebox.showinfo("💬 Respuesta de Soporte", "¡Tienes nuevas respuestas de la administración o soporte en tu chat!")
 
     def mostrar_pantalla_suspendido(self):
-        """Muestra una interfaz de bloqueo si la cuenta se encuentra suspendida."""
         self.root.config(bg="#F8D7DA")
         self.root.title("Cuenta Suspendida - EcoPuntos")
         self.root.geometry("650x450")
@@ -282,75 +410,30 @@ class VentanaVecino:
         frame_aviso = tk.Frame(self.root, bg="#F8D7DA", padx=20, pady=20)
         frame_aviso.pack(fill="both", expand=True)
 
-        tk.Label(
-            frame_aviso, 
-            text="⚠️ CUENTA SUSPENDIDA TEMPORALMENTE", 
-            font=("Arial", 15, "bold"), 
-            fg="#721C24", 
-            bg="#F8D7DA"
-        ).pack(pady=10)
+        tk.Label(frame_aviso, text="⚠️ CUENTA SUSPENDIDA TEMPORALMENTE", font=("Arial", 15, "bold"), fg="#721C24", bg="#F8D7DA").pack(pady=10)
+        motivo = self.datos.get("motivo_suspension", "Actividad anómala detectada.")
+        tk.Label(frame_aviso, text=f"Motivo del Administrador:\n{motivo}", font=("Arial", 10), fg="#721C24", bg="#F8D7DA", justify="center", wraplength=550).pack(pady=10)
 
-        motivo = self.datos.get("motivo_suspension", "Actividad anómala detectada en puntos o canje de promociones.")
-        tk.Label(
-            frame_aviso, 
-            text=f"Motivo del Administrador:\n{motivo}", 
-            font=("Arial", 10), 
-            fg="#721C24", 
-            bg="#F8D7DA",
-            justify="center",
-            wraplength=550
-        ).pack(pady=10)
-
-        tk.Label(
-            frame_aviso, 
-            text="Si consideras que esto es un error, redacta una justificación para el administrador:", 
-            font=("Arial", 10, "bold"), 
-            fg="#333333", 
-            bg="#F8D7DA"
-        ).pack(anchor="w", padx=20, pady=(10, 0))
-
+        tk.Label(frame_aviso, text="Redacta una justificación para el administrador:", font=("Arial", 10, "bold"), fg="#333333", bg="#F8D7DA").pack(anchor="w", padx=20, pady=(10, 0))
         txt_justificacion = tk.Text(frame_aviso, width=70, height=6, font=("Arial", 10))
         txt_justificacion.pack(pady=5)
         
-        justificacion_previa = self.datos.get("justificacion_cliente", "")
-        if justificacion_previa:
-            txt_justificacion.insert("1.0", justificacion_previa)
+        if self.datos.get("justificacion_cliente", ""):
+            txt_justificacion.insert("1.0", self.datos.get("justificacion_cliente", ""))
 
         def enviar_justificacion():
             texto = txt_justificacion.get("1.0", tk.END).strip()
             if not texto:
-                messagebox.showwarning("Atención", "Por favor ingresa una justificación antes de enviar.")
+                messagebox.showwarning("Atención", "Por favor ingresa una justificación.")
                 return
-
             usuarios = cargar_usuarios()
             if self.id_usuario in usuarios:
                 usuarios[self.id_usuario]["justificacion_cliente"] = texto
                 guardar_usuarios(usuarios)
-                messagebox.showinfo("Enviado", "Tu justificación ha sido enviada al administrador correctamente.")
-            else:
-                messagebox.showerror("Error", "No se encontró el usuario en la base de datos.")
+                messagebox.showinfo("Enviado", "Tu justificación ha sido enviada al administrador.")
 
-        tk.Button(
-            frame_aviso, 
-            text="Enviar Justificación al Admin 📤", 
-            bg="#28A745", 
-            fg="white", 
-            font=("Arial", 10, "bold"), 
-            relief="flat",
-            command=enviar_justificacion,
-            cursor="hand2"
-        ).pack(pady=10)
-
-        tk.Button(
-            frame_aviso, 
-            text="🚪 Cerrar Sesión", 
-            bg="#757575", 
-            fg="white", 
-            font=("Arial", 10, "bold"), 
-            relief="flat", 
-            command=self.cerrar_sesion_cb, 
-            cursor="hand2"
-        ).pack(pady=5)
+        tk.Button(frame_aviso, text="Enviar Justificación al Admin 📤", bg="#28A745", fg="white", font=("Arial", 10, "bold"), relief="flat", command=enviar_justificacion, cursor="hand2").pack(pady=10)
+        tk.Button(frame_aviso, text="🚪 Cerrar Sesión", bg="#757575", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self.cerrar_sesion_cb, cursor="hand2").pack(pady=5)
 
     def aplicar_icono(self):
         ruta_png = os.path.join("img", "logo.png")
@@ -367,18 +450,14 @@ class VentanaVecino:
         
         puntos_actuales = self.datos.get('puntos', 0)
         self.lbl_puntos.config(text=f"{puntos_actuales} PTS")
-        
-        # Actualizar insignia/rango dinámicamente
-        nuevo_rango = self.obtener_rango_vecino(puntos_actuales)
-        self.lbl_rango.config(text=f"Rango: {nuevo_rango}")
+        self.lbl_rango.config(text=f"Rango: {self.obtener_rango_vecino(puntos_actuales)}")
 
         self.cargar_catalogo_promociones()
 
         for item in self.tabla_reciclaje.get_children(): self.tabla_reciclaje.delete(item)
         for item in self.tabla_movimientos.get_children(): self.tabla_movimientos.delete(item)
 
-        historial = cargar_log_clientes()
-        for reg in reversed(historial):
+        for reg in reversed(cargar_log_clientes()):
             if reg.get("dni_cliente") == self.id_usuario:
                 tipo = reg.get("tipo", "")
                 puntos = reg.get("puntos", 0)
@@ -391,67 +470,64 @@ class VentanaVecino:
                     try:
                         info = detalle.replace("Reciclaje de ", "").replace(" kg)", "")
                         partes = info.split(" (")
-                        material = partes[0]
-                        peso = partes[1] if len(partes) > 1 else "-"
+                        material, peso = partes[0], partes[1] if len(partes) > 1 else "-"
                     except Exception:
                         material, peso = detalle, "-"
-                    
                     self.tabla_reciclaje.insert("", "end", values=(fecha, material, peso, puntos))
 
         self.cargar_chat()
 
     def cargar_catalogo_promociones(self):
-            for w in self.frame_promos_scroll.winfo_children():
-                w.destroy()
+        for w in self.frame_promos_scroll.winfo_children():
+            w.destroy()
 
-            promos = cargar_promociones()
-            if not promos:
-                tk.Label(
-                    self.frame_promos_scroll, 
-                    text="🛍️ No hay promociones disponibles en este momento.", 
-                    font=("Arial", 11, "italic"), 
-                    bg="white", 
-                    fg="#757575"
-                ).pack(pady=40)
-                return
+        promos = cargar_promociones()
+        if not promos:
+            tk.Label(self.frame_promos_scroll, text="🛍️ No hay promociones disponibles en este momento.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=40)
+            return
 
-            self.referencias_img_vecino = []
+        self.referencias_img_vecino = []
+        from interfaces.utils import obtener_imagen_miniatura
 
-            from interfaces.utils import obtener_imagen_miniatura
+        for index, p in enumerate(promos):
+            card = tk.Frame(self.frame_promos_scroll, bg="#FFF8E1", bd=1, relief="solid", padx=10, pady=10)
+            card.pack(fill="x", pady=5, padx=5)
 
-            for p in promos:
-                card = tk.Frame(self.frame_promos_scroll, bg="#FFF8E1", bd=1, relief="solid", padx=10, pady=10)
-                card.pack(fill="x", pady=5, padx=5)
+            ruta_foto = p.get("foto", "")
+            img_tk = obtener_imagen_miniatura(ruta_foto, ancho=75, alto=75)
 
-                ruta_foto = p.get("foto", "")
-                img_tk = obtener_imagen_miniatura(ruta_foto, ancho=75, alto=75)
+            if img_tk:
+                self.referencias_img_vecino.append(img_tk)
+                tk.Label(card, image=img_tk, bg="#FFF8E1").pack(side="left", padx=(0, 12))
+            else:
+                tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#FFE0B2", width=10, height=4).pack(side="left", padx=(0, 12))
 
-                if img_tk:
-                    self.referencias_img_vecino.append(img_tk)
-                    lbl_img = tk.Label(card, image=img_tk, bg="#FFF8E1")
-                    lbl_img.pack(side="left", padx=(0, 12))
-                else:
-                    lbl_no_img = tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#FFE0B2", width=10, height=4)
-                    lbl_no_img.pack(side="left", padx=(0, 12))
+            frame_info = tk.Frame(card, bg="#FFF8E1")
+            frame_info.pack(side="left", fill="both", expand=True)
 
-                frame_info = tk.Frame(card, bg="#FFF8E1")
-                frame_info.pack(side="left", fill="both", expand=True)
+            stock_text = f" | 📦 Stock: {p.get('stock', 'Ilimitado')}" if 'stock' in p else ""
+            tk.Label(frame_info, text=f"🏪 {p.get('tienda_nombre', 'Tienda')}{stock_text}", font=("Arial", 9, "bold"), fg="#E65100", bg="#FFF8E1").pack(anchor="w")
+            tk.Label(frame_info, text=f"📌 {p.get('titulo', 'Oferta')}", font=("Arial", 11, "bold"), bg="#FFF8E1").pack(anchor="w", pady=(2, 0))
+            tk.Label(frame_info, text=f"📝 {p.get('descripcion', '')}", font=("Arial", 9), fg="#424242", bg="#FFF8E1").pack(anchor="w")
+            
+            tk.Label(frame_info, text=f"Precio: S/ {p.get('precio_soles', 0):.2f}  ➔  Costo: {p.get('puntos', 0)} PTS", font=("Arial", 10, "bold"), fg="#2E7D32", bg="#FFF8E1").pack(anchor="w", pady=(4, 0))
 
-                tk.Label(frame_info, text=f"🏪 {p.get('tienda_nombre', 'Tienda Afiliada')}", font=("Arial", 9, "bold"), fg="#E65100", bg="#FFF8E1").pack(anchor="w")
-                tk.Label(frame_info, text=f"📌 {p.get('titulo', 'Oferta')}", font=("Arial", 11, "bold"), bg="#FFF8E1").pack(anchor="w", pady=(2, 0))
-                tk.Label(frame_info, text=f"📝 {p.get('descripcion', '')}", font=("Arial", 9), fg="#424242", bg="#FFF8E1").pack(anchor="w")
-                
-                tk.Label(
-                    frame_info, 
-                    text=f"Precio Normal: S/ {p.get('precio_soles', 0):.2f}  ➔  Costo: {p.get('puntos', 0)} PTS", 
-                    font=("Arial", 10, "bold"), 
-                    fg="#2E7D32", 
-                    bg="#FFF8E1"
-                ).pack(anchor="w", pady=(4, 0))
+            # Botón de Canje para el Vecino
+            tk.Button(
+                card, 
+                text="🎟️ Canjear Oferta", 
+                bg="#2E7D32", 
+                fg="white", 
+                font=("Arial", 9, "bold"), 
+                relief="flat", 
+                command=lambda idx=index: self.canjear_oferta(idx),
+                cursor="hand2",
+                padx=10,
+                pady=5
+            ).pack(side="right", padx=10)
 
     def cargar_chat(self):
         marcar_chat_como_leido(self.id_usuario, "vecino")
-
         self.txt_chat.config(state="normal")
         self.txt_chat.delete("1.0", tk.END)
 
@@ -459,20 +535,12 @@ class VentanaVecino:
         msg_cliente = [m for m in mensajes if m.get("dni_cliente") == self.id_usuario]
 
         if not msg_cliente:
-            self.txt_chat.insert(tk.END, "💬 Inicia una conversación con el equipo de soporte, administradores o desarrolladores.\n\n")
+            self.txt_chat.insert(tk.END, "💬 Inicia una conversación con el equipo de soporte o administración.\n\n")
         else:
             for m in msg_cliente:
-                autor = m.get("autor", "Usuario")
-                rol = m.get("rol", "").upper()
-                texto = m.get("mensaje", "")
-                fecha = m.get("fecha", "")
-                leido = m.get("leido", True)
-
+                autor, rol, texto, fecha, leido = m.get("autor", "Usuario"), m.get("rol", "").upper(), m.get("mensaje", ""), m.get("fecha", ""), m.get("leido", True)
                 check_leido = " (✓ Leído)" if leido else " (🔔 Nuevo)"
-
-                etiqueta = f"[{fecha}] {autor} ({rol}){check_leido}:\n"
-                self.txt_chat.insert(tk.END, etiqueta)
-                self.txt_chat.insert(tk.END, f"{texto}\n\n")
+                self.txt_chat.insert(tk.END, f"[{fecha}] {autor} ({rol}){check_leido}:\n{texto}\n\n")
 
         self.txt_chat.see(tk.END)
         self.txt_chat.config(state="disabled")
@@ -480,13 +548,6 @@ class VentanaVecino:
     def enviar_mensaje(self):
         texto = self.ent_msg.get().strip()
         if not texto: return
-
-        guardar_mensaje_chat(
-            dni_cliente=self.id_usuario,
-            autor_nombre=self.datos.get("nombre", "Vecino"),
-            rol_autor="vecino",
-            mensaje=texto
-        )
-
+        guardar_mensaje_chat(dni_cliente=self.id_usuario, autor_nombre=self.datos.get("nombre", "Vecino"), rol_autor="vecino", mensaje=texto)
         self.ent_msg.delete(0, tk.END)
         self.cargar_chat()
