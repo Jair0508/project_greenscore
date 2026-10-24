@@ -51,6 +51,6 @@
         "autor": "Administrador Desarrollador",
         "rol": "admin",
         "mensaje": "+999 puntos bro",
-        "leido": false
+        "leido": true
     }
 ]
