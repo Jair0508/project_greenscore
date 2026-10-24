@@ -138,5 +138,12 @@
         "tipo": "ABONO_RECICLAJE",
         "puntos": 6.0,
         "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (1.0 kg)"
+    },
+    {
+        "fecha": "2026-10-24 02:50:52",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_OFERTA",
+        "puntos": -100.0,
+        "detalle": "Canje de 'Coca' en Bodega Luchito"
     }
 ]

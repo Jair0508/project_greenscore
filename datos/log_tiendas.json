@@ -54,5 +54,12 @@
         "tienda_nombre": "Bodega Luchito",
         "dni_cliente": "952089997",
         "puntos_descontados": 0
+    },
+    {
+        "fecha": "2026-10-24 02:50:52",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 100.0
     }
 ]
