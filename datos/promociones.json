@@ -6,6 +6,17 @@
         "descripcion": "100GR",
         "precio_soles": 3.0,
         "puntos": 30.0,
-        "foto": "C:/Users/Deviluke/Downloads/turron calderon.png"
+        "foto": "C:/Users/Deviluke/Downloads/turron calderon.png",
+        "stock": 9
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Coca",
+        "descripcion": "de la buena",
+        "precio_soles": 10.0,
+        "puntos": 100.0,
+        "stock": 22,
+        "foto": "C:/Users/dell/OneDrive/Escritorio/Proyecto/Ofertas/CocaCola 3L.png"
     }
 ]
