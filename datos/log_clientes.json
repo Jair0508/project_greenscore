@@ -47,5 +47,103 @@
         "tipo": "ABONO_RECICLAJE",
         "puntos": 60000.0,
         "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (10000.0 kg)"
+    },
+    {
+        "fecha": "2026-10-24 00:10:31",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -30,
+        "detalle": "Compra/Canje en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-24 00:32:01",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_OFERTA",
+        "puntos": -30.0,
+        "detalle": "Canje de 'TURRON CALDERÓN' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-24 00:32:47",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Bodega Luchito: Calificación: ⭐⭐⭐⭐ (4/5 - Muy Bueno) | Reseña: el tal sebas es pepon"
+    },
+    {
+        "fecha": "2026-10-24 00:44:53",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -110,
+        "detalle": "Compra/Canje en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-24 00:58:31",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_OFERTA",
+        "puntos": -110.0,
+        "detalle": "Canje de 'Gaseosa Coca Cola 3L' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-24 00:58:44",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Bodega Luchito: Calificación: ⭐ (1/5 - Malo) | Reseña: 10/10"
+    },
+    {
+        "fecha": "2026-10-24 01:12:41",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_OFERTA",
+        "puntos": -100.0,
+        "detalle": "Canje de 'Coca' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-24 01:12:51",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Bodega Luchito: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: muchos ceros"
+    },
+    {
+        "fecha": "2026-10-24 01:14:27",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -100,
+        "detalle": "Compra/Canje en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-24 01:22:45",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_OFERTA",
+        "puntos": -100.0,
+        "detalle": "Canje de 'Coca' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-24 01:22:55",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Bodega Luchito: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: waza"
+    },
+    {
+        "fecha": "2026-10-24 01:26:51",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": 0,
+        "detalle": "Retiro de producto canjeado en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-24 01:30:01",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 6.0,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (1.0 kg)"
+    },
+    {
+        "fecha": "2026-10-24 02:50:52",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_OFERTA",
+        "puntos": -100.0,
+        "detalle": "Canje de 'Coca' en Bodega Luchito"
     }
 ]

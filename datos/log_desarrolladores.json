@@ -180,5 +180,26 @@
         "autor_nombre": "Administrador Desarrollador",
         "accion": "SUMAR_PUNTOS",
         "objetivo": "Abonó 60000.0 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-10-24 01:30:01",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 6.0 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-10-24 01:30:42",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 952089997. Motivo: por gay"
+    },
+    {
+        "fecha": "2026-10-24 01:32:54",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó suspensión a 952089997. Motivo Admin: me la chupo"
     }
 ]
