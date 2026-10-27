@@ -61,5 +61,96 @@
         "tienda_nombre": "Bodega Luchito",
         "dni_cliente": "952089997",
         "puntos_descontados": 100.0
+    },
+    {
+        "fecha": "2026-10-27 00:55:23",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-10-27 01:01:34",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-10-27 01:01:34",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 100
+    },
+    {
+        "fecha": "2026-10-27 01:14:53",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-10-27 01:14:53",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 102
+    },
+    {
+        "fecha": "2026-10-27 01:23:40",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-10-27 01:23:40",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 100
+    },
+    {
+        "fecha": "2026-10-27 01:23:40",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 102
+    },
+    {
+        "fecha": "2026-10-27 01:27:12",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-10-27 01:32:28",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-10-27 01:33:18",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-10-27 01:33:18",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 100
+    },
+    {
+        "fecha": "2026-10-27 01:33:18",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 102
     }
 ]

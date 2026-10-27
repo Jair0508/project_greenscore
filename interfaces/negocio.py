@@ -48,12 +48,26 @@ class VentanaNegocio:
             
             tk.Label(
                 frame_top, 
-                text=f"🏪 Terminal de Canje: {self.nombre_negocio}", 
+                text=f"🏪 Terminal de Bodega: {self.nombre_negocio}", 
                 font=("Arial", 14, "bold"), 
                 fg="white", 
                 bg="#E65100", 
                 pady=12
-            ).pack()
+            ).pack(side="left", padx=20)
+
+            # Botón de Términos y Condiciones de la Bodega
+            tk.Button(
+                frame_top,
+                text="📄! Términos de Bodega",
+                bg="#BF360C",
+                fg="white",
+                font=("Arial", 9, "bold"),
+                relief="flat",
+                command=self.mostrar_terminos_negocio,
+                cursor="hand2",
+                padx=10,
+                pady=5
+            ).pack(side="right", padx=20)
 
             # BOTÓN DE CERRAR SESIÓN FIJO ABAJO
             tk.Button(
@@ -91,7 +105,7 @@ class VentanaNegocio:
             # 1. Buscador de Vecino
             frame_busca = tk.LabelFrame(
                 frame_central, 
-                text=" 1. Consultar Cuenta del Vecino ", 
+                text=" 1. Consultar Cuenta del Vecino (Presencial) ", 
                 font=("Arial", 11, "bold"), 
                 padx=15, 
                 pady=10, 
@@ -122,7 +136,7 @@ class VentanaNegocio:
             # 2. Estado de Cuenta
             self.frame_info = tk.LabelFrame(
                 frame_central, 
-                text=" 2. Estado de Cuenta ", 
+                text=" 2. Estado de Cuenta del Vecino (Máx. 2000 PTS) ", 
                 font=("Arial", 11, "bold"), 
                 padx=15, 
                 pady=10, 
@@ -149,46 +163,27 @@ class VentanaNegocio:
             )
             self.lbl_saldo.pack(anchor="w", pady=5)
 
-            # Botones de Operación (Con contraste de texto corregido)
-            frame_botones_accion = tk.Frame(frame_central, bg="white")
-            frame_botones_accion.pack(fill="x", pady=(0, 10))
-
-            self.btn_validar_oferta = tk.Button(
-                frame_botones_accion, 
-                text="📦 Validar y Entregar Oferta (0 Puntos)", 
-                bg="#2E7D32", 
-                fg="white", 
-                activeforeground="white",
-                disabledforeground="#E0E0E0",
-                font=("Arial", 10, "bold"), 
-                state="disabled", 
-                relief="flat", 
-                command=self.validar_entrega_oferta,
-                pady=8,
-                cursor="hand2"
-            )
-            self.btn_validar_oferta.pack(side="left", fill="x", expand=True, padx=(0, 5))
-
+            # Botón único de Cobro / Canje Presencial (Texto limpio sin la palabra múltiple)
             self.btn_canjear = tk.Button(
-                frame_botones_accion, 
-                text="💳 Descuento Libre en Caja", 
+                frame_central, 
+                text="💳 Canje de Ofertas en Caja", 
                 bg="#E65100", 
                 fg="white", 
                 activeforeground="white",
                 disabledforeground="#E0E0E0",
-                font=("Arial", 10, "bold"), 
+                font=("Arial", 11, "bold"), 
                 state="disabled", 
                 relief="flat", 
                 command=self.abrir_cuadro_canje,
-                pady=8,
+                pady=10,
                 cursor="hand2"
             )
-            self.btn_canjear.pack(side="right", fill="x", expand=True, padx=(5, 0))
+            self.btn_canjear.pack(fill="x", pady=(0, 10))
 
             # Botón Publicar Promoción
             tk.Button(
                 frame_central, 
-                text="📢 Publicar Nueva Promoción / Oferta", 
+                text="📢 Publicar Nueva Oferta / Promoción", 
                 bg="#1976D2", 
                 fg="white", 
                 activeforeground="white",
@@ -221,7 +216,7 @@ class VentanaNegocio:
 
             tk.Label(
                 frame_hist_box, 
-                text="📜 Historial de Canjes Realizados a Clientes:", 
+                text="📜 Historial de Canjes y Entregas Presenciales Realizadas:", 
                 font=("Arial", 11, "bold"), 
                 bg="white",
                 fg="#333333"
@@ -231,7 +226,7 @@ class VentanaNegocio:
             config_log = [
                 ("fecha", "Fecha / Hora", 200),
                 ("dni_cliente", "DNI del Cliente", 180),
-                ("puntos", "Puntos Descontados", 160)
+                ("puntos", "Puntos / Operación", 160)
             ]
 
             frame_tabla = ttk.Frame(frame_hist_box)
@@ -334,6 +329,54 @@ class VentanaNegocio:
         except Exception as e:
             messagebox.showerror("Error de Interfaz", f"Detalle al cargar Tienda: {str(e)}")
 
+    def mostrar_terminos_negocio(self):
+        """Muestra los Términos y Condiciones específicos para la Bodega / Negocio."""
+        win_tyc = tk.Toplevel(self.root)
+        win_tyc.title("📜 Términos y Condiciones — Bodegas EcoPuntos")
+        win_tyc.geometry("520x460")
+        win_tyc.resizable(False, False)
+        win_tyc.grab_set()
+
+        if hasattr(self.root, 'icon_img'):
+            win_tyc.iconphoto(False, self.root.icon_img)
+
+        tk.Label(win_tyc, text="📜 Términos y Condiciones (Negocios / Bodegas)", font=("Arial", 12, "bold"), fg="#E65100").pack(pady=(15, 10))
+
+        frame_txt = tk.Frame(win_tyc, padx=15, pady=5)
+        frame_txt.pack(fill="both", expand=True)
+
+        scrollbar = ttk.Scrollbar(frame_txt)
+        scrollbar.pack(side="right", fill="y")
+
+        txt_box = tk.Text(
+            frame_txt, 
+            wrap="word", 
+            yscrollcommand=scrollbar.set, 
+            font=("Arial", 10), 
+            bg="#FFFFFF", 
+            fg="#222222", 
+            padx=10, 
+            pady=10
+        )
+        txt_box.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=txt_box.yview)
+
+        contenido = (
+            "REGLAS DE OPERACIÓN PARA BODEGAS Y COMERCIOS — ECOPUNTOS\n\n"
+            "1. GESTIÓN DE CANJES Y VENTAS PRESENCIALES\n"
+            "• Toda transacción de puntos, entrega de productos ofertados o descuentos en caja debe realizarse de forma estrictamente presencial mediante la validación del DNI del vecino en esta terminal.\n\n"
+            "2. LÍMITE DE PUNTOS POR CLIENTE\n"
+            "• Ningún vecino podrá acumular más de 2,000 puntos (S/ 200.00) en su saldo activo. Si un cliente alcanza el tope, se le exhortará a realizar canjes antes de recibir nuevos abonos por reciclaje.\n\n"
+            "3. CONTROL DE INVENTARIO Y STOCK\n"
+            "• El comercio es responsable de mantener actualizado el stock y los precios de sus ofertas publicadas. Cada entrega validada descuenta la unidad correspondiente del sistema.\n\n"
+            "Al operar como comercio afiliado, usted acepta cumplir estas normativas."
+        )
+
+        txt_box.insert("1.0", contenido)
+        txt_box.config(state="disabled")
+
+        tk.Button(win_tyc, text="Entendido 👍", bg="#E65100", fg="white", font=("Arial", 10, "bold"), command=win_tyc.destroy, padx=20, pady=8, cursor="hand2").pack(pady=12)
+
     def actualizar_historial_tienda(self):
         for item in self.tabla_historial_tienda.get_children():
             self.tabla_historial_tienda.delete(item)
@@ -341,18 +384,19 @@ class VentanaNegocio:
         logs = cargar_log_tiendas()
         for log in reversed(logs):
             if log.get("tienda_id") == self.id_usuario:
+                puntos_int = int(float(log.get('puntos_descontados', 0)))
+                puntos_txt = f"{puntos_int} PTS" if puntos_int == 0 else f"-{puntos_int} PTS"
                 self.tabla_historial_tienda.insert(
                     "", 
                     "end", 
                     values=(
                         log.get("fecha", "-"), 
                         log.get("dni_cliente", "-"), 
-                        f"-{log.get('puntos_descontados', 0)} PTS"
+                        puntos_txt
                     )
                 )
 
     def actualizar_resenas_negocio(self):
-        """Filtra y calcula las calificaciones de este negocio específico desde el log de clientes."""
         for item in self.tabla_resenas_negocio.get_children():
             self.tabla_resenas_negocio.delete(item)
 
@@ -420,7 +464,7 @@ class VentanaNegocio:
             mis_promos = [(i, p) for i, p in enumerate(promos) if p.get("tienda_id") == self.id_usuario]
 
             if not mis_promos:
-                tk.Label(frame_container, text="No tienes promociones activas actualmente.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=50)
+                tk.Label(frame_container, text="No tienes ofertas publicadas actualmente.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=50)
                 return
 
             tk.Label(frame_container, text=f"Total de ofertas publicadas: {len(mis_promos)}", font=("Arial", 10, "bold"), bg="white", fg="#E65100").pack(anchor="w", pady=(0, 10))
@@ -443,13 +487,14 @@ class VentanaNegocio:
                     tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#FFE0B2", width=8, height=3).pack(side="left", padx=(0, 10))
 
                 stock_disp = p.get("stock", "Ilimitado")
-                txt_info = f"📌 {p['titulo']} (Costo: {p['puntos']} PTS / S/ {p['precio_soles']:.2f})\n📦 Stock Disponible: {stock_disp}\n📝 {p['descripcion']}"
+                puntos_int = int(float(p['puntos']))
+                txt_info = f"📌 {p['titulo']} (Costo: {puntos_int} PTS / S/ {p['precio_soles']:.2f})\n📦 Stock Disponible: {stock_disp}\n📝 {p['descripcion']}"
                 tk.Label(card, text=txt_info, font=("Arial", 9), bg="#FFF8E1", justify="left").pack(side="left", anchor="w", expand=True)
 
                 def borrar(i=idx):
                     if messagebox.askyesno("Eliminar Promoción", "¿Deseas eliminar permanentemente esta oferta del sistema?"):
                         if eliminar_promocion(i, self.id_usuario, self.nombre_negocio):
-                            messagebox.showinfo("Éxito", "La promoción ha sido eliminada correctamente.")
+                            messagebox.showinfo("Éxito", "La oferta ha sido eliminada correctamente.")
                             refrescar()
 
                 tk.Button(card, text="🗑️ Eliminar", bg="#C62828", fg="white", activeforeground="white", font=("Arial", 9, "bold"), relief="flat", command=borrar, cursor="hand2", padx=8, pady=4).pack(side="right", padx=5)
@@ -471,66 +516,153 @@ class VentanaNegocio:
 
         if dni in usuarios and usuarios[dni].get("rol") == "vecino":
             self.vecino_actual = dni
+            puntos_enteros = int(float(usuarios[dni].get('puntos', 0)))
             self.lbl_nombre.config(text=f"Vecino: {usuarios[dni].get('nombre', 'Sin nombre')} (DNI: {dni})")
-            self.lbl_saldo.config(text=f"Saldo Disponible: {usuarios[dni].get('puntos', 0)} PTS")
+            self.lbl_saldo.config(text=f"Saldo Disponible: {puntos_enteros} PTS")
             self.btn_canjear.config(state="normal")
-            self.btn_validar_oferta.config(state="normal")
         else:
             self.vecino_actual = None
             self.lbl_nombre.config(text="Vecino no encontrado")
             self.lbl_saldo.config(text="Saldo Disponible: 0 PTS")
             self.btn_canjear.config(state="disabled")
-            self.btn_validar_oferta.config(state="disabled")
             messagebox.showwarning("No Encontrado", "El DNI ingresado no pertenece a un vecino registrado.")
-
-    def validar_entrega_oferta(self):
-        if not self.vecino_actual: return
-
-        usuarios = cargar_usuarios()
-        nombre_vecino = usuarios[self.vecino_actual].get('nombre', 'Cliente')
-
-        if messagebox.askyesno("Confirmar Entrega de Oferta", f"¿Confirmar la entrega del producto canjeado al vecino {nombre_vecino}?\n\nEsta operación valida el cupón con 0 puntos adicionales."):
-            try:
-                registrar_accion_tienda(self.id_usuario, self.nombre_negocio, self.vecino_actual, 0)
-                registrar_accion_cliente(self.vecino_actual, "ENTREGA_OFERTA", 0, f"Retiro de producto canjeado en {self.nombre_negocio}")
-            except Exception as e:
-                print(f"Aviso log entrega: {e}")
-
-            messagebox.showinfo("¡Entrega Exitosa!", f"Se ha validado la entrega del producto a {nombre_vecino}.")
-            self.consultar_vecino()
-            self.actualizar_historial_tienda()
 
     def abrir_cuadro_canje(self):
         if not self.vecino_actual: return
         
         usuarios = cargar_usuarios()
-        saldo_actual = usuarios[self.vecino_actual].get("puntos", 0)
+        saldo_actual = int(float(usuarios[self.vecino_actual].get("puntos", 0)))
 
         if saldo_actual <= 0:
             messagebox.showerror("Saldo Insuficiente", "El vecino no cuenta con puntos para canjear.")
             return
 
-        pts_canje = simpledialog.askinteger(
-            "Confirmar Canje", 
-            f"Vecino: {usuarios[self.vecino_actual]['nombre']}\nSaldo actual: {saldo_actual} PTS\n\n¿Cuántos puntos desea descontar?",
-            parent=self.root, 
-            minvalue=1, 
-            maxvalue=saldo_actual
-        )
+        # Cargar promociones activas de ESTE negocio
+        promos = cargar_promociones()
+        mis_promos = [(idx, p) for idx, p in enumerate(promos) if p.get("tienda_id") == self.id_usuario]
 
-        if pts_canje and messagebox.askyesno("Confirmar Operación", f"¿Descontar {pts_canje} puntos?"):
-            usuarios[self.vecino_actual]["puntos"] = round(usuarios[self.vecino_actual]["puntos"] - pts_canje, 1)
+        if not mis_promos:
+            messagebox.showwarning("Sin Ofertas", "Este comercio no tiene ofertas o promociones publicadas actualmente.")
+            return
+
+        # Ventana personalizada con título limpio (sin mención múltiple)
+        win_cobro = tk.Toplevel(self.root)
+        win_cobro.title("Canje de Ofertas en Caja")
+        win_cobro.geometry("480x450")
+        win_cobro.resizable(False, False)
+        win_cobro.grab_set()
+
+        if hasattr(self.root, 'icon_img'):
+            win_cobro.iconphoto(False, self.root.icon_img)
+
+        tk.Label(
+            win_cobro, 
+            text=f"Vecino: {usuarios[self.vecino_actual].get('nombre', 'Cliente')} | Saldo: {saldo_actual} PTS", 
+            font=("Arial", 11, "bold"), 
+            fg="#E65100"
+        ).pack(anchor="w", padx=20, pady=(15, 5))
+
+        tk.Label(win_cobro, text="Seleccione una o varias ofertas a canjear:", font=("Arial", 9, "bold")).pack(anchor="w", padx=20, pady=(5, 5))
+
+        # Contenedor con scroll para las casillas de verificación
+        frame_scroll_container = tk.Frame(win_cobro, bg="white", bd=1, relief="solid")
+        frame_scroll_container.pack(fill="both", expand=True, padx=20, pady=5)
+
+        canvas = tk.Canvas(frame_scroll_container, bg="white", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(frame_scroll_container, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas, bg="white", padx=10, pady=5)
+
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Diccionario para almacenar las variables de los Checkbuttons
+        vars_promos = {}
+
+        for orig_idx, p in mis_promos:
+            titulo = p.get('titulo', 'Oferta')
+            costo_pts = int(float(p.get('puntos', 0)))
+            stock_disp = p.get('stock', 10)
+            
+            var = tk.IntVar()
+            vars_promos[orig_idx] = (var, p)
+            
+            texto_chk = f"{titulo} — Costo: {costo_pts} PTS (Stock: {stock_disp})"
+            chk = tk.Checkbutton(scroll_frame, text=texto_chk, variable=var, font=("Arial", 9), bg="white", anchor="w")
+            chk.pack(anchor="w", fill="x", pady=3)
+
+        def procesar_canjes_multiples():
+            seleccionadas = []
+            total_puntos_requeridos = 0
+
+            for orig_idx, (var, promo) in vars_promos.items():
+                if var.get() == 1:
+                    costo = int(float(promo.get('puntos', 0)))
+                    stock = promo.get('stock', 10)
+                    
+                    if isinstance(stock, int) and stock <= 0:
+                        messagebox.showwarning("Agotado", f"La oferta '{promo['titulo']}' ya no tiene stock disponible.", parent=win_cobro)
+                        return
+                    
+                    seleccionadas.append((orig_idx, promo, costo))
+                    total_puntos_requeridos += costo
+
+            if not seleccionadas:
+                messagebox.showwarning("Atención", "Debe seleccionar al menos una promoción para canjear.", parent=win_cobro)
+                return
+
+            # Validación estricta de puntos insuficientes
+            if total_puntos_requeridos > saldo_actual:
+                messagebox.showerror(
+                    "Puntos Insuficientes", 
+                    f"El vecino no cuenta con suficientes puntos.\n\nTotal requerido: {total_puntos_requeridos} PTS\nSaldo disponible: {saldo_actual} PTS", 
+                    parent=win_cobro
+                )
+                return
+
+            # Mensaje de confirmación
+            nombres_ofertas = ", ".join([f"'{p['titulo']}'" for _, p, _ in seleccionadas])
+            if not messagebox.askyesno("Confirmación", f"¿Confirmas promoción {nombres_ofertas} por {total_puntos_requeridos} PTS?", parent=win_cobro):
+                return
+
+            # Descontar puntos al vecino (enteros puros)
+            usuarios[self.vecino_actual]["puntos"] = int(saldo_actual - total_puntos_requeridos)
             guardar_usuarios(usuarios)
 
-            try:
-                registrar_accion_tienda(self.id_usuario, self.nombre_negocio, self.vecino_actual, pts_canje)
-                registrar_accion_cliente(self.vecino_actual, "CANJE_TIENDA", -pts_canje, f"Compra/Canje en {self.nombre_negocio}")
-            except Exception as e:
-                print(f"Aviso log: {e}")
+            # Actualizar stocks y registrar logs por cada oferta seleccionada
+            promos_actualizadas = cargar_promociones()
+            for orig_idx, promo, costo in seleccionadas:
+                for g_idx, gp in enumerate(promos_actualizadas):
+                    if gp.get("tienda_id") == self.id_usuario and gp.get("titulo") == promo.get("titulo") and gp.get("puntos") == promo.get("puntos"):
+                        stk = gp.get("stock", 10)
+                        if isinstance(stk, int):
+                            gp["stock"] = stk - 1
+                            if gp["stock"] <= 0:
+                                promos_actualizadas.pop(g_idx)
+                        break
+                
+                try:
+                    registrar_accion_tienda(self.id_usuario, self.nombre_negocio, self.vecino_actual, costo)
+                    registrar_accion_cliente(self.vecino_actual, "ENTREGA_OFERTA", -costo, f"Canje presencial de '{promo['titulo']}' en {self.nombre_negocio}")
+                except Exception as e:
+                    print(f"Aviso log multiple: {e}")
 
-            messagebox.showinfo("Éxito", "El canje se ha registrado correctamente.")
+            guardar_promociones(promos_actualizadas)
+
+            messagebox.showinfo("Éxito", f"¡Canje completado! Se han descontado {total_puntos_requeridos} PTS en total.", parent=win_cobro)
+            win_cobro.destroy()
             self.consultar_vecino()
             self.actualizar_historial_tienda()
+
+        # Botones de acción
+        frame_btns = tk.Frame(win_cobro)
+        frame_btns.pack(pady=15)
+
+        tk.Button(frame_btns, text="Aceptar / Canjear Seleccionadas", bg="#E65100", fg="white", font=("Arial", 10, "bold"), width=25, command=procesar_canjes_multiples, relief="flat", cursor="hand2").pack(side="left", padx=5)
+        tk.Button(frame_btns, text="Cancelar", bg="#757575", fg="white", font=("Arial", 10, "bold"), width=12, command=win_cobro.destroy, relief="flat", cursor="hand2").pack(side="right", padx=5)
 
     def dialogo_publicar_promocion(self):
         win_promo = tk.Toplevel(self.root)
@@ -550,16 +682,16 @@ class VentanaNegocio:
         ent_precio = tk.Entry(win_promo, font=("Arial", 10))
         ent_precio.pack(fill="x", padx=20)
 
-        lbl_pts_equiv = tk.Label(win_promo, text="Equivalente: 0.0 PTS", font=("Arial", 10, "bold"), fg="#2E7D32")
+        lbl_pts_equiv = tk.Label(win_promo, text="Equivalente: 0 PTS", font=("Arial", 10, "bold"), fg="#2E7D32")
         lbl_pts_equiv.pack(anchor="w", padx=20, pady=4)
 
         def calcular_pts_event(event=None):
             try:
                 monto_soles = float(ent_precio.get().strip())
-                pts = round(monto_soles / 0.10, 1)
+                pts = int(round(monto_soles / 0.10))
                 lbl_pts_equiv.config(text=f"Equivalente: {pts} PTS")
             except ValueError:
-                lbl_pts_equiv.config(text="Equivalente: 0.0 PTS")
+                lbl_pts_equiv.config(text="Equivalente: 0 PTS")
 
         ent_precio.bind("<KeyRelease>", calcular_pts_event)
 
@@ -604,7 +736,7 @@ class VentanaNegocio:
 
             try:
                 precio_soles = float(precio_str)
-                pts_requeridos = round(precio_soles / 0.10, 1)
+                pts_requeridos = int(round(precio_soles / 0.10))
                 stock = int(stock_str)
                 if stock <= 0: raise ValueError()
             except ValueError:
@@ -624,7 +756,7 @@ class VentanaNegocio:
             })
             guardar_promociones(promos)
 
-            messagebox.showinfo("Éxito", "¡Promoción publicada correctamente!")
+            messagebox.showinfo("Éxito", "¡Oferta publicada correctamente!")
             win_promo.destroy()
 
         tk.Button(win_promo, text="💾 Publicar Oferta", bg="#2E7D32", fg="white", activeforeground="white", font=("Arial", 10, "bold"), command=guardar_promo, relief="flat", pady=6).pack(pady=15)

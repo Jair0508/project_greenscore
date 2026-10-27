@@ -67,9 +67,9 @@
         "correo": "sebas67@gmail.com",
         "telefono": "952999999",
         "clave": "pro67",
-        "puntos": 59326.0,
-        "suspendido": false,
-        "motivo_suspension": "",
+        "puntos": 58510,
+        "suspendido": true,
+        "motivo_suspension": "waza100",
         "justificacion_cliente": "",
         "pregunta_secreta": "cumpleaños",
         "respuesta_secreta": "3107"

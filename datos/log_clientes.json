@@ -145,5 +145,110 @@
         "tipo": "CANJE_OFERTA",
         "puntos": -100.0,
         "detalle": "Canje de 'Coca' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 00:55:23",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -30,
+        "detalle": "Canje presencial de 'TURRON CALDERÓN' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:01:34",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -30,
+        "detalle": "Canje presencial de 'TURRON CALDERÓN' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:01:34",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -100,
+        "detalle": "Canje presencial de 'Coca' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:14:53",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -30,
+        "detalle": "Canje presencial de 'TURRON CALDERÓN' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:14:53",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -102,
+        "detalle": "Canje presencial de 'crack' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:23:40",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -30,
+        "detalle": "Canje presencial de 'TURRON CALDERÓN' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:23:40",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -100,
+        "detalle": "Canje presencial de 'Coca' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:23:40",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -102,
+        "detalle": "Canje presencial de 'crack' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:24:12",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Bodega Luchito: Calificación: ⭐⭐⭐ (3/5 - Bueno) | Reseña: waza2"
+    },
+    {
+        "fecha": "2026-10-27 01:27:12",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -30,
+        "detalle": "Canje presencial de 'TURRON CALDERÓN' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:32:28",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -30,
+        "detalle": "Canje presencial de 'TURRON CALDERÓN' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:33:18",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -30,
+        "detalle": "Canje presencial de 'TURRON CALDERÓN' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:33:18",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -100,
+        "detalle": "Canje presencial de 'Coca' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:33:18",
+        "dni_cliente": "952089997",
+        "tipo": "ENTREGA_OFERTA",
+        "puntos": -102,
+        "detalle": "Canje presencial de 'crack' en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-10-27 01:34:36",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Bodega Luchito: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: waza3"
     }
 ]
