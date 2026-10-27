@@ -51,6 +51,86 @@
         "autor": "Administrador Desarrollador",
         "rol": "admin",
         "mensaje": "+999 puntos bro",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-24 00:34:46",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "hey bro, tranquilo con los puntos, pueden banearte los demas...",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-24 00:45:38",
+        "dni_cliente": "952089997",
+        "autor": "sebas",
+        "rol": "vecino",
+        "mensaje": "calla puto",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-24 01:30:42",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: por gay",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-24 01:32:26",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "baneado",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-24 01:32:54",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: me la chupo",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-27 01:58:00",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-27 01:58:33",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: waza2",
+        "leido": true
+    },
+    {
+        "fecha": "2026-10-27 02:03:56",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza67",
+        "leido": false
+    },
+    {
+        "fecha": "2026-10-27 02:04:17",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: waza69",
+        "leido": false
+    },
+    {
+        "fecha": "2026-10-27 02:10:38",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza100",
         "leido": false
     }
 ]
