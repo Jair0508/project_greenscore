@@ -201,5 +201,40 @@
         "autor_nombre": "Administrador Desarrollador",
         "accion": "ACTIVAR_CUENTA",
         "objetivo": "Levantó suspensión a 952089997. Motivo Admin: me la chupo"
+    },
+    {
+        "fecha": "2026-10-27 01:58:00",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 952089997. Motivo: waza"
+    },
+    {
+        "fecha": "2026-10-27 01:58:33",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó suspensión a 952089997. Motivo Admin: waza2"
+    },
+    {
+        "fecha": "2026-10-27 02:03:56",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 952089997. Motivo: waza67"
+    },
+    {
+        "fecha": "2026-10-27 02:04:17",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó suspensión a 952089997. Motivo Admin: waza69"
+    },
+    {
+        "fecha": "2026-10-27 02:10:38",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "SUSPENDER_CUENTA",
+        "objetivo": "Suspendió al usuario 952089997. Motivo: waza100"
     }
 ]

@@ -7,7 +7,7 @@
         "precio_soles": 3.0,
         "puntos": 30.0,
         "foto": "C:/Users/Deviluke/Downloads/turron calderon.png",
-        "stock": 9
+        "stock": 2
     },
     {
         "tienda_id": "75246852",
@@ -16,7 +16,17 @@
         "descripcion": "de la buena",
         "precio_soles": 10.0,
         "puntos": 100.0,
-        "stock": 22,
+        "stock": 19,
         "foto": "C:/Users/dell/OneDrive/Escritorio/Proyecto/Ofertas/CocaCola 3L.png"
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "crack",
+        "descripcion": "waza",
+        "precio_soles": 10.2,
+        "puntos": 102,
+        "stock": 7,
+        "foto": ""
     }
 ]
