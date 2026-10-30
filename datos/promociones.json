@@ -1,1 +1,22 @@
-[]
+[
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Turron Calderón",
+        "descripcion": "250gr, clásico",
+        "precio_soles": 3.0,
+        "puntos": 30.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Pasta (de dientes)",
+        "descripcion": "awa y mas awa",
+        "precio_soles": 4.0,
+        "puntos": 40.0,
+        "stock": 10,
+        "foto": ""
+    }
+]
