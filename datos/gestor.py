@@ -167,3 +167,12 @@ def marcar_chat_como_leido(dni_cliente, rol_lector):
                 json.dump(mensajes, f, indent=4, ensure_ascii=False)
         except Exception:
             pass
+
+def obtener_puntos_recolectados_por_tienda(id_tienda):
+    """Calcula el total de puntos extraidos/canjeados por una tienda especifica."""
+    log_tiendas = cargar_log_tiendas()
+    total_pts = 0
+    for reg in log_tiendas:
+        if str(reg.get("id_tienda", "")) == str(id_tienda):
+            total_pts += float(reg.get("puntos", 0))
+    return round(total_pts, 1)

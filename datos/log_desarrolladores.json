@@ -236,5 +236,19 @@
         "autor_nombre": "Administrador Desarrollador",
         "accion": "SUSPENDER_CUENTA",
         "objetivo": "Suspendió al usuario 952089997. Motivo: waza100"
+    },
+    {
+        "fecha": "2026-10-28 22:40:25",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "EDITAR_DATOS",
+        "objetivo": "Actualizó datos personales de 68452135"
+    },
+    {
+        "fecha": "2026-10-28 22:40:50",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "CAMBIO_CLAVE",
+        "objetivo": "Modificó la clave de 68452135"
     }
 ]

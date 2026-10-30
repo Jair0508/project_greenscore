@@ -4,7 +4,7 @@ import os
 from datos.gestor import (
     cargar_usuarios, guardar_usuarios, registrar_accion_dev, 
     cargar_log_devs, cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente,
-    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido
+    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido, obtener_puntos_recolectados_por_tienda
 )
 from logica.modelos import Material
 
@@ -554,7 +554,24 @@ class VentanaAdmin:
             if rol == "vecino":
                 self.tabla_usr_vecinos.insert("", "end", values=tupla_datos, tags=(tag_fila,))
             elif rol == "negocio":
-                self.tabla_usr_negocios.insert("", "end", values=tupla_datos, tags=(tag_fila,))
+                        # 1. Obtener puntos recolectados desde el historial en gestor.py
+                        pts_recolectados = obtener_puntos_recolectados_por_tienda(uid)
+                        
+                        # 2. Calcular comision (10% de los puntos recolectados)
+                        comision_pts = round(pts_recolectados * 0.10, 1)
+                        comision_soles = round(comision_pts * 0.10, 2)  # 1 pt = S/ 0.10
+                        
+                        # Formato de la tupla con Puntos Recolectados y Comisión
+                        tupla_negocio = (
+                            uid,
+                            datos.get("nombre", "-"),
+                            rol.upper(),
+                            estado_txt,
+                            f"{pts_recolectados} PTS",                  # Muestra puntos extraídos
+                            f"{comision_pts} PTS (S/ {comision_soles:.2f})", # Muestra comisión
+                            justif_txt
+                        )
+                        self.tabla_usr_negocios.insert("", "end", values=tupla_negocio, tags=(tag_fila,))
             elif rol in ["admin", "desarrollador"]:
                 self.tabla_usr_devs.insert("", "end", values=tupla_datos, tags=(tag_fila,))
 

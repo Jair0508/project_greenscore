@@ -632,7 +632,7 @@ class VentanaNegocio:
             usuarios[self.vecino_actual]["puntos"] = int(saldo_actual - total_puntos_requeridos)
             guardar_usuarios(usuarios)
 
-            # Actualizar stocks y registrar logs por cada oferta seleccionada
+            # Actualizar stocks y registrar logs por cada oferta seleccionadapu
             promos_actualizadas = cargar_promociones()
             for orig_idx, promo, costo in seleccionadas:
                 for g_idx, gp in enumerate(promos_actualizadas):
