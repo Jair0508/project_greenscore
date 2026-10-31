@@ -4,7 +4,8 @@ import os
 from datos.gestor import (
     cargar_usuarios, guardar_usuarios, registrar_accion_dev, 
     cargar_log_devs, cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente,
-    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido, obtener_puntos_recolectados_por_tienda
+    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido, 
+    obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin
 )
 from logica.modelos import Material
 
@@ -963,47 +964,151 @@ class VentanaAdmin:
         self.actualizar_tablas()
         messagebox.showinfo("Éxito", "Datos actualizados.")
 
+    # Reemplazar la vista detallada por la distribución en Cuadrícula (Grid) + Eliminación
     def dialogo_ver_promociones_con_foto(self):
+        """Muestra las promociones en cuadrícula sobre fondo blanco con la ilustración de lirios."""
         win_promos = tk.Toplevel(self.root)
-        win_promos.config(bg=COLOR_FONDO_APP)
-        win_promos.title("Vista Detallada de Ofertas en Sistema")
-        win_promos.geometry("620x500")
+        # Cambio a blanco puro para la ventana base
+        win_promos.config(bg=COLOR_BLANCO)
+        win_promos.title("Gestión de Ofertas en Cuadrícula")
+        win_promos.geometry("720x540")
+        win_promos.resizable(False, False)
         win_promos.grab_set()
 
         if hasattr(self.root, 'icon_img'):
             win_promos.iconphoto(False, self.root.icon_img)
 
-        frame_main = tk.Frame(win_promos, bg=COLOR_BLANCO)
-        frame_main.pack(fill="both", expand=True, padx=10, pady=10)
+        # 1. CANVAS CON FONDO BLANCO PURO (#FFFFFF)
+        canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
+        scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
 
-        win_promos.referencias_img = []
-        promos = cargar_promociones()
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
 
-        if not promos:
-            tk.Label(frame_main, text="No hay promociones registradas en el sistema.", font=("Arial", 11, "italic"), fg=COLOR_GRIS_BOTON, bg=COLOR_BLANCO).pack(pady=40)
-            return
+        # 2. CARGA FORZADA DE LA IMAGEN CON LIRIOS (fondo_ofertas_admin)
+        nombres_archivos = [
+            "fondo_ofertas_admin.png",
+            "fondo_ofertas_admin.jpg",
+            "tarjeta_contenedor.png",
+            "tarjeta_contenedor.jpg"
+        ]
 
-        for p in promos:
-            card = tk.Frame(frame_main, bg=COLOR_FONDO_APP, bd=1, relief="solid", highlightbackground=COLOR_SECUNDARIO_AZUL, padx=10, pady=8)
-            card.pack(fill="x", pady=5)
+        ruta_encontrada = None
+        for nombre in nombres_archivos:
+            r = os.path.join("img", nombre)
+            if os.path.exists(r):
+                ruta_encontrada = r
+                break
 
-            ruta_foto = p.get("foto", "")
-            if ruta_foto and os.path.exists(ruta_foto):
-                try:
-                    from PIL import Image, ImageTk
-                    img = Image.open(ruta_foto).resize((65, 65), Image.Resampling.LANCZOS)
-                    img_tk = ImageTk.PhotoImage(img)
-                    win_promos.referencias_img.append(img_tk)
-                    tk.Label(card, image=img_tk, bg=COLOR_FONDO_APP).pack(side="left", padx=(0, 10))
-                except Exception:
-                    tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#E2E8F0", fg=COLOR_TEXTO_MAIN, width=8, height=4).pack(side="left", padx=(0, 10))
-            else:
-                tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#E2E8F0", fg=COLOR_TEXTO_MAIN, width=8, height=4).pack(side="left", padx=10)
-
+        if ruta_encontrada:
             try:
-                pts_oferta = int(float(p.get('puntos', 0)))
-            except (ValueError, TypeError):
-                pts_oferta = 0
+                from PIL import Image, ImageTk
+                # Cargar y redimensionar la ilustración de lirios a 720x540 px de forma nítida
+                img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
+                win_promos.bg_img = ImageTk.PhotoImage(img_pil)
+                img_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+                canvas.tag_lower(img_id)  # Enviar al fondo absoluto dentro del Canvas
+            except Exception as e:
+                try:
+                    win_promos.bg_img = tk.PhotoImage(file=ruta_encontrada)
+                    img_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+                    canvas.tag_lower(img_id)
+                except Exception as ex:
+                    print(f"Error al cargar fondo de lirios: {ex}")
 
-            info_text = f"🏪 Tienda: {p.get('tienda_nombre')} (ID: {p.get('tienda_id')})\n📌 Título: {p.get('titulo')}\n📝 Detalle: {p.get('descripcion')}\n💰 Precio: S/ {p.get('precio_soles', 0):.2f} ➔ {pts_oferta} PTS"
-            tk.Label(card, text=info_text, font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, justify="left").pack(side="left", anchor="w")
+        # 3. CONTENEDOR FLOTANTE TRANSPARENTE
+        frame_grid = tk.Frame(canvas, bg="")
+
+        def _on_frame_configure(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        frame_grid.bind("<Configure>", _on_frame_configure)
+        canvas.create_window((0, 0), window=frame_grid, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        def refrescar_grid():
+            for w in frame_grid.winfo_children():
+                w.destroy()
+
+            promos = cargar_promociones()
+            if not promos:
+                tk.Label(
+                    frame_grid, 
+                    text="No hay promociones registradas actualmente.", 
+                    font=("Arial", 11, "italic"), 
+                    fg=COLOR_GRIS_BOTON, 
+                    bg=COLOR_BLANCO
+                ).pack(pady=50)
+                return
+
+            cols = 2  # Disposición en cuadrícula de 2 columnas
+            for idx, p in enumerate(promos):
+                row = idx // cols
+                col = idx % cols
+
+                # TARJETA CUADRADA (240x240 px) BLANCA FLOTANTE CON BORDE AZUL
+                card = tk.Frame(
+                    frame_grid, 
+                    bg=COLOR_BLANCO, 
+                    bd=1, 
+                    relief="solid", 
+                    highlightbackground=COLOR_SECUNDARIO_AZUL, 
+                    highlightthickness=1,
+                    padx=12, 
+                    pady=12,
+                    width=240,
+                    height=240
+                )
+                card.grid(row=row, column=col, padx=12, pady=12, sticky="nsew")
+                card.grid_propagate(False)
+
+                pts_oferta = int(float(p.get('puntos', 0)))
+                txt_info = (
+                    f"🏪 {p.get('tienda_nombre')}\n(ID: {p.get('tienda_id')})\n\n"
+                    f"📌 {p.get('titulo')}\n"
+                    f"💰 S/ {p.get('precio_soles', 0):.2f} ➔ {pts_oferta} PTS\n\n"
+                    f"📝 {p.get('descripcion')}"
+                )
+
+                tk.Label(
+                    card, 
+                    text=txt_info, 
+                    font=("Arial", 8, "bold"), 
+                    fg=COLOR_TEXTO_MAIN, 
+                    bg=COLOR_BLANCO, 
+                    justify="left",
+                    wraplength=210
+                ).pack(anchor="w", expand=True)
+
+                def eliminar_con_motivo(i=idx, tienda_id=p.get('tienda_id'), titulo=p.get('titulo')):
+                    motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
+                    if not motivo:
+                        messagebox.showwarning("Requerido", "Debe ingresar una justificación para eliminar la oferta.")
+                        return
+
+                    if messagebox.askyesno("Confirmar", f"¿Eliminar definitivamente la oferta '{titulo}'?"):
+                        if eliminar_promocion_admin(i, tienda_id, motivo, self.datos_sesion.get("nombre", "Administración")):
+                            registrar_accion_dev(
+                                self.id_usuario, 
+                                self.datos_sesion.get("nombre"), 
+                                "ELIMINAR_OFERTA", 
+                                f"Eliminó oferta '{titulo}' de la tienda {tienda_id}. Motivo: {motivo}"
+                            )
+                            messagebox.showinfo("Éxito", "La oferta ha sido eliminada y la tienda notificada.")
+                            self.actualizar_tablas()
+                            refrescar_grid()
+
+                tk.Button(
+                    card, 
+                    text="🗑️ Eliminar Oferta", 
+                    bg=COLOR_ROJO_ALERTA, 
+                    fg=COLOR_BLANCO, 
+                    activeforeground=COLOR_BLANCO, 
+                    font=("Arial", 8, "bold"), 
+                    relief="flat", 
+                    command=eliminar_con_motivo, 
+                    cursor="hand2", 
+                    pady=4
+                ).pack(fill="x", side="bottom")
+
+        refrescar_grid()

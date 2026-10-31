@@ -96,24 +96,31 @@ def guardar_promociones(lista_promos):
     with open(RUTA_PROMOCIONES, "w", encoding="utf-8") as f:
         json.dump(lista_promos, f, ensure_ascii=False, indent=4)
 
-def eliminar_promocion(index_promo, tienda_id, tienda_nombre):
+def eliminar_promocion(indice_promo, id_tienda, nombre_tienda):
+    """Elimina una promoción perteneciendo al comercio especificado."""
     promos = cargar_promociones()
-    if 0 <= index_promo < len(promos):
-        promo_removida = promos.pop(index_promo)
+    if 0 <= indice_promo < len(promos):
+        promo = promos[indice_promo]
+        if str(promo.get("tienda_id")) == str(id_tienda):
+            promos.pop(indice_promo)
+            guardar_promociones(promos)
+            return True
+    return False
+
+def eliminar_promocion_admin(indice_promo, id_tienda, motivo, autor_admin):
+    """Elimina una promoción desde el panel de administración y notifica a la tienda."""
+    promos = cargar_promociones()
+    if 0 <= indice_promo < len(promos):
+        promo_eliminada = promos.pop(indice_promo)
         guardar_promociones(promos)
         
-        # Registrar auditoría para Administradores y Desarrolladores
-        try:
-            from datos.gestor import registrar_accion_tienda
-            registrar_accion_tienda(
-                tienda_id, 
-                tienda_nombre, 
-                "SISTEMA", 
-                0, 
-                f"ELIMINAR_PROMO: '{promo_removida.get('titulo')}'"
-            )
-        except Exception:
-            pass
+        # Envia mensaje de notificación automática
+        guardar_mensaje_chat(
+            dni_cliente=str(id_tienda),
+            autor_nombre=autor_admin,
+            rol_autor="admin",
+            mensaje=f"🚨 AVISO DE SISTEMA: Su oferta '{promo_eliminada.get('titulo')}' ha sido ELIMINADA por administración.\nMotivo: {motivo}"
+        )
         return True
     return False
 
