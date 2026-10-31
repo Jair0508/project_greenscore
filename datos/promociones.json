@@ -2,31 +2,21 @@
     {
         "tienda_id": "75246852",
         "tienda_nombre": "Bodega Luchito",
-        "titulo": "TURRON CALDERÓN",
-        "descripcion": "100GR",
+        "titulo": "Turron Calderón",
+        "descripcion": "250gr, clásico",
         "precio_soles": 3.0,
         "puntos": 30.0,
-        "foto": "C:/Users/Deviluke/Downloads/turron calderon.png",
-        "stock": 2
+        "stock": 10,
+        "foto": ""
     },
     {
         "tienda_id": "75246852",
         "tienda_nombre": "Bodega Luchito",
-        "titulo": "Coca",
-        "descripcion": "de la buena",
-        "precio_soles": 10.0,
-        "puntos": 100.0,
-        "stock": 19,
-        "foto": "C:/Users/dell/OneDrive/Escritorio/Proyecto/Ofertas/CocaCola 3L.png"
-    },
-    {
-        "tienda_id": "75246852",
-        "tienda_nombre": "Bodega Luchito",
-        "titulo": "crack",
-        "descripcion": "waza",
-        "precio_soles": 10.2,
-        "puntos": 102,
-        "stock": 7,
+        "titulo": "Pasta (de dientes)",
+        "descripcion": "awa y mas awa",
+        "precio_soles": 4.0,
+        "puntos": 40.0,
+        "stock": 10,
         "foto": ""
     }
 ]
