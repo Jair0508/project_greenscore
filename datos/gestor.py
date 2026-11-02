@@ -34,7 +34,7 @@ def _guardar_log(ruta, lista_log):
 # --- FUNCIONES DE REGISTRO / AUDITORÍA ---
 
 def registrar_accion_dev(id_dev, nombre_dev, accion, objetivo):
-    """Guarda acciones realizadas por administradores / desarrolladores"""
+    """Guarda acciones realizadas por administradores"""
     logs = _cargar_log(RUTA_LOG_DEVS)
     logs.append({
         "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),

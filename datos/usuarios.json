@@ -1,7 +1,7 @@
 {
     "admin1": {
         "rol": "admin",
-        "nombre": "Administrador Desarrollador",
+        "nombre": "Administrador",
         "correo": "green.s12.3@gmail.com",
         "clave": "1234",
         "telefono": "987654321"
@@ -50,17 +50,6 @@
         "pregunta_secreta": "fecha de cumpleaños",
         "respuesta_secreta": "31071999"
     },
-    "0885": {
-        "rol": "desarrollador",
-        "nombre": "Magui",
-        "correo": "m.ht@gmail.com",
-        "telefono": "945358265",
-        "clave": "1234",
-        "puntos": "N/A",
-        "suspendido": false,
-        "motivo_suspension": "",
-        "justificacion_cliente": ""
-    },
     "952089997": {
         "rol": "vecino",
         "nombre": "sebas",
@@ -68,10 +57,21 @@
         "telefono": "952999999",
         "clave": "pro67",
         "puntos": 58510,
-        "suspendido": true,
-        "motivo_suspension": "waza100",
+        "suspendido": false,
+        "motivo_suspension": "",
         "justificacion_cliente": "",
         "pregunta_secreta": "cumpleaños",
         "respuesta_secreta": "3107"
+    },
+    "5577": {
+        "rol": "gestor de reciclaje",
+        "nombre": "Gallardo el Gallo",
+        "correo": "-",
+        "telefono": "-",
+        "clave": "1234",
+        "puntos": "N/A",
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
     }
 }
