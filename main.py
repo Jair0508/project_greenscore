@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import os
+
 from datos.gestor import cargar_usuarios, guardar_usuarios, registrar_accion_cliente
 from interfaces.admin import VentanaAdmin
+from interfaces.gestor_reciclaje import VentanaGestorReciclaje
 from interfaces.negocio import VentanaNegocio
 from interfaces.vecino import VentanaVecino
-
 # ==========================================
 # PALETA DE COLORES "ECO-GESTIÓN" (SIN NEGRO)
 # ==========================================
@@ -285,6 +286,8 @@ class AppPrincipal:
 
             if rol in ["admin", "desarrollador"]:
                 VentanaAdmin(self.root, usuario, self.mostrar_login)
+            elif rol in ["gestor", "gestor de reciclaje"]:
+                VentanaGestorReciclaje(self.root, usuario, self.mostrar_login)
             elif rol == "negocio":
                 VentanaNegocio(self.root, usuario, self.mostrar_login)
             elif rol == "vecino":

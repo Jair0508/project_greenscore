@@ -32,7 +32,7 @@ class VentanaAdmin:
         self.datos_sesion = usuarios.get(id_usuario, {})
         self.es_admin_supremo = (self.datos_sesion.get("rol") == "admin")
 
-        titulo_rol = "SUPER ADMINISTRADOR" if self.es_admin_supremo else "DESARROLLADOR"
+        titulo_rol = "ADMINISTRADOR" if self.es_admin_supremo else "GESTOR DE RECICLAJE"
         self.root.title(f"EcoPuntos - Panel de {titulo_rol}")
         self.root.geometry("1020x740")
         self.root.resizable(False, False)
@@ -120,7 +120,7 @@ class VentanaAdmin:
 
         if self.es_admin_supremo:
             self.tab_log_devs = ttk.Frame(notebook)
-            notebook.add(self.tab_log_devs, text="🕵️ Actividad Devs (Solo Admin)")
+            notebook.add(self.tab_log_devs, text="🕵️ Actividad Gestores / Admins")
 
         def crear_tabla_con_scroll(parent, columnas, configuracion_columnas):
             frame_tabla = ttk.Frame(parent)
@@ -165,13 +165,13 @@ class VentanaAdmin:
 
         sub_notebook_usuarios.add(self.tab_usr_vecinos, text="👤 Vecinos")
         sub_notebook_usuarios.add(self.tab_usr_negocios, text="🏪 Negocios")
-        sub_notebook_usuarios.add(self.tab_usr_devs, text="💻 Desarrolladores / Admins")
+        sub_notebook_usuarios.add(self.tab_usr_devs, text="♻️ Gestores de Reciclaje / Admins")
 
         cols_usr = ("id", "nombre", "rol", "estado", "puntos", "rango", "justificacion")
         config_usr = [
             ("id", "DNI / ID", 110),
             ("nombre", "Nombre / Comercio", 180),
-            ("rol", "Rol", 90),
+            ("rol", "Rol", 140),
             ("estado", "Estado / Indicador", 160),
             ("puntos", "Puntos", 80),
             ("rango", "Rango Ecológico", 170),
@@ -188,7 +188,7 @@ class VentanaAdmin:
         # PROMOCIONES ACTIVAS
         tk.Button(
             tab_promos, 
-            text="🖼️ Abrir Vista Visual con Fotos", 
+            text="🖼️ Panel de promociones", 
             bg=COLOR_PRIMARIO_AZUL, 
             fg=COLOR_BLANCO, 
             activeforeground=COLOR_BLANCO,
@@ -263,8 +263,8 @@ class VentanaAdmin:
             cols_dev = ("fecha", "autor_id", "autor_nombre", "accion", "objetivo")
             config_dev = [
                 ("fecha", "Fecha / Hora", 200),
-                ("autor_id", "ID Dev/Admin", 120),
-                ("autor_nombre", "Nombre Dev", 180),
+                ("autor_id", "ID Gestor/Admin", 120),
+                ("autor_nombre", "Nombre Autor", 180),
                 ("accion", "Acción Ejecutada", 160),
                 ("objetivo", "Usuario / Cuenta Afectada", 250)
             ]
@@ -280,11 +280,11 @@ class VentanaAdmin:
 
         sub_notebook_soporte.add(self.tab_chat_vecinos, text="👤 Vecinos")
         sub_notebook_soporte.add(self.tab_chat_negocios, text="🏪 Negocios")
-        sub_notebook_soporte.add(self.tab_chat_devs, text="💻 Desarrolladores")
+        sub_notebook_soporte.add(self.tab_chat_devs, text="♻️ Gestores de Reciclaje")
 
         self.chats_ui = {}
 
-        for rol_tipo, tab_widget in [("vecino", self.tab_chat_vecinos), ("negocio", self.tab_chat_negocios), ("desarrollador", self.tab_chat_devs)]:
+        for rol_tipo, tab_widget in [("vecino", self.tab_chat_vecinos), ("negocio", self.tab_chat_negocios), ("gestor de reciclaje", self.tab_chat_devs)]:
             frame_box = tk.Frame(tab_widget, bg=COLOR_BLANCO, padx=10, pady=10)
             frame_box.pack(fill="both", expand=True)
 
@@ -390,7 +390,7 @@ class VentanaAdmin:
             return "🌱 Eco-Novato"
 
     def llenar_todos_los_combos(self):
-        for rol in ["vecino", "negocio", "desarrollador"]:
+        for rol in ["vecino", "negocio", "gestor de reciclaje"]:
             self.llenar_combo_chats_por_rol(rol)
 
     def llenar_combo_chats_por_rol(self, rol_tipo):
@@ -406,7 +406,9 @@ class VentanaAdmin:
 
         for uid, datos in usuarios.items():
             rol_usuario = datos.get("rol", "")
-            if rol_usuario == rol_tipo or (rol_tipo == "desarrollador" and rol_usuario in ["admin", "desarrollador"]):
+            es_match = (rol_usuario == rol_tipo) or (rol_tipo == "gestor de reciclaje" and rol_usuario in ["admin", "gestor de reciclaje", "desarrollador"])
+            
+            if es_match:
                 if uid == self.id_usuario:
                     continue
 
@@ -424,7 +426,7 @@ class VentanaAdmin:
             cb.current(0)
             self.cargar_chat_seleccionado(rol_tipo)
         else:
-            cb.set(f"No hay usuarios registrados en {rol_tipo.capitalize()}")
+            cb.set(f"No hay usuarios registrados")
             ui["txt"].config(state="normal")
             ui["txt"].delete("1.0", tk.END)
             ui["txt"].insert(tk.END, "💬 No hay registros disponibles.\n")
@@ -438,7 +440,7 @@ class VentanaAdmin:
         dni = ui["mapeo"].get(seleccion)
         if not dni: return
 
-        rol_lector = "admin" if self.es_admin_supremo else "desarrollador"
+        rol_lector = "admin" if self.es_admin_supremo else "gestor de reciclaje"
         marcar_chat_como_leido(dni, rol_lector)
 
         txt = ui["txt"]
@@ -477,7 +479,7 @@ class VentanaAdmin:
         texto = ui["ent"].get().strip()
         if not texto: return
 
-        rol_autor = "admin" if self.es_admin_supremo else "desarrollador"
+        rol_autor = "admin" if self.es_admin_supremo else "gestor de reciclaje"
         guardar_mensaje_chat(
             dni_cliente=dni,
             autor_nombre=self.datos_sesion.get("nombre", "Soporte"),
@@ -511,35 +513,61 @@ class VentanaAdmin:
         win = tk.Toplevel(self.root)
         win.config(bg=COLOR_FONDO_APP)
         win.title(titulo)
-        win.geometry("320x150")
+        win.geometry("380x180")
         win.resizable(False, False)
         win.grab_set()
 
         if hasattr(self.root, 'icon_img'):
             win.iconphoto(False, self.root.icon_img)
 
-        tk.Label(win, text=mensaje, font=("Arial", 10), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, pady=10).pack()
-        ent = tk.Entry(win, font=("Arial", 10), width=25, bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO_AZUL)
-        ent.pack(pady=5, ipady=2)
-        ent.focus_set()
+        container = tk.Frame(win, bg=COLOR_FONDO_APP, padx=15, pady=15)
+        container.pack(fill="both", expand=True)
 
-        resultado = {"valor": None}
+        lbl_msg = tk.Label(
+            container, 
+            text=mensaje, 
+            font=("Arial", 9, "bold"), 
+            fg=COLOR_TEXTO_MAIN, 
+            bg=COLOR_FONDO_APP,
+            wraplength=340,
+            justify="center"
+        )
+        lbl_msg.pack(pady=(0, 10))
 
-        def aceptar():
-            resultado["valor"] = ent.get().strip()
-            win.destroy()
+        entry_var = tk.StringVar()
+        entry = tk.Entry(container, textvariable=entry_var, font=("Arial", 10), width=35, bd=1, relief="solid")
+        entry.pack(pady=5)
+        entry.focus_set()
+
+        resultado = {"texto": None}
+
+        def confirmar():
+            txt = entry_var.get().strip()
+            if txt:
+                resultado["texto"] = txt
+                win.destroy()
 
         def cancelar():
             win.destroy()
 
-        frame_btn = tk.Frame(win, bg=COLOR_FONDO_APP)
+        frame_btn = tk.Frame(container, bg=COLOR_FONDO_APP)
         frame_btn.pack(pady=10)
-        
-        tk.Button(frame_btn, text="Aceptar", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, width=10, command=aceptar, relief="flat", cursor="hand2").pack(side="left", padx=5)
-        tk.Button(frame_btn, text="Cancelar", bg=COLOR_GRIS_BOTON, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, width=10, command=cancelar, relief="flat", cursor="hand2").pack(side="left", padx=5)
+
+        tk.Button(
+            frame_btn, text="Aceptar", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, 
+            font=("Arial", 9, "bold"), width=10, relief="flat", cursor="hand2", command=confirmar
+        ).pack(side="left", padx=5)
+
+        tk.Button(
+            frame_btn, text="Cancelar", bg=COLOR_GRIS_BOTON, fg=COLOR_BLANCO, 
+            font=("Arial", 9, "bold"), width=10, relief="flat", cursor="hand2", command=cancelar
+        ).pack(side="left", padx=5)
+
+        win.bind("<Return>", lambda e: confirmar())
+        win.bind("<Escape>", lambda e: cancelar())
 
         self.root.wait_window(win)
-        return resultado["valor"]
+        return resultado["texto"]
 
     def actualizar_tablas(self):
         for item in self.tabla_usr_vecinos.get_children(): self.tabla_usr_vecinos.delete(item)
@@ -596,7 +624,7 @@ class VentanaAdmin:
                     justif_txt
                 )
                 self.tabla_usr_negocios.insert("", "end", values=tupla_negocio, tags=(tag_fila,))
-            elif rol in ["admin", "desarrollador"]:
+            elif rol in ["admin", "gestor de reciclaje", "desarrollador"]:
                 self.tabla_usr_devs.insert("", "end", values=tupla_datos, tags=(tag_fila,))
 
         for item in self.tabla_promos.get_children(): self.tabla_promos.delete(item)
@@ -686,7 +714,7 @@ class VentanaAdmin:
         usuarios[uid]["motivo_suspension"] = motivo
         guardar_usuarios(usuarios)
 
-        rol_autor = "admin" if self.es_admin_supremo else "desarrollador"
+        rol_autor = "admin" if self.es_admin_supremo else "gestor de reciclaje"
         guardar_mensaje_chat(
             dni_cliente=uid,
             autor_nombre=self.datos_sesion.get("nombre", "Administración"),
@@ -725,7 +753,7 @@ class VentanaAdmin:
         usuarios[uid]["justificacion_cliente"] = ""
         guardar_usuarios(usuarios)
 
-        rol_autor = "admin" if self.es_admin_supremo else "desarrollador"
+        rol_autor = "admin" if self.es_admin_supremo else "gestor de reciclaje"
         guardar_mensaje_chat(
             dni_cliente=uid,
             autor_nombre=self.datos_sesion.get("nombre", "Administración"),
@@ -748,7 +776,7 @@ class VentanaAdmin:
         win_modal = tk.Toplevel(self.root)
         win_modal.config(bg=COLOR_FONDO_APP)
         win_modal.title("Crear Nueva Cuenta")
-        win_modal.geometry("340x360")
+        win_modal.geometry("340x380")
         win_modal.resizable(False, False)
         win_modal.grab_set()
 
@@ -756,11 +784,15 @@ class VentanaAdmin:
             win_modal.iconphoto(False, self.root.icon_img)
 
         tk.Label(win_modal, text="Seleccione Tipo de Cuenta:", font=("Arial", 10, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(pady=5)
+        
+        # OPCIONES DE DESPLEGABLE ACTUALIZADAS
         roles_disponibles = ["vecino", "negocio"]
-        if self.es_admin_supremo: roles_disponibles.append("desarrollador")
+        if self.es_admin_supremo: 
+            roles_disponibles.append("gestor de reciclaje")
 
         cb_rol = ttk.Combobox(win_modal, values=roles_disponibles, state="readonly")
-        cb_rol.pack(pady=5); cb_rol.current(0)
+        cb_rol.pack(pady=5)
+        cb_rol.current(0)
 
         tk.Label(win_modal, text="DNI / Código de Cuenta:", fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack()
         ent_uid = tk.Entry(win_modal, bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO_AZUL); ent_uid.pack(pady=2, ipady=2)
@@ -814,8 +846,8 @@ class VentanaAdmin:
             return
 
         rol_obj = usuarios[uid]["rol"]
-        if rol_obj in ["admin", "desarrollador"] and not self.es_admin_supremo:
-            messagebox.showerror("Acceso Denegado", "Solo el Admin Supremo puede eliminar a Desarrolladores o Admins.")
+        if rol_obj in ["admin", "gestor de reciclaje", "desarrollador"] and not self.es_admin_supremo:
+            messagebox.showerror("Acceso Denegado", "Solo el Administrador puede eliminar a otros administradores o gestores.")
             return
 
         if messagebox.askyesno("Confirmar", f"¿Eliminar permanentemente la cuenta de {usuarios[uid]['nombre']}?"):
@@ -964,11 +996,9 @@ class VentanaAdmin:
         self.actualizar_tablas()
         messagebox.showinfo("Éxito", "Datos actualizados.")
 
-    # Reemplazar la vista detallada por la distribución en Cuadrícula (Grid) + Eliminación
     def dialogo_ver_promociones_con_foto(self):
         """Muestra las promociones en cuadrícula sobre fondo blanco con la ilustración de lirios."""
         win_promos = tk.Toplevel(self.root)
-        # Cambio a blanco puro para la ventana base
         win_promos.config(bg=COLOR_BLANCO)
         win_promos.title("Gestión de Ofertas en Cuadrícula")
         win_promos.geometry("720x540")
@@ -1003,11 +1033,10 @@ class VentanaAdmin:
         if ruta_encontrada:
             try:
                 from PIL import Image, ImageTk
-                # Cargar y redimensionar la ilustración de lirios a 720x540 px de forma nítida
                 img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
                 win_promos.bg_img = ImageTk.PhotoImage(img_pil)
                 img_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
-                canvas.tag_lower(img_id)  # Enviar al fondo absoluto dentro del Canvas
+                canvas.tag_lower(img_id)
             except Exception as e:
                 try:
                     win_promos.bg_img = tk.PhotoImage(file=ruta_encontrada)
@@ -1041,12 +1070,11 @@ class VentanaAdmin:
                 ).pack(pady=50)
                 return
 
-            cols = 2  # Disposición en cuadrícula de 2 columnas
+            cols = 2
             for idx, p in enumerate(promos):
                 row = idx // cols
                 col = idx % cols
 
-                # TARJETA CUADRADA (240x240 px) BLANCA FLOTANTE CON BORDE AZUL
                 card = tk.Frame(
                     frame_grid, 
                     bg=COLOR_BLANCO, 
