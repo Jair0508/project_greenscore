@@ -250,5 +250,12 @@
         "autor_nombre": "Administrador Desarrollador",
         "accion": "CAMBIO_CLAVE",
         "objetivo": "Modificó la clave de 68452135"
+    },
+    {
+        "fecha": "2026-11-02 09:44:13",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador Desarrollador",
+        "accion": "ACTIVAR_CUENTA",
+        "objetivo": "Levantó suspensión a 952089997. Motivo Admin: por romper sillas"
     }
 ]

@@ -68,8 +68,8 @@
         "telefono": "952999999",
         "clave": "pro67",
         "puntos": 58510,
-        "suspendido": true,
-        "motivo_suspension": "waza100",
+        "suspendido": false,
+        "motivo_suspension": "",
         "justificacion_cliente": "",
         "pregunta_secreta": "cumpleaños",
         "respuesta_secreta": "3107"

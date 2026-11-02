@@ -508,38 +508,68 @@ class VentanaAdmin:
             pass
 
     def pedir_texto_custom(self, titulo, mensaje):
-        win = tk.Toplevel(self.root)
-        win.config(bg=COLOR_FONDO_APP)
-        win.title(titulo)
-        win.geometry("320x150")
-        win.resizable(False, False)
-        win.grab_set()
+        """Muestra una ventana de diálogo personalizada ajustando el salto de línea del texto."""
+        win_dialog = tk.Toplevel(self.root)
+        win_dialog.config(bg=COLOR_FONDO_APP)
+        win_dialog.title(titulo)
+        win_dialog.geometry("380x180")
+        win_dialog.resizable(False, False)
+        win_dialog.grab_set()
 
         if hasattr(self.root, 'icon_img'):
-            win.iconphoto(False, self.root.icon_img)
+            win_dialog.iconphoto(False, self.root.icon_img)
 
-        tk.Label(win, text=mensaje, font=("Arial", 10), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, pady=10).pack()
-        ent = tk.Entry(win, font=("Arial", 10), width=25, bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO_AZUL)
-        ent.pack(pady=5, ipady=2)
-        ent.focus_set()
+        # Contenedor con padding para centrar elementos
+        container = tk.Frame(win_dialog, bg=COLOR_FONDO_APP, padx=15, pady=15)
+        container.pack(fill="both", expand=True)
 
-        resultado = {"valor": None}
+        # LABEL CON WRAPLENGTH (Salto de línea a los 340 píxeles para que no se corte)
+        lbl_msg = tk.Label(
+            container, 
+            text=mensaje, 
+            font=("Arial", 9, "bold"), 
+            fg=COLOR_TEXTO_MAIN, 
+            bg=COLOR_FONDO_APP,
+            wraplength=340,  # <-- Permite el salto de línea automático
+            justify="center" # Centra el texto multilínea
+        )
+        lbl_msg.pack(pady=(0, 10))
 
-        def aceptar():
-            resultado["valor"] = ent.get().strip()
-            win.destroy()
+        entry_var = tk.StringVar()
+        entry = tk.Entry(container, textvariable=entry_var, font=("Arial", 10), width=35, bd=1, relief="solid")
+        entry.pack(pady=5)
+        entry.focus_set()
+
+        resultado = {"texto": None}
+
+        def confirmar():
+            txt = entry_var.get().strip()
+            if txt:
+                resultado["texto"] = txt
+                win_dialog.destroy()
 
         def cancelar():
-            win.destroy()
+            win_dialog.destroy()
 
-        frame_btn = tk.Frame(win, bg=COLOR_FONDO_APP)
+        # Botones de acción
+        frame_btn = tk.Frame(container, bg=COLOR_FONDO_APP)
         frame_btn.pack(pady=10)
-        
-        tk.Button(frame_btn, text="Aceptar", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, width=10, command=aceptar, relief="flat", cursor="hand2").pack(side="left", padx=5)
-        tk.Button(frame_btn, text="Cancelar", bg=COLOR_GRIS_BOTON, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, width=10, command=cancelar, relief="flat", cursor="hand2").pack(side="left", padx=5)
 
-        self.root.wait_window(win)
-        return resultado["valor"]
+        tk.Button(
+            frame_btn, text="Aceptar", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, 
+            font=("Arial", 9, "bold"), width=10, relief="flat", cursor="hand2", command=confirmar
+        ).pack(side="left", padx=5)
+
+        tk.Button(
+            frame_btn, text="Cancelar", bg=COLOR_GRIS_BOTON, fg=COLOR_BLANCO, 
+            font=("Arial", 9, "bold"), width=10, relief="flat", cursor="hand2", command=cancelar
+        ).pack(side="left", padx=5)
+
+        win_dialog.bind("<Return>", lambda e: confirmar())
+        win_dialog.bind("<Escape>", lambda e: cancelar())
+
+        self.root.wait_window(win_dialog)
+        return resultado["texto"]
 
     def actualizar_tablas(self):
         for item in self.tabla_usr_vecinos.get_children(): self.tabla_usr_vecinos.delete(item)
