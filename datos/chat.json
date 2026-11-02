@@ -132,5 +132,13 @@
         "rol": "admin",
         "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza100",
         "leido": false
+    },
+    {
+        "fecha": "2026-11-02 10:08:57",
+        "dni_cliente": "952089997",
+        "autor": "Administrador Desarrollador",
+        "rol": "admin",
+        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: por rompe sillas",
+        "leido": false
     }
 ]
