@@ -87,6 +87,7 @@ class AppPrincipal:
             highlightbackground=COLOR_SECUNDARIO
         )
         self.ent_user.pack(fill="x", pady=(0, 10), ipady=3)
+        self.ent_user.focus_set()  # Enfocar el campo de usuario automáticamente
 
         # Contraseña
         tk.Label(frame_box, text="Contraseña:", font=("Arial", 10, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_BLANCO).pack(anchor="w", pady=(5, 2))
@@ -101,6 +102,12 @@ class AppPrincipal:
             highlightbackground=COLOR_SECUNDARIO
         )
         self.ent_pass.pack(fill="x", pady=(0, 14), ipady=3)
+
+        # --- NAVEGACIÓN CON TECLA ENTER (<Return>) ---
+        # Enter en el usuario -> Pasa automáticamente al campo de contraseña
+        self.ent_user.bind("<Return>", lambda event: self.ent_pass.focus_set())
+        # Enter en la contraseña -> Valida e ingresa al sistema
+        self.ent_pass.bind("<Return>", lambda event: self.validar_login())
 
         # Botón Ingresar (Verde Hoja Principal)
         btn_ingresar = tk.Button(
@@ -252,6 +259,9 @@ class AppPrincipal:
             win_rec.destroy()
             messagebox.showinfo("Éxito", "¡Su contraseña ha sido actualizada correctamente! Ya puede iniciar sesión.")
 
+        # Vincular Enter también en la ventana de recuperación
+        ent_resp.bind("<Return>", lambda event: verificar_y_restablecer())
+
         tk.Button(
             win_rec, 
             text="Validar y Cambiar Clave", 
@@ -268,7 +278,7 @@ class AppPrincipal:
         usuario = self.ent_user.get().strip()
         clave = self.ent_pass.get().strip()
         usuarios = cargar_usuarios()
-
+        
         if usuario in usuarios and usuarios[usuario]["clave"] == clave:
             rol = usuarios[usuario]["rol"]
             self.limpiar_pantalla()
