@@ -1,87 +1,24 @@
 [
     {
-        "tienda_id": "75246852",
-        "tienda_nombre": "Bodega Luchito",
-        "titulo": "Turron Calderón",
-        "descripcion": "250gr, clásico",
-        "precio_soles": 3.0,
-        "puntos": 30.0,
-        "stock": 10,
-        "foto": ""
-    },
-    {
-        "tienda_id": "75246852",
-        "tienda_nombre": "Bodega Luchito",
-        "titulo": "Pasta (de dientes)",
-        "descripcion": "awa y mas awa",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Jabon liquido",
+        "categoria": "Cuidado Personal y Aseo",
+        "descripcion": "jabon para jabonear",
         "precio_soles": 4.0,
         "puntos": 40.0,
-        "stock": 10,
+        "stock": 5,
         "foto": ""
     },
     {
         "tienda_id": "Number1",
         "tienda_nombre": "Tienda_Sebas",
-        "titulo": "Coca Cola",
-        "descripcion": "fria y buena",
-        "precio_soles": 10.0,
-        "puntos": 100.0,
-        "stock": 10,
-        "foto": ""
-    },
-    {
-        "tienda_id": "Number1",
-        "tienda_nombre": "Tienda_Sebas",
-        "titulo": "Pilsen",
+        "titulo": "Vitamina (Cristal)",
         "categoria": "Licores y Cervezas",
-        "descripcion": "heladita",
+        "descripcion": "Salud",
         "precio_soles": 6.5,
         "puntos": 65.0,
-        "stock": 10,
-        "foto": ""
-    },
-    {
-        "tienda_id": "Number1",
-        "tienda_nombre": "Tienda_Sebas",
-        "titulo": "Inka Cola 3L",
-        "categoria": "Bebidas y Gaseosas",
-        "descripcion": "heladita x2",
-        "precio_soles": 10.0,
-        "puntos": 100.0,
-        "stock": 10,
-        "foto": ""
-    },
-    {
-        "tienda_id": "Number1",
-        "tienda_nombre": "Tienda_Sebas",
-        "titulo": "Chifles acevichados",
-        "categoria": "Dulces y Snacks",
-        "descripcion": "frescos pal ceviche",
-        "precio_soles": 5.0,
-        "puntos": 50.0,
-        "stock": 10,
-        "foto": ""
-    },
-    {
-        "tienda_id": "Number1",
-        "tienda_nombre": "Tienda_Sebas",
-        "titulo": "Downi",
-        "categoria": "Utensilios y Limpieza",
-        "descripcion": "pa lavar platos",
-        "precio_soles": 5.0,
-        "puntos": 50.0,
-        "stock": 10,
-        "foto": ""
-    },
-    {
-        "tienda_id": "Number1",
-        "tienda_nombre": "Tienda_Sebas",
-        "titulo": "Arroz",
-        "categoria": "Abarrotes",
-        "descripcion": "que es abarrotes?",
-        "precio_soles": 7.0,
-        "puntos": 70.0,
-        "stock": 10,
+        "stock": 93,
         "foto": ""
     }
 ]

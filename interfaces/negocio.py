@@ -522,14 +522,14 @@ class VentanaNegocio:
                     promos_actuales[idx_p]["stock"] = nuevo_stock
             guardar_promociones(promos_actuales)
 
-            # 3. Registrar Transacción en Logs
+            # 3. Registrar Transacción en Logs (tanto en tienda como en cliente)
             try:
                 registrar_accion_tienda(self.id_usuario, self.nombre_negocio, self.vecino_actual, puntos_totales)
                 registrar_accion_cliente(
                     self.vecino_actual, 
                     "CANJE_TIENDA", 
                     -puntos_totales, 
-                    f"Canje de ofertas: {', '.join(ofertas_canjeadas)}"
+                    f"Canje de ofertas: {', '.join(ofertas_canjeadas)} en {self.nombre_negocio}"
                 )
             except Exception as e:
                 print(f"Aviso log: {e}")
@@ -537,6 +537,7 @@ class VentanaNegocio:
             messagebox.showinfo("Éxito", f"¡Canje completado!\nSe han descontado {puntos_totales} PTS y actualizado el stock de productos.")
             win_cobro.destroy()
             self.consultar_vecino()
+            self.actualizar_historial_tienda()
 
         tk.Button(
             frame_btns, 
@@ -706,7 +707,7 @@ class VentanaNegocio:
         contenido = (
             "REGLAS DE OPERACIÓN PARA BODEGAS Y COMERCIOS — ECOPUNTOS\n\n"
             "1. GESTIÓN DE CANJES Y VENTAS PRESENCIALES\n"
-            "• Toda transacción de puntos, entrega de productos ofertados o descuentos en caja debe realizarse de forma strictly presencial mediante la validación del DNI del vecino en esta terminal.\n\n"
+            "• Toda transacción de puntos, entrega de productos ofertados o descuentos en caja debe realizarse de forma presencial mediante la validación del DNI del vecino en esta terminal.\n\n"
             "2. LÍMITE DE PUNTOS POR CLIENTE\n"
             "• Ningún vecino podrá acumular más de 2,000 puntos (S/ 200.00) en su saldo activo. Si un cliente alcanza el tope, se le exhortará a realizar canjes antes de recibir nuevos abonos por reciclaje.\n\n"
             "3. CONTROL DE INVENTARIO Y STOCK\n"
@@ -720,12 +721,13 @@ class VentanaNegocio:
         tk.Button(win_tyc, text="Entendido 👍", bg=COLOR_PRIMARIO, fg=COLOR_BLANCO, font=("Arial", 10, "bold"), command=win_tyc.destroy, padx=20, pady=8, cursor="hand2").pack(pady=12)
 
     def actualizar_historial_tienda(self):
+        """Lee directamente de los registros de la tienda para mostrar las entregas al instante."""
         for item in self.tabla_historial_tienda.get_children():
             self.tabla_historial_tienda.delete(item)
 
         logs = cargar_log_tiendas()
         for log in reversed(logs):
-            if log.get("tienda_id") == self.id_usuario:
+            if str(log.get("tienda_id")) == str(self.id_usuario):
                 puntos_int = int(float(log.get('puntos_descontados', 0)))
                 puntos_txt = f"{puntos_int} PTS" if puntos_int == 0 else f"-{puntos_int} PTS"
                 self.tabla_historial_tienda.insert(
@@ -739,36 +741,44 @@ class VentanaNegocio:
                 )
 
     def actualizar_resenas_negocio(self):
+        """Filtra y muestra exclusivamente las reseñas y calificaciones dirigidas a este negocio."""
         for item in self.tabla_resenas_negocio.get_children():
             self.tabla_resenas_negocio.delete(item)
 
         logs = cargar_log_clientes()
         mis_resenas = []
         suma_calificaciones = 0
+        nombre_lower = self.nombre_negocio.strip().lower()
 
         for log in reversed(logs):
-            if log.get("tipo") == "RESEÑA_TIENDA":
-                detalle = log.get("detalle", "")
-                if self.nombre_negocio.lower() in detalle.lower():
+            tipo = log.get("tipo", "")
+            detalle = log.get("detalle", "").strip()
+            
+            # Validamos que sea un log de tipo reseña y que mencione explícitamente el nombre de este negocio
+            if "RESEÑA" in tipo or "Reseña para" in detalle:
+                detalle_lower = detalle.lower()
+                if nombre_lower in detalle_lower:
                     fecha = log.get("fecha", "-")
                     dni = log.get("dni_cliente", "-")
                     
                     estrellas_str = "⭐ (Sin calificación)"
                     comentario_str = detalle
-                    valor_numerico = 0
+                    valor_numerico = 5  # Valor por defecto
 
                     if "Calificación:" in detalle:
-                        partes = detalle.split("Calificación:")
-                        if len(partes) > 1:
-                            subpartes = partes[1].split("|")
-                            estrellas_str = subpartes[0].strip()
-                            if len(subpartes) > 1:
-                                comentario_str = subpartes[1].replace("Reseña:", "").strip()
-
-                            try:
-                                valor_numerico = int(estrellas_str.split("/")[0].replace("(", "").strip())
-                            except Exception:
-                                valor_numerico = 5
+                        try:
+                            partes = detalle.split("Calificación:")
+                            if len(partes) > 1:
+                                subpartes = partes[1].split("|")
+                                estrellas_str = subpartes[0].strip()
+                                if len(subpartes) > 1:
+                                    comentario_str = subpartes[1].replace("Reseña:", "").strip()
+                                
+                                if "(" in estrellas_str:
+                                    num_extraido = estrellas_str.split("(")[1].split("/")[0].strip()
+                                    valor_numerico = int(num_extraido)
+                        except Exception:
+                            valor_numerico = 5
 
                     suma_calificaciones += valor_numerico
                     mis_resenas.append((fecha, dni, estrellas_str, comentario_str))

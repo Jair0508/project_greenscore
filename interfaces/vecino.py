@@ -16,6 +16,17 @@ from datos.gestor import (
 
 COLOR_FONDO_VECINO = "#E8F5E9"
 
+# Categorías idénticas a la gestión de bodega
+CATEGORIAS_BODEGA = [
+    "Abarrotes y Despensa",
+    "Bebidas y Gaseosas",
+    "Licores y Cervezas",
+    "Dulces, Biscochos y Snacks",
+    "Limpieza del Hogar",
+    "Cuidado Personal y Aseo",
+    "Utensilios de Cocina / Hogar"
+]
+
 class VentanaVecino:
     def __init__(self, root, id_usuario, cerrar_sesion_cb):
         self.root = root
@@ -126,9 +137,9 @@ class VentanaVecino:
         notebook.add(tab_chat, text="💬 Soporte / Chat")
         notebook.add(tab_seguridad, text="🔐 Seguridad y Cuenta")
 
-        # --- 1. CATÁLOGO DE PROMOCIONES (Informativo) ---
-        self.frame_promos_scroll = tk.Frame(tab_promos, bg="white")
-        self.frame_promos_scroll.pack(fill="both", expand=True, padx=5, pady=5)
+        # --- 1. CATÁLOGO DE PROMOCIONES (Con Scroll y Secciones por Categoría) ---
+        self.frame_promos_container = tk.Frame(tab_promos, bg="white")
+        self.frame_promos_container.pack(fill="both", expand=True, padx=5, pady=5)
 
         # --- FUNCIÓN AUXILIAR DE TABLAS ---
         def crear_tabla_scroll(parent, cols, config):
@@ -161,7 +172,7 @@ class VentanaVecino:
         ]
         self.tabla_reciclaje = crear_tabla_scroll(tab_reciclaje, cols_rec, config_rec)
 
-        # --- 3. SUB-PESTAÑAS DENTRO DE MOVIMIENTOS Y REGISTROS (Sin Canjes, solo Abonos, Entregas y Reseñas) ---
+        # --- 3. SUB-PESTAÑAS DENTRO DE MOVIMIENTOS Y REGISTROS ---
         sub_notebook = ttk.Notebook(tab_historial_general)
         sub_notebook.pack(fill="both", expand=True, padx=5, pady=5)
 
@@ -258,7 +269,6 @@ class VentanaVecino:
             cursor="hand2"
         ).pack(anchor="w", pady=(0, 20))
 
-        # Información sobre el Cierre de Cuenta y Devolución Presencial
         info_baja_frame = tk.LabelFrame(frame_seg_box, text=" ℹ️ Información sobre el Cierre de Cuenta ", font=("Arial", 10, "bold"), fg="#1976D2", bg="white", padx=15, pady=10)
         info_baja_frame.pack(fill="x", pady=10)
 
@@ -459,7 +469,6 @@ class VentanaVecino:
 
         self.cargar_chat()
 
-        # Detección automática del último log para abrir la ventana de reseña si aplica
         if logs_cliente:
             ultimo_log = logs_cliente[-1]
             tipo_ultimo = ultimo_log.get("tipo", "")
@@ -509,56 +518,84 @@ class VentanaVecino:
         tk.Button(win_cal, text="Enviar Calificación 📤", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), command=enviar_calificacion, relief="flat", pady=6, cursor="hand2").pack(pady=15)
 
     def cargar_catalogo_promociones(self):
-        for w in self.frame_promos_scroll.winfo_children():
+        """Muestra el catálogo de ofertas organizado por categorías de forma limpia, sin imágenes."""
+        for w in self.frame_promos_container.winfo_children():
             w.destroy()
+
+        # Canvas con scroll para el catálogo
+        canvas = tk.Canvas(self.frame_promos_container, bg="white", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.frame_promos_container, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas, bg="white")
+
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
 
         promos = cargar_promociones()
         if not promos:
-            tk.Label(self.frame_promos_scroll, text="🛍️ No hay ofertas disponibles en este momento.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=40)
+            tk.Label(scroll_frame, text="🛍️ No hay ofertas disponibles en este momento.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=40, padx=20)
             return
 
-        self.referencias_img_vecino = []
-        from interfaces.utils import obtener_imagen_miniatura
-
         lbl_aviso_cat = tk.Label(
-            self.frame_promos_scroll, 
+            scroll_frame, 
             text="ℹ️ Catálogo Informativo: Visualiza las ofertas disponibles. Los canjes se realizan de forma presencial en la bodega.", 
             font=("Arial", 9, "italic"), 
             fg="#1976D2", 
             bg="white",
             pady=5
         )
-        lbl_aviso_cat.pack(anchor="w", padx=5, pady=(0, 5))
+        lbl_aviso_cat.pack(anchor="w", padx=10, pady=(5, 10))
 
-        for index, p in enumerate(promos):
-            card = tk.Frame(self.frame_promos_scroll, bg="#FFF8E1", bd=1, relief="solid", padx=10, pady=10)
-            card.pack(fill="x", pady=5, padx=5)
+        # Agrupar ofertas por categorías definidas
+        categorias_dict = {cat: [] for cat in CATEGORIAS_BODEGA}
+        for p in promos:
+            cat = p.get("categoria")
+            if not cat or cat not in categorias_dict:
+                cat = "Abarrotes y Despensa"
+            categorias_dict[cat].append(p)
 
-            ruta_foto = p.get("foto", "")
-            img_tk = obtener_imagen_miniatura(ruta_foto, ancho=75, alto=75)
+        # Renderizar por Secciones
+        for cat_nombre, lista_items in categorias_dict.items():
+            if not lista_items:
+                continue
 
-            if img_tk:
-                self.referencias_img_vecino.append(img_tk)
-                tk.Label(card, image=img_tk, bg="#FFF8E1").pack(side="left", padx=(0, 12))
-            else:
-                tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#FFE0B2", width=10, height=4).pack(side="left", padx=(0, 12))
-
-            frame_info = tk.Frame(card, bg="#FFF8E1")
-            frame_info.pack(side="left", fill="both", expand=True)
-
-            stock_text = p.get('stock', 'Ilimitado')
-            tk.Label(frame_info, text=f"🏪 {p.get('tienda_nombre', 'Tienda')} | 📦 Stock disponible: {stock_text}", font=("Arial", 9, "bold"), fg="#E65100", bg="#FFF8E1").pack(anchor="w")
-            tk.Label(frame_info, text=f"📌 {p.get('titulo', 'Oferta')}", font=("Arial", 11, "bold"), bg="#FFF8E1").pack(anchor="w", pady=(2, 0))
-            tk.Label(frame_info, text=f"📝 {p.get('descripcion', '')}", font=("Arial", 9), fg="#424242", bg="#FFF8E1").pack(anchor="w")
-            
-            puntos_costo = int(float(p.get('puntos', 0)))
-            tk.Label(
-                frame_info, 
-                text=f"Precio sugerido: S/ {p.get('precio_soles', 0):.2f}  ➔  Costo requerido: {puntos_costo} PTS", 
+            # Encabezado de la Categoría
+            lbl_sec = tk.Label(
+                scroll_frame, 
+                text=f"📂 {cat_nombre.upper()}", 
                 font=("Arial", 10, "bold"), 
-                fg="#2E7D32", 
-                bg="#FFF8E1"
-            ).pack(anchor="w", pady=(4, 0))
+                bg="#E8F5E9", 
+                fg="#1B4332", 
+                anchor="w",
+                padx=10,
+                pady=6
+            )
+            lbl_sec.pack(fill="x", padx=10, pady=(10, 5))
+
+            for p in lista_items:
+                card = tk.Frame(scroll_frame, bg="#FFF8E1", bd=1, relief="solid", padx=12, pady=10)
+                card.pack(fill="x", padx=10, pady=4)
+
+                stock_text = p.get('stock', '0')
+                puntos_costo = int(float(p.get('puntos', 0)))
+                
+                tk.Label(card, text=f"🏪 {p.get('tienda_nombre', 'Tienda')} | 📦 Stock disponible: {stock_text}", font=("Arial", 9, "bold"), fg="#E65100", bg="#FFF8E1").pack(anchor="w")
+                tk.Label(card, text=f"📌 {p.get('titulo', 'Oferta')}", font=("Arial", 11, "bold"), bg="#FFF8E1").pack(anchor="w", pady=(2, 0))
+                
+                desc = p.get('descripcion', '')
+                if desc:
+                    tk.Label(card, text=f"📝 {desc}", font=("Arial", 9), fg="#424242", bg="#FFF8E1").pack(anchor="w")
+                
+                tk.Label(
+                    card, 
+                    text=f"Precio sugerido: S/ {p.get('precio_soles', 0):.2f}  ➔  Costo requerido: {puntos_costo} PTS", 
+                    font=("Arial", 10, "bold"), 
+                    fg="#2E7D32", 
+                    bg="#FFF8E1"
+                ).pack(anchor="w", pady=(4, 0))
 
     def cargar_chat(self):
         marcar_chat_como_leido(self.id_usuario, "vecino")
