@@ -16,6 +16,17 @@ from datos.gestor import (
 
 COLOR_FONDO_VECINO = "#E8F5E9"
 
+# Categorías idénticas a la gestión de bodega
+CATEGORIAS_BODEGA = [
+    "Abarrotes y Despensa",
+    "Bebidas y Gaseosas",
+    "Licores y Cervezas",
+    "Dulces, Biscochos y Snacks",
+    "Limpieza del Hogar",
+    "Cuidado Personal y Aseo",
+    "Utensilios de Cocina / Hogar"
+]
+
 class VentanaVecino:
     def __init__(self, root, id_usuario, cerrar_sesion_cb):
         self.root = root
@@ -126,9 +137,9 @@ class VentanaVecino:
         notebook.add(tab_chat, text="💬 Soporte / Chat")
         notebook.add(tab_seguridad, text="🔐 Seguridad y Cuenta")
 
-        # --- 1. CATÁLOGO DE PROMOCIONES (Informativo) ---
-        self.frame_promos_scroll = tk.Frame(tab_promos, bg="white")
-        self.frame_promos_scroll.pack(fill="both", expand=True, padx=5, pady=5)
+        # --- 1. CATÁLOGO DE PROMOCIONES ---
+        self.frame_promos_container = tk.Frame(tab_promos, bg="white")
+        self.frame_promos_container.pack(fill="both", expand=True, padx=5, pady=5)
 
         # --- FUNCIÓN AUXILIAR DE TABLAS ---
         def crear_tabla_scroll(parent, cols, config):
@@ -151,35 +162,39 @@ class VentanaVecino:
                 tabla.column(col, width=w, minwidth=70, stretch=True)
             return tabla
 
-        # 2. TABLA DETALLADA DE RECICLAJE
+        # 2. TABLA DETALLADA DE RECICLAJE (Con anchos optimizados para evitar desbordes)
         cols_rec = ("fecha", "material", "peso", "puntos")
         config_rec = [
-            ("fecha", "Fecha / Hora", 160),
-            ("material", "Material Reciclado", 280),
-            ("peso", "Peso Entregado (kg)", 140),
-            ("puntos", "Puntos Obt.", 120)
+            ("fecha", "Fecha / Hora", 150),
+            ("material", "Material y Bodega", 320),
+            ("peso", "Peso (kg)", 120),
+            ("puntos", "Puntos Obt.", 100)
         ]
         self.tabla_reciclaje = crear_tabla_scroll(tab_reciclaje, cols_rec, config_rec)
 
-        # --- 3. SUB-PESTAÑAS DENTRO DE MOVIMIENTOS Y REGISTROS (Sin Canjes, solo Abonos, Entregas y Reseñas) ---
+        # --- 3. SUB-PESTAÑAS DENTRO DE MOVIMIENTOS Y REGISTROS ---
         sub_notebook = ttk.Notebook(tab_historial_general)
         sub_notebook.pack(fill="both", expand=True, padx=5, pady=5)
 
         sub_tab_abonos = ttk.Frame(sub_notebook)
         sub_tab_entregas = ttk.Frame(sub_notebook)
+        sub_tab_canjes = ttk.Frame(sub_notebook)
         sub_tab_resenas = ttk.Frame(sub_notebook)
 
         sub_notebook.add(sub_tab_abonos, text="♻️ Abonos")
-        sub_notebook.add(sub_tab_entregas, text="📦 Entregas")
+        sub_notebook.add(sub_tab_entregas, text="📦 Entregas Generales")
+        sub_notebook.add(sub_tab_canjes, text="🛒 Canjes en Bodega")
         sub_notebook.add(sub_tab_resenas, text="⭐ Reseñas")
 
         cols_sub = ("fecha", "puntos", "detalle")
         config_abonos = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos Abonados", 140), ("detalle", "Detalle de Reciclaje", 450)]
-        config_entregas = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos / Descuento", 140), ("detalle", "Detalle de Canje / Entrega", 450)]
+        config_entregas = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos / Operación", 140), ("detalle", "Detalle de Movimiento", 450)]
+        config_canjes = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos Descontados", 140), ("detalle", "Detalle del Canje en Bodega", 450)]
         config_resenas = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos", 100), ("detalle", "Calificación y Comentario", 490)]
 
         self.tabla_abonos = crear_tabla_scroll(sub_tab_abonos, cols_sub, config_abonos)
         self.tabla_entregas = crear_tabla_scroll(sub_tab_entregas, cols_sub, config_entregas)
+        self.tabla_canjes = crear_tabla_scroll(sub_tab_canjes, cols_sub, config_canjes)
         self.tabla_resenas = crear_tabla_scroll(sub_tab_resenas, cols_sub, config_resenas)
 
         # 4. CANAL DE CHAT CON DEVS Y ADMIN
@@ -258,7 +273,6 @@ class VentanaVecino:
             cursor="hand2"
         ).pack(anchor="w", pady=(0, 20))
 
-        # Información sobre el Cierre de Cuenta y Devolución Presencial
         info_baja_frame = tk.LabelFrame(frame_seg_box, text=" ℹ️ Información sobre el Cierre de Cuenta ", font=("Arial", 10, "bold"), fg="#1976D2", bg="white", padx=15, pady=10)
         info_baja_frame.pack(fill="x", pady=10)
 
@@ -432,6 +446,7 @@ class VentanaVecino:
         for item in self.tabla_reciclaje.get_children(): self.tabla_reciclaje.delete(item)
         for item in self.tabla_entregas.get_children(): self.tabla_entregas.delete(item)
         for item in self.tabla_abonos.get_children(): self.tabla_abonos.delete(item)
+        for item in self.tabla_canjes.get_children(): self.tabla_canjes.delete(item)
         for item in self.tabla_resenas.get_children(): self.tabla_resenas.delete(item)
 
         logs_cliente = [reg for reg in cargar_log_clientes() if reg.get("dni_cliente") == self.id_usuario]
@@ -442,16 +457,41 @@ class VentanaVecino:
             fecha = reg.get("fecha", "-")
             detalle = reg.get("detalle", "")
 
-            if tipo == "ABONO_RECICLAJE":
+            if tipo in ["ABONO_RECICLAJE", "RECICLAJE_RECIBIDO"]:
                 self.tabla_abonos.insert("", "end", values=(fecha, puntos, detalle))
-                if "Reciclaje de" in detalle:
+                
+                # Extracción limpia y profesional para la tabla de reciclaje detallado
+                if "Entrega de" in detalle or "Reciclaje de" in detalle:
                     try:
-                        info = detalle.replace("Reciclaje de ", "").replace(" kg)", "")
-                        partes = info.split(" (")
-                        material, peso = partes[0], partes[1] if len(partes) > 1 else "-"
+                        texto_limpio = detalle.replace("Entrega de ", "").replace("Reciclaje de ", "")
+                        
+                        if "kg de " in texto_limpio:
+                            partes_peso = texto_limpio.split("kg de ")
+                            peso_val = partes_peso[0].strip() + " kg"
+                            resto = partes_peso[1]
+                        elif "kg " in texto_limpio:
+                            partes_peso = texto_limpio.split("kg ")
+                            peso_val = partes_peso[0].strip() + " kg"
+                            resto = partes_peso[1]
+                        else:
+                            peso_val = "-"
+                            resto = texto_limpio
+
+                        if " en " in resto:
+                            partes_tienda = resto.split(" en ")
+                            material_val = partes_tienda[0].strip()
+                            tienda_val = partes_tienda[1].split(" (")[0].strip()
+                            detalle_material_formateado = f"{material_val} (Bodega: {tienda_val})"
+                        else:
+                            detalle_material_formateado = resto.split(" (")[0].strip()
+
+                        self.tabla_reciclaje.insert("", "end", values=(fecha, detalle_material_formateado, peso_val, puntos))
                     except Exception:
-                        material, peso = detalle, "-"
-                    self.tabla_reciclaje.insert("", "end", values=(fecha, material, peso, puntos))
+                        self.tabla_reciclaje.insert("", "end", values=(fecha, detalle, "-", puntos))
+            elif "CANJE_TIENDA" in tipo:
+                puntos_descontados = abs(puntos)
+                self.tabla_canjes.insert("", "end", values=(fecha, f"-{puntos_descontados} PTS", detalle))
+                self.tabla_entregas.insert("", "end", values=(fecha, puntos, detalle))
             elif "ENTREGA" in tipo or "CANJE" in tipo:
                 self.tabla_entregas.insert("", "end", values=(fecha, puntos, detalle))
             elif "RESEÑA" in tipo:
@@ -459,7 +499,6 @@ class VentanaVecino:
 
         self.cargar_chat()
 
-        # Detección automática del último log para abrir la ventana de reseña si aplica
         if logs_cliente:
             ultimo_log = logs_cliente[-1]
             tipo_ultimo = ultimo_log.get("tipo", "")
@@ -509,56 +548,79 @@ class VentanaVecino:
         tk.Button(win_cal, text="Enviar Calificación 📤", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), command=enviar_calificacion, relief="flat", pady=6, cursor="hand2").pack(pady=15)
 
     def cargar_catalogo_promociones(self):
-        for w in self.frame_promos_scroll.winfo_children():
+        for w in self.frame_promos_container.winfo_children():
             w.destroy()
+
+        canvas = tk.Canvas(self.frame_promos_container, bg="white", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self.frame_promos_container, orient="vertical", command=canvas.yview)
+        scroll_frame = tk.Frame(canvas, bg="white")
+
+        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
 
         promos = cargar_promociones()
         if not promos:
-            tk.Label(self.frame_promos_scroll, text="🛍️ No hay ofertas disponibles en este momento.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=40)
+            tk.Label(scroll_frame, text="🛍️ No hay ofertas disponibles en este momento.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=40, padx=20)
             return
 
-        self.referencias_img_vecino = []
-        from interfaces.utils import obtener_imagen_miniatura
-
         lbl_aviso_cat = tk.Label(
-            self.frame_promos_scroll, 
+            scroll_frame, 
             text="ℹ️ Catálogo Informativo: Visualiza las ofertas disponibles. Los canjes se realizan de forma presencial en la bodega.", 
             font=("Arial", 9, "italic"), 
             fg="#1976D2", 
             bg="white",
             pady=5
         )
-        lbl_aviso_cat.pack(anchor="w", padx=5, pady=(0, 5))
+        lbl_aviso_cat.pack(anchor="w", padx=10, pady=(5, 10))
 
-        for index, p in enumerate(promos):
-            card = tk.Frame(self.frame_promos_scroll, bg="#FFF8E1", bd=1, relief="solid", padx=10, pady=10)
-            card.pack(fill="x", pady=5, padx=5)
+        categorias_dict = {cat: [] for cat in CATEGORIAS_BODEGA}
+        for p in promos:
+            cat = p.get("categoria")
+            if not cat or cat not in categorias_dict:
+                cat = "Abarrotes y Despensa"
+            categorias_dict[cat].append(p)
 
-            ruta_foto = p.get("foto", "")
-            img_tk = obtener_imagen_miniatura(ruta_foto, ancho=75, alto=75)
+        for cat_nombre, lista_items in categorias_dict.items():
+            if not lista_items:
+                continue
 
-            if img_tk:
-                self.referencias_img_vecino.append(img_tk)
-                tk.Label(card, image=img_tk, bg="#FFF8E1").pack(side="left", padx=(0, 12))
-            else:
-                tk.Label(card, text="📷\nSin Foto", font=("Arial", 8), bg="#FFE0B2", width=10, height=4).pack(side="left", padx=(0, 12))
-
-            frame_info = tk.Frame(card, bg="#FFF8E1")
-            frame_info.pack(side="left", fill="both", expand=True)
-
-            stock_text = p.get('stock', 'Ilimitado')
-            tk.Label(frame_info, text=f"🏪 {p.get('tienda_nombre', 'Tienda')} | 📦 Stock disponible: {stock_text}", font=("Arial", 9, "bold"), fg="#E65100", bg="#FFF8E1").pack(anchor="w")
-            tk.Label(frame_info, text=f"📌 {p.get('titulo', 'Oferta')}", font=("Arial", 11, "bold"), bg="#FFF8E1").pack(anchor="w", pady=(2, 0))
-            tk.Label(frame_info, text=f"📝 {p.get('descripcion', '')}", font=("Arial", 9), fg="#424242", bg="#FFF8E1").pack(anchor="w")
-            
-            puntos_costo = int(float(p.get('puntos', 0)))
-            tk.Label(
-                frame_info, 
-                text=f"Precio sugerido: S/ {p.get('precio_soles', 0):.2f}  ➔  Costo requerido: {puntos_costo} PTS", 
+            lbl_sec = tk.Label(
+                scroll_frame, 
+                text=f"📂 {cat_nombre.upper()}", 
                 font=("Arial", 10, "bold"), 
-                fg="#2E7D32", 
-                bg="#FFF8E1"
-            ).pack(anchor="w", pady=(4, 0))
+                bg="#E8F5E9", 
+                fg="#1B4332", 
+                anchor="w",
+                padx=10,
+                pady=6
+            )
+            lbl_sec.pack(fill="x", padx=10, pady=(10, 5))
+
+            for p in lista_items:
+                card = tk.Frame(scroll_frame, bg="#FFF8E1", bd=1, relief="solid", padx=12, pady=10)
+                card.pack(fill="x", padx=10, pady=4)
+
+                stock_text = p.get('stock', '0')
+                puntos_costo = int(float(p.get('puntos', 0)))
+                
+                tk.Label(card, text=f"🏪 {p.get('tienda_nombre', 'Tienda')} | 📦 Stock disponible: {stock_text}", font=("Arial", 9, "bold"), fg="#E65100", bg="#FFF8E1").pack(anchor="w")
+                tk.Label(card, text=f"📌 {p.get('titulo', 'Oferta')}", font=("Arial", 11, "bold"), bg="#FFF8E1").pack(anchor="w", pady=(2, 0))
+                
+                desc = p.get('descripcion', '')
+                if desc:
+                    tk.Label(card, text=f"📝 {desc}", font=("Arial", 9), fg="#424242", bg="#FFF8E1").pack(anchor="w")
+                
+                tk.Label(
+                    card, 
+                    text=f"Precio sugerido: S/ {p.get('precio_soles', 0):.2f}  ➔  Costo requerido: {puntos_costo} PTS", 
+                    font=("Arial", 10, "bold"), 
+                    fg="#2E7D32", 
+                    bg="#FFF8E1"
+                ).pack(anchor="w", pady=(4, 0))
 
     def cargar_chat(self):
         marcar_chat_como_leido(self.id_usuario, "vecino")

@@ -115,7 +115,7 @@
         "autor": "Administrador Desarrollador",
         "rol": "admin",
         "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza67",
-        "leido": false
+        "leido": true
     },
     {
         "fecha": "2026-10-27 02:04:17",
@@ -123,7 +123,7 @@
         "autor": "Administrador Desarrollador",
         "rol": "admin",
         "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: waza69",
-        "leido": false
+        "leido": true
     },
     {
         "fecha": "2026-10-27 02:10:38",
@@ -131,7 +131,7 @@
         "autor": "Administrador Desarrollador",
         "rol": "admin",
         "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza100",
-        "leido": false
+        "leido": true
     },
     {
         "fecha": "2026-11-02 10:08:57",
@@ -139,6 +139,6 @@
         "autor": "Administrador Desarrollador",
         "rol": "admin",
         "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: por rompe sillas",
-        "leido": false
+        "leido": true
     }
 ]
