@@ -1000,7 +1000,7 @@ class VentanaAdmin:
         """Muestra las promociones en cuadrícula sobre fondo blanco con la ilustración de lirios."""
         win_promos = tk.Toplevel(self.root)
         win_promos.config(bg=COLOR_BLANCO)
-        win_promos.title("Gestión de Ofertas en Cuadrícula")
+        win_promos.title("Panel de Promociones")
         win_promos.geometry("720x540")
         win_promos.resizable(False, False)
         win_promos.grab_set()

@@ -701,7 +701,7 @@ class VentanaGestorReciclaje:
     def dialogo_ver_promociones_con_foto(self):
         win_promos = tk.Toplevel(self.root)
         win_promos.config(bg=COLOR_BLANCO)
-        win_promos.title("Gestión de Ofertas en Cuadrícula")
+        win_promos.title("Panel de promociones")
         win_promos.geometry("720x540")
         win_promos.resizable(False, False)
         win_promos.grab_set()
