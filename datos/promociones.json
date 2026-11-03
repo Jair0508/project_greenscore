@@ -1,22 +1,24 @@
 [
     {
-        "tienda_id": "75246852",
-        "tienda_nombre": "Bodega Luchito",
-        "titulo": "Turron Calderón",
-        "descripcion": "250gr, clásico",
-        "precio_soles": 3.0,
-        "puntos": 30.0,
-        "stock": 10,
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Jabon liquido",
+        "categoria": "Cuidado Personal y Aseo",
+        "descripcion": "jabon para jabonear",
+        "precio_soles": 4.0,
+        "puntos": 40.0,
+        "stock": 4,
         "foto": ""
     },
     {
-        "tienda_id": "75246852",
-        "tienda_nombre": "Bodega Luchito",
-        "titulo": "Pasta (de dientes)",
-        "descripcion": "awa y mas awa",
-        "precio_soles": 4.0,
-        "puntos": 40.0,
-        "stock": 10,
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Vitamina (Cristal)",
+        "categoria": "Licores y Cervezas",
+        "descripcion": "Salud",
+        "precio_soles": 6.5,
+        "puntos": 65.0,
+        "stock": 93,
         "foto": ""
     }
 ]

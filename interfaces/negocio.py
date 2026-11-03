@@ -1,6 +1,7 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox
 import os
+from logica.modelos import Material
 from datos.gestor import (
     cargar_usuarios, 
     guardar_usuarios, 
@@ -10,19 +11,42 @@ from datos.gestor import (
     guardar_promociones,
     eliminar_promocion,
     cargar_log_tiendas,
-    cargar_log_clientes
+    cargar_log_clientes,
+    registrar_entrega_reciclaje,
+    cargar_entregas_reciclaje
 )
+
+# Importamos matplotlib para generar gráficos estadísticos profesionales
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    MATPLOTLIB_DISPONIBLE = True
+except ImportError:
+    MATPLOTLIB_DISPONIBLE = False
 
 # ==========================================
 # PALETA DE COLORES "ECO-GESTIÓN" (SIN NEGRO)
 # ==========================================
-COLOR_FONDO_APP      = "#F4F9F4"  # Blanco Menta Suave (Fondo general)
-COLOR_TEXTO_MAIN     = "#1B4332"  # Verde Bosque Profundo (Reemplazo de negro)
-COLOR_PRIMARIO       = "#40916C"  # Verde Hoja (Headers / Acciones principales)
-COLOR_SECUNDARIO     = "#52B788"  # Verde Claro Fresco (Bordes / Elementos activos)
-COLOR_ACENTO_CANJE   = "#E76F51"  # Terracota Suave (Recompensas, Puntos y Alertas)
-COLOR_BLANCO         = "#FFFFFF"  # Blanco puro para tarjetas e inputs
-COLOR_ROJO_ELIMINAR  = "#C62828"  # Rojo para el botón de eliminar
+COLOR_FONDO_APP      = "#F4F9F4"  # Blanco Menta Suave
+COLOR_TEXTO_MAIN     = "#1B4332"  # Verde Bosque Profundo
+COLOR_PRIMARIO       = "#40916C"  # Verde Hoja
+COLOR_SECUNDARIO     = "#52B788"  # Verde Claro Fresco
+COLOR_ACENTO_CANJE   = "#E76F51"  # Terracota Suave
+COLOR_BLANCO         = "#FFFFFF"  # Blanco puro
+COLOR_ROJO_ELIMINAR  = "#C62828"  # Rojo para eliminar
+
+# Categorías específicas e independientes para Bodega
+CATEGORIAS_BODEGA = [
+    "Abarrotes y Despensa",
+    "Bebidas y Gaseosas",
+    "Licores y Cervezas",
+    "Dulces, Biscochos y Snacks",
+    "Limpieza del Hogar",
+    "Cuidado Personal y Aseo",
+    "Utensilios de Cocina / Hogar"
+]
 
 class VentanaNegocio:
     def __init__(self, root, id_usuario, cerrar_sesion_cb):
@@ -39,7 +63,7 @@ class VentanaNegocio:
 
             self.aplicar_icono()
 
-            # 1. CARGA DE IMAGEN DE FONDO (Dimensiones requeridas: 980x740 px)
+            # Imagen de Fondo (980x740 px)
             ruta_fondo = os.path.join("img", "fondo_negocio.png")
             if os.path.exists(ruta_fondo):
                 try:
@@ -52,7 +76,7 @@ class VentanaNegocio:
             self.aplicar_estilos_ttk()
 
             usuarios = cargar_usuarios()
-            self.nombre_negocio = usuarios.get(id_usuario, {}).get("nombre", "Comercio")
+            self.nombre_negocio = usuarios.get(str(id_usuario), {}).get("nombre", "Comercio")
 
             # Header Principal
             frame_top = tk.Frame(self.root, bg=COLOR_PRIMARIO)
@@ -101,12 +125,309 @@ class VentanaNegocio:
             notebook_negocio.pack(fill="both", expand=True, padx=15, pady=10)
 
             tab_terminal = ttk.Frame(notebook_negocio)
+            tab_reciclaje = ttk.Frame(notebook_negocio)
+            tab_stats = ttk.Frame(notebook_negocio)       # NUEVA PESTAÑA: GRÁFICOS Y TOTALES
             tab_historial = ttk.Frame(notebook_negocio)
             tab_resenas = ttk.Frame(notebook_negocio)
 
             notebook_negocio.add(tab_terminal, text="💳 Terminal y Publicación")
+            notebook_negocio.add(tab_reciclaje, text="♻️ Recibir Reciclaje")
+            notebook_negocio.add(tab_stats, text="📊 Estadísticas y Gráficos") # Pestaña añadida[cite: 9]
             notebook_negocio.add(tab_historial, text="📜 Historial y Gestión de Ofertas")
             notebook_negocio.add(tab_resenas, text="⭐ Mis Reseñas y Calificación")
+
+            # ==========================================
+            # VERIFICACIÓN DE ABONO SUSPENDIDO
+            # ==========================================
+            datos_tienda = usuarios.get(str(self.id_usuario), {})
+            abono_suspendido = datos_tienda.get("abono_suspendido", False)
+
+            if abono_suspendido:
+                frame_bloqueo = tk.Frame(tab_reciclaje, bg=COLOR_BLANCO, padx=25, pady=25)
+                frame_bloqueo.pack(fill="both", expand=True, padx=15, pady=15)
+                tk.Label(
+                    frame_bloqueo,
+                    text="⚠️ ATENCIÓN: ABONO SUSPENDIDO",
+                    font=("Arial", 14, "bold"),
+                    fg=COLOR_ROJO_ELIMINAR,
+                    bg=COLOR_BLANCO
+                ).pack(pady=(20, 10))
+                tk.Label(
+                    frame_bloqueo,
+                    text="Su cuenta comercial tiene los abonos suspendidos.\nPor favor, contacte al administrador del sistema para más información.",
+                    font=("Arial", 11),
+                    fg=COLOR_TEXTO_MAIN,
+                    bg=COLOR_BLANCO,
+                    justify="center"
+                ).pack(pady=10)
+            else:
+                # ==========================================
+                # PESTAÑA: RECIBIR RECICLAJE
+                # ==========================================
+                frame_rec_box = tk.Frame(tab_reciclaje, bg=COLOR_BLANCO, padx=15, pady=15)
+                frame_rec_box.pack(fill="both", expand=True, padx=15, pady=15)
+
+                frame_form_rec = tk.LabelFrame(
+                    frame_rec_box,
+                    text=" Registrar Pesaje de Material Reciclado ",
+                    font=("Arial", 11, "bold"),
+                    padx=15,
+                    pady=10,
+                    bg=COLOR_BLANCO,
+                    fg=COLOR_TEXTO_MAIN
+                )
+                frame_form_rec.pack(fill="x", pady=(0, 15))
+
+                f_dni = tk.Frame(frame_form_rec, bg=COLOR_BLANCO)
+                f_dni.pack(fill="x", pady=5)
+                tk.Label(f_dni, text="DNI del Vecino:", font=("Arial", 10), width=15, anchor="w", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(side="left")
+                self.ent_dni_rec = tk.Entry(f_dni, font=("Arial", 11), width=15, bg=COLOR_FONDO_APP, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
+                self.ent_dni_rec.pack(side="left", padx=5, ipady=2)
+                
+                self.lbl_nombre_vecino_rec = tk.Label(f_dni, text="Vecino: No verificado", font=("Arial", 10, "bold"), bg=COLOR_BLANCO, fg=COLOR_PRIMARIO)
+                self.lbl_nombre_vecino_rec.pack(side="left", padx=15)
+
+                def verificar_vecino_reciclaje(event=None):
+                    dni_val = self.ent_dni_rec.get().strip()
+                    usrs = cargar_usuarios()
+                    if dni_val in usrs and usrs[dni_val].get("rol") == "vecino":
+                        nom = usrs[dni_val].get("nombre", "Vecino")
+                        self.lbl_nombre_vecino_rec.config(text=f"Vecino: {nom}")
+                    else:
+                        self.lbl_nombre_vecino_rec.config(text="Vecino: No encontrado")
+
+                self.ent_dni_rec.bind("<KeyRelease>", verificar_vecino_reciclaje)
+
+                f_mat = tk.Frame(frame_form_rec, bg=COLOR_BLANCO)
+                f_mat.pack(fill="x", pady=5)
+                tk.Label(f_mat, text="Material:", font=("Arial", 10), width=15, anchor="w", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(side="left")
+                
+                self.cb_material = ttk.Combobox(
+                    f_mat,
+                    values=list(Material.TASAS.keys()),
+                    state="readonly",
+                    font=("Arial", 10),
+                    width=25
+                )
+                self.cb_material.pack(side="left", padx=5)
+                if Material.TASAS:
+                    self.cb_material.set(list(Material.TASAS.keys())[0])
+
+                f_peso = tk.Frame(frame_form_rec, bg=COLOR_BLANCO)
+                f_peso.pack(fill="x", pady=5)
+                tk.Label(f_peso, text="Peso (kg):", font=("Arial", 10), width=15, anchor="w", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(side="left")
+                self.ent_peso = tk.Entry(f_peso, font=("Arial", 11), width=15, bg=COLOR_FONDO_APP, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
+                self.ent_peso.pack(side="left", padx=5, ipady=2)
+
+                self.lbl_calculo_pts = tk.Label(f_peso, text="Puntos a abonar: 0 PTS", font=("Arial", 10, "bold"), bg=COLOR_BLANCO, fg=COLOR_ACENTO_CANJE)
+                self.lbl_calculo_pts.pack(side="left", padx=15)
+
+                def calcular_puntos_live(event=None):
+                    try:
+                        mat = self.cb_material.get()
+                        peso_val = float(self.ent_peso.get().strip())
+                        if peso_val > 0:
+                            pts_calc = Material.calcular_puntos(mat, peso_val)
+                            self.lbl_calculo_pts.config(text=f"Puntos a abonar: {pts_calc} PTS")
+                        else:
+                            self.lbl_calculo_pts.config(text="Puntos a abonar: 0 PTS")
+                    except ValueError:
+                        self.lbl_calculo_pts.config(text="Puntos a abonar: 0 PTS")
+
+                self.ent_peso.bind("<KeyRelease>", calcular_puntos_live)
+                self.cb_material.bind("<<ComboboxSelected>>", calcular_puntos_live)
+
+                def procesar_pesaje():
+                    dni = self.ent_dni_rec.get().strip()
+                    mat = self.cb_material.get()
+                    peso_str = self.ent_peso.get().strip()
+
+                    usrs = cargar_usuarios()
+                    if dni not in usrs or usrs[dni].get("rol") != "vecino":
+                        messagebox.showerror("Error", "Debe ingresar el DNI de un vecino registrado.")
+                        return
+
+                    try:
+                        peso = float(peso_str)
+                    except ValueError:
+                        messagebox.showerror("Error", "Ingrese un valor numérico válido para el peso en kg.")
+                        return
+
+                    if peso <= 0:
+                        messagebox.showerror("Error", "No se aceptan pesos de 0 o negativos.")
+                        return
+                    if peso > 50:
+                        messagebox.showerror("Error", "El límite máximo por una sola entrega es de 50 kg.")
+                        return
+
+                    puntos_ganados = Material.calcular_puntos(mat, peso)
+                    nombre_vecino = usrs[dni].get("nombre", "Vecino")
+
+                    if messagebox.askyesno("Confirmar Abono", f"¿Abonar {puntos_ganados} puntos a {nombre_vecino} por {peso} kg de {mat}?"):
+                        saldo_actual = usrs[dni].get("puntos", 0)
+                        nuevo_saldo = saldo_actual + puntos_ganados
+                        
+                        if nuevo_saldo > 2000:
+                            messagebox.showwarning("Tope Máximo", "El vecino alcanzaría más de 2,000 puntos. Se ajustará al tope máximo permitido.")
+                            nuevo_saldo = 2000
+
+                        usrs[dni]["puntos"] = nuevo_saldo
+                        guardar_usuarios(usrs)
+
+                        registrar_entrega_reciclaje(self.id_usuario, dni, mat, peso, puntos_ganados)
+
+                        registrar_accion_cliente(
+                            dni,
+                            "RECICLAJE_RECIBIDO",
+                            puntos_ganados,
+                            f"Entrega de {peso}kg de {mat} en {self.nombre_negocio} (+{puntos_ganados} PTS)"
+                        )
+
+                        messagebox.showinfo("Éxito", f"¡Se han abonado {puntos_ganados} puntos correctamente al vecino!")
+                        self.ent_dni_rec.delete(0, tk.END)
+                        self.ent_peso.delete(0, tk.END)
+                        self.lbl_nombre_vecino_rec.config(text="Vecino: No verificado")
+                        self.lbl_calculo_pts.config(text="Puntos a abonar: 0 PTS")
+                        actualizar_tabla_entregas()
+                        actualizar_panel_estadisticas()
+
+                tk.Button(
+                    frame_form_rec,
+                    text="💾 Confirmar y Abonar Puntos al Vecino",
+                    bg=COLOR_PRIMARIO,
+                    fg=COLOR_BLANCO,
+                    font=("Arial", 10, "bold"),
+                    relief="flat",
+                    command=procesar_pesaje,
+                    pady=6,
+                    cursor="hand2"
+                ).pack(anchor="e", pady=(10, 0))
+
+                tk.Label(
+                    frame_rec_box,
+                    text="📊 Historial de Entregas Recibidas (Esta Bodega):",
+                    font=("Arial", 11, "bold"),
+                    bg=COLOR_BLANCO,
+                    fg=COLOR_TEXTO_MAIN
+                ).pack(anchor="w", pady=(10, 5))
+
+                cols_ent = ("fecha", "dni", "material", "peso", "puntos")
+                frame_t_ent = ttk.Frame(frame_rec_box)
+                frame_t_ent.pack(fill="both", expand=True, pady=5)
+
+                sy_ent = ttk.Scrollbar(frame_t_ent, orient="vertical")
+                self.tabla_entregas = ttk.Treeview(frame_t_ent, columns=cols_ent, show="headings", yscrollcommand=sy_ent.set)
+                sy_ent.config(command=self.tabla_entregas.yview)
+                sy_ent.pack(side="right", fill="y")
+                self.tabla_entregas.pack(side="left", fill="both", expand=True)
+
+                config_cols_ent = [
+                    ("fecha", "Fecha / Hora", 160),
+                    ("dni", "DNI Vecino", 110),
+                    ("material", "Material", 150),
+                    ("peso", "Peso (kg)", 90),
+                    ("puntos", "Puntos Abonados", 130)
+                ]
+                for col, txt, w in config_cols_ent:
+                    self.tabla_entregas.heading(col, text=txt)
+                    self.tabla_entregas.column(col, width=w, stretch=True)
+
+                def actualizar_tabla_entregas():
+                    for item in self.tabla_entregas.get_children():
+                        self.tabla_entregas.delete(item)
+                    
+                    todas_entregas = cargar_entregas_reciclaje()
+                    for ent in reversed(todas_entregas):
+                        if str(ent.get("tienda_id")) == str(self.id_usuario):
+                            self.tabla_entregas.insert(
+                                "",
+                                "end",
+                                values=(
+                                    ent.get("fecha", "-"),
+                                    ent.get("dni_cliente", "-"),
+                                    ent.get("material", "-"),
+                                    f"{ent.get('peso_kg', 0)} kg",
+                                    f"+{ent.get('puntos', 0)} PTS"
+                                )
+                            )
+
+                actualizar_tabla_entregas()
+
+            # ==========================================
+            # PESTAÑA: ESTADÍSTICAS Y GRÁFICOS
+            # ==========================================
+            frame_stats_box = tk.Frame(tab_stats, bg=COLOR_BLANCO, padx=15, pady=15)
+            frame_stats_box.pack(fill="both", expand=True, padx=15, pady=15)
+
+            tk.Label(
+                frame_stats_box,
+                text="📈 Resumen de Kilogramos Reciclados por Material",
+                font=("Arial", 12, "bold"),
+                bg=COLOR_BLANCO,
+                fg=COLOR_TEXTO_MAIN
+            ).pack(anchor="w", pady=(0, 10))
+
+            frame_grafico_container = tk.Frame(frame_stats_box, bg=COLOR_BLANCO, bd=1, relief="solid", highlightbackground=COLOR_SECUNDARIO)
+            frame_grafico_container.pack(fill="both", expand=True)
+
+            def actualizar_panel_estadisticas():
+                for w in frame_grafico_container.winfo_children():
+                    w.destroy()
+
+                todas_entregas = cargar_entregas_reciclaje()
+                mis_entregas = [e for e in todas_entregas if str(e.get("tienda_id")) == str(self.id_usuario)]
+
+                totales_material = {}
+                for ent in mis_entregas:
+                    mat = ent.get("material", "Desconocido")
+                    peso = float(ent.get("peso_kg", 0))
+                    totales_material[mat] = totales_material.get(mat, 0.0) + peso
+
+                if not mis_entregas or not totales_material:
+                    tk.Label(
+                        frame_grafico_container,
+                        text="No hay registros de reciclaje suficientes para mostrar estadísticas.",
+                        font=("Arial", 11, "italic"),
+                        fg="#757575",
+                        bg=COLOR_BLANCO
+                    ).pack(pady=100)
+                    return
+
+                if MATPLOTLIB_DISPONIBLE:
+                    # Ajuste definitivo de dimensiones y márgenes amplios para que las etiquetas no se corten
+                    fig, ax = plt.subplots(figsize=(6.8, 3.8), dpi=100)
+                    fig.patch.set_facecolor(COLOR_BLANCO)
+                    ax.set_facecolor(COLOR_FONDO_APP)
+
+                    materiales = list(totales_material.keys())
+                    kilos = list(totales_material.values())
+
+                    colores_palette = ['#40916C', '#52B788', '#E76F51', '#2D6A4F', '#95D5B2', '#D8F3DC']
+                    colores_usados = [colores_palette[i % len(colores_palette)] for i in range(len(materiales))]
+
+                    # Barras ligeramente más angostas para perfecta separación
+                    barras = ax.bar(materiales, kilos, color=colores_usados, width=0.3)
+                    ax.set_title("Total de Kilogramos Recogidos por Material", fontsize=11, fontweight="bold", color=COLOR_TEXTO_MAIN)
+                    ax.set_ylabel("Kilogramos (kg)", fontsize=10, color=COLOR_TEXTO_MAIN)
+                    
+                    # Rotación limpia de 30° con fuente ajustada
+                    plt.xticks(range(len(materiales)), materiales, rotation=30, ha="right", fontsize=8, color=COLOR_TEXTO_MAIN)
+                    
+                    ax.spines['top'].set_visible(False)
+                    ax.spines['right'].set_visible(False)
+
+                    # Márgenes perfectamente calculados para evitar que se corte por los lados o abajo
+                    plt.subplots_adjust(bottom=0.42, top=0.9, left=0.08, right=0.98)
+
+                    canvas_grafico = FigureCanvasTkAgg(fig, master=frame_grafico_container)
+                    canvas_grafico.draw()
+                    canvas_grafico.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+                else:
+                    tk.Label(frame_grafico_container, text="Totales acumulados:", font=("Arial", 11, "bold"), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(anchor="w", padx=20, pady=10)
+                    for mat, kg in totales_material.items():
+                        tk.Label(frame_grafico_container, text=f"• {mat}: {kg:.2f} kg", font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(anchor="w", padx=30, pady=2)
+
+            actualizar_panel_estadisticas()
 
             # ==========================================
             # PESTAÑA 1: TERMINAL Y PUBLICACIÓN
@@ -175,7 +496,7 @@ class VentanaNegocio:
             )
             self.lbl_saldo.pack(anchor="w", pady=5)
 
-            # Botón único de Canje Presencial (Acento Terracota)
+            # Botón único de Canje Presencial
             self.btn_canjear = tk.Button(
                 frame_central, 
                 text="💳 Canje de Ofertas en Caja", 
@@ -207,7 +528,7 @@ class VentanaNegocio:
             ).pack(fill="x")
 
             # ==========================================
-            # PESTAÑA 2: HISTORIAL Y GESTIÓN DE OFERTAS
+            # PESTAÑA: HISTORIAL Y GESTIÓN DE OFERTAS
             # ==========================================
             frame_hist_box = tk.Frame(tab_historial, bg=COLOR_BLANCO, padx=15, pady=15)
             frame_hist_box.pack(fill="both", expand=True, padx=15, pady=15)
@@ -266,7 +587,7 @@ class VentanaNegocio:
                 self.tabla_historial_tienda.column(col, width=w, minwidth=80, stretch=True)
 
             # ==========================================
-            # PESTAÑA 3: RESEÑAS Y CALIFICACIONES DEL NEGOCIO
+            # PESTAÑA: RESEÑAS Y CALIFICACIONES DEL NEGOCIO
             # ==========================================
             frame_res_box = tk.Frame(tab_resenas, bg=COLOR_BLANCO, padx=15, pady=15)
             frame_res_box.pack(fill="both", expand=True, padx=15, pady=15)
@@ -386,16 +707,16 @@ class VentanaNegocio:
             return
 
         promos = cargar_promociones()
-        mis_promos = [p for p in promos if str(p.get("tienda_id")) == str(self.id_usuario)]
+        mis_promos = [(i, p) for i, p in enumerate(promos) if str(p.get("tienda_id")) == str(self.id_usuario) and int(p.get("stock", 0)) > 0]
 
         if not mis_promos:
-            messagebox.showwarning("Sin Ofertas", "Este comercio no tiene ofertas o promociones publicadas actualmente.")
+            messagebox.showwarning("Sin Ofertas Disponibles", "Este comercio no tiene ofertas con stock disponible en este momento.")
             return
 
         win_cobro = tk.Toplevel(self.root)
         win_cobro.config(bg=COLOR_FONDO_APP)
         win_cobro.title("Canje de Ofertas en Caja")
-        win_cobro.geometry("480x450")
+        win_cobro.geometry("520x480")
         win_cobro.resizable(False, False)
         win_cobro.grab_set()
 
@@ -413,7 +734,7 @@ class VentanaNegocio:
 
         tk.Label(
             win_cobro, 
-            text="Seleccione una o varias ofertas a canjear:", 
+            text="Seleccione las ofertas y la cantidad a canjear:", 
             font=("Arial", 9, "bold"),
             fg=COLOR_TEXTO_MAIN,
             bg=COLOR_FONDO_APP
@@ -433,27 +754,32 @@ class VentanaNegocio:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        vars_promos = []
-        for p in mis_promos:
-            var = tk.BooleanVar()
+        items_canje = []
+        for idx_promo, p in mis_promos:
+            row_frame = tk.Frame(scroll_frame, bg=COLOR_BLANCO)
+            row_frame.pack(fill="x", padx=10, pady=5)
+
+            var_chk = tk.BooleanVar()
             costo = int(float(p.get("puntos", 0)))
             titulo = p.get("titulo", "Oferta")
-            stock = p.get("stock", "10")
-            texto_chk = f"{titulo} — Costo: {costo} PTS (Stock: {stock})"
-            
+            stock_max = int(p.get("stock", 0))
+
             chk = tk.Checkbutton(
-                scroll_frame, 
-                text=texto_chk, 
-                variable=var, 
+                row_frame, 
+                text=f"{titulo} ({costo} PTS) - Stock: {stock_max}", 
+                variable=var_chk, 
                 bg=COLOR_BLANCO, 
                 fg=COLOR_TEXTO_MAIN,
-                activebackground=COLOR_BLANCO,
-                activeforeground=COLOR_TEXTO_MAIN,
-                font=("Arial", 9), 
+                font=("Arial", 9, "bold"), 
                 anchor="w"
             )
-            chk.pack(fill="x", padx=10, pady=4, anchor="w")
-            vars_promos.append((var, costo, titulo))
+            chk.pack(side="left", fill="x", expand=True)
+
+            tk.Label(row_frame, text="Cant:", font=("Arial", 9), bg=COLOR_BLANCO).pack(side="left", padx=(5, 2))
+            spin_cant = tk.Spinbox(row_frame, from_=1, to=stock_max, width=4, font=("Arial", 9))
+            spin_cant.pack(side="right", padx=5)
+
+            items_canje.append((idx_promo, var_chk, spin_cant, costo, titulo, stock_max))
 
         frame_btns = tk.Frame(win_cobro, bg=COLOR_FONDO_APP)
         frame_btns.pack(pady=15)
@@ -461,11 +787,25 @@ class VentanaNegocio:
         def procesar_canje_seleccionado():
             puntos_totales = 0
             ofertas_canjeadas = []
+            operaciones_stock = []
 
-            for var, costo, titulo in vars_promos:
+            for idx_promo, var, spin, costo, titulo, stock_max in items_canje:
                 if var.get():
-                    puntos_totales += costo
-                    ofertas_canjeadas.append(titulo)
+                    try:
+                        cant = int(spin.get())
+                        if cant <= 0:
+                            continue
+                        if cant > stock_max:
+                            messagebox.showerror("Error de Stock", f"La cantidad solicitada de '{titulo}' excede el stock disponible ({stock_max}).")
+                            return
+                        
+                        subtotal = costo * cant
+                        puntos_totales += subtotal
+                        ofertas_canjeadas.append(f"{cant}x {titulo}")
+                        operaciones_stock.append((idx_promo, cant))
+                    except ValueError:
+                        messagebox.showerror("Error", f"Ingrese una cantidad válida para '{titulo}'.")
+                        return
 
             if puntos_totales == 0:
                 messagebox.showwarning("Atención", "Debe seleccionar al menos una oferta para canjear.")
@@ -481,20 +821,29 @@ class VentanaNegocio:
             usuarios[self.vecino_actual]["puntos"] -= puntos_totales
             guardar_usuarios(usuarios)
 
+            promos_actuales = cargar_promociones()
+            for idx_p, cant_descontar in operaciones_stock:
+                if idx_p < len(promos_actuales):
+                    stock_prev = int(promos_actuales[idx_p].get("stock", 0))
+                    nuevo_stock = max(0, stock_prev - cant_descontar)
+                    promos_actuales[idx_p]["stock"] = nuevo_stock
+            guardar_promociones(promos_actuales)
+
             try:
                 registrar_accion_tienda(self.id_usuario, self.nombre_negocio, self.vecino_actual, puntos_totales)
                 registrar_accion_cliente(
                     self.vecino_actual, 
                     "CANJE_TIENDA", 
                     -puntos_totales, 
-                    f"Canje de ofertas: {', '.join(ofertas_canjeadas)}"
+                    f"Canje de ofertas: {', '.join(ofertas_canjeadas)} en {self.nombre_negocio}"
                 )
             except Exception as e:
                 print(f"Aviso log: {e}")
 
-            messagebox.showinfo("Éxito", f"¡Canje completado! Se han descontado {puntos_totales} PTS en total.")
+            messagebox.showinfo("Éxito", f"¡Canje completado!\nSe han descontado {puntos_totales} PTS y actualizado el stock de productos.")
             win_cobro.destroy()
             self.consultar_vecino()
+            self.actualizar_historial_tienda()
 
         tk.Button(
             frame_btns, 
@@ -526,7 +875,7 @@ class VentanaNegocio:
         win_promo = tk.Toplevel(self.root)
         win_promo.config(bg=COLOR_FONDO_APP)
         win_promo.title("Publicar Oferta / Promoción")
-        win_promo.geometry("380x380")
+        win_promo.geometry("420x500")
         win_promo.resizable(False, False)
         win_promo.grab_set()
 
@@ -536,6 +885,21 @@ class VentanaNegocio:
         tk.Label(win_promo, text="Título de Promoción (Máx 25 caract.):", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(15, 2))
         ent_titulo = tk.Entry(win_promo, font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
         ent_titulo.pack(fill="x", padx=20)
+
+        tk.Label(win_promo, text="Categoría de la Oferta:", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(10, 2))
+        combo_categoria = ttk.Combobox(
+            win_promo, 
+            state="readonly", 
+            values=CATEGORIAS_BODEGA, 
+            font=("Arial", 10)
+        )
+        combo_categoria.pack(fill="x", padx=20)
+        combo_categoria.set("Abarrotes y Despensa")
+
+        tk.Label(win_promo, text="Cantidad Inicial en Stock (Unidades):", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(10, 2))
+        ent_stock = tk.Entry(win_promo, font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
+        ent_stock.pack(fill="x", padx=20)
+        ent_stock.insert(0, "10")
 
         tk.Label(win_promo, text="Precio Normal en Soles (S/):", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(10, 2))
         ent_precio = tk.Entry(win_promo, font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
@@ -560,11 +924,22 @@ class VentanaNegocio:
 
         def guardar_promo():
             titulo = ent_titulo.get().strip()
+            categoria = combo_categoria.get()
+            stock_str = ent_stock.get().strip()
             desc = ent_desc.get().strip()
             precio_str = ent_precio.get().strip()
 
             if len(titulo) == 0 or len(titulo) > 25:
                 messagebox.showerror("Error", "El título es obligatorio y debe tener como máximo 25 caracteres.")
+                return
+
+            try:
+                stock_val = int(stock_str)
+                if stock_val <= 0:
+                    messagebox.showerror("Error", "El stock inicial debe ser mayor a 0.")
+                    return
+            except ValueError:
+                messagebox.showerror("Error", "Ingrese un número entero válido para el stock.")
                 return
 
             if len(desc) == 0 or len(desc) > 100:
@@ -583,10 +958,11 @@ class VentanaNegocio:
                 "tienda_id": self.id_usuario,
                 "tienda_nombre": self.nombre_negocio,
                 "titulo": titulo,
+                "categoria": categoria,
                 "descripcion": desc,
                 "precio_soles": precio_soles,
                 "puntos": pts_requeridos,
-                "stock": 10,
+                "stock": stock_val,
                 "foto": ""
             })
             guardar_promociones(promos)
@@ -631,7 +1007,7 @@ class VentanaNegocio:
         contenido = (
             "REGLAS DE OPERACIÓN PARA BODEGAS Y COMERCIOS — ECOPUNTOS\n\n"
             "1. GESTIÓN DE CANJES Y VENTAS PRESENCIALES\n"
-            "• Toda transacción de puntos, entrega de productos ofertados o descuentos en caja debe realizarse de forma estrictamente presencial mediante la validación del DNI del vecino en esta terminal.\n\n"
+            "• Toda transacción de puntos, entrega de productos ofertados o descuentos en caja debe realizarse de forma presencial mediante la validación del DNI del vecino en esta terminal.\n\n"
             "2. LÍMITE DE PUNTOS POR CLIENTE\n"
             "• Ningún vecino podrá acumular más de 2,000 puntos (S/ 200.00) en su saldo activo. Si un cliente alcanza el tope, se le exhortará a realizar canjes antes de recibir nuevos abonos por reciclaje.\n\n"
             "3. CONTROL DE INVENTARIO Y STOCK\n"
@@ -650,7 +1026,7 @@ class VentanaNegocio:
 
         logs = cargar_log_tiendas()
         for log in reversed(logs):
-            if log.get("tienda_id") == self.id_usuario:
+            if str(log.get("tienda_id")) == str(self.id_usuario):
                 puntos_int = int(float(log.get('puntos_descontados', 0)))
                 puntos_txt = f"{puntos_int} PTS" if puntos_int == 0 else f"-{puntos_int} PTS"
                 self.tabla_historial_tienda.insert(
@@ -670,30 +1046,36 @@ class VentanaNegocio:
         logs = cargar_log_clientes()
         mis_resenas = []
         suma_calificaciones = 0
+        nombre_lower = self.nombre_negocio.strip().lower()
 
         for log in reversed(logs):
-            if log.get("tipo") == "RESEÑA_TIENDA":
-                detalle = log.get("detalle", "")
-                if self.nombre_negocio.lower() in detalle.lower():
+            tipo = log.get("tipo", "")
+            detalle = log.get("detalle", "").strip()
+            
+            if "RESEÑA" in tipo or "Reseña para" in detalle:
+                detalle_lower = detalle.lower()
+                if nombre_lower in detalle_lower:
                     fecha = log.get("fecha", "-")
                     dni = log.get("dni_cliente", "-")
                     
                     estrellas_str = "⭐ (Sin calificación)"
                     comentario_str = detalle
-                    valor_numerico = 0
+                    valor_numerico = 5
 
                     if "Calificación:" in detalle:
-                        partes = detalle.split("Calificación:")
-                        if len(partes) > 1:
-                            subpartes = partes[1].split("|")
-                            estrellas_str = subpartes[0].strip()
-                            if len(subpartes) > 1:
-                                comentario_str = subpartes[1].replace("Reseña:", "").strip()
-
-                            try:
-                                valor_numerico = int(estrellas_str.split("/")[0].replace("(", "").strip())
-                            except Exception:
-                                valor_numerico = 5
+                        try:
+                            partes = detalle.split("Calificación:")
+                            if len(partes) > 1:
+                                subpartes = partes[1].split("|")
+                                estrellas_str = subpartes[0].strip()
+                                if len(subpartes) > 1:
+                                    comentario_str = subpartes[1].replace("Reseña:", "").strip()
+                                
+                                if "(" in estrellas_str:
+                                    num_extraido = estrellas_str.split("(")[1].split("/")[0].strip()
+                                    valor_numerico = int(num_extraido)
+                        except Exception:
+                            valor_numerico = 5
 
                     suma_calificaciones += valor_numerico
                     mis_resenas.append((fecha, dni, estrellas_str, comentario_str))
@@ -709,113 +1091,133 @@ class VentanaNegocio:
             self.lbl_total_resenas.config(text="📊 Total de Opiniones Recibidas: 0 reseñas")
 
     def dialogo_mis_promociones(self):
-        """Lista las promociones utilizando una imagen personalizada para el contenedor interno."""
         win_list = tk.Toplevel(self.root)
         win_list.title("Mis Ofertas Publicadas - Gestión")
-        win_list.geometry("640x480")
+        win_list.geometry("680x540")
         win_list.resizable(False, False)
         win_list.grab_set()
 
         if hasattr(self.root, 'icon_img'):
             win_list.iconphoto(False, self.root.icon_img)
 
-        # 1. Fondo de la ventana modal completa (640x480 px)
-        ruta_fondo_modal = os.path.join("img", "fondo_mis_ofertas.png")
-        if not os.path.exists(ruta_fondo_modal):
-            ruta_fondo_modal = os.path.join("img", "fondo_negocio.png")
+        canvas = tk.Canvas(win_list, bg=COLOR_BLANCO, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(win_list, orient="vertical", command=canvas.yview)
+        frame_container = tk.Frame(canvas, bg=COLOR_BLANCO)
 
-        padre_ui = win_list
-        if os.path.exists(ruta_fondo_modal):
-            try:
-                win_list.bg_img = tk.PhotoImage(file=ruta_fondo_modal)
-                lbl_fondo = tk.Label(win_list, image=win_list.bg_img)
-                lbl_fondo.place(x=0, y=0, relwidth=1, relheight=1)
-                padre_ui = lbl_fondo
-            except Exception as e:
-                print(f"Aviso imagen de fondo modal: {e}")
+        def actualizar_scroll(event=None):
+            canvas.configure(scrollregion=canvas.bbox("all"))
 
-        # 2. Imagen contenedora central (590x430 px) en reemplazo del recuadro gris
-        ruta_tarjeta = os.path.join("img", "tarjeta_contenedor.png")
-        if os.path.exists(ruta_tarjeta):
-            try:
-                win_list.img_tarjeta = tk.PhotoImage(file=ruta_tarjeta)
-                lbl_tarjeta = tk.Label(padre_ui, image=win_list.img_tarjeta, bg=COLOR_FONDO_APP)
-                lbl_tarjeta.pack(fill="both", expand=True, padx=25, pady=25)
-                frame_container = lbl_tarjeta
-            except Exception:
-                frame_container = tk.Frame(padre_ui, bg=COLOR_FONDO_APP)
-                frame_container.pack(fill="both", expand=True, padx=25, pady=25)
-        else:
-            # Si no hay imagen asignada, usa transparencia nativa
-            frame_container = tk.Frame(padre_ui, bg=COLOR_FONDO_APP)
-            frame_container.pack(fill="both", expand=True, padx=25, pady=25)
+        frame_container.bind("<Configure>", actualizar_scroll)
+        canvas_window = canvas.create_window((0, 0), window=frame_container, anchor="nw")
+
+        def ajustar_ancho_canvas(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+
+        canvas.bind('<Configure>', ajustar_ancho_canvas)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
 
         def refrescar():
             for w in frame_container.winfo_children(): 
                 w.destroy()
+                
             promos = cargar_promociones()
             mis_promos = [(i, p) for i, p in enumerate(promos) if str(p.get("tienda_id")) == str(self.id_usuario)]
 
             if not mis_promos:
-                lbl_vacio = tk.Label(frame_container, text="No tienes ofertas publicadas actualmente.", font=("Arial", 11, "italic"), fg="#757575", bg=COLOR_BLANCO)
-                lbl_vacio.pack(pady=50)
+                lbl_vacio = tk.Label(
+                    frame_container, 
+                    text="No tienes ofertas publicadas actualmente.\n¡Usa el botón de 'Publicar Nueva Oferta' para agregar productos!", 
+                    font=("Arial", 11, "italic"), 
+                    fg="#757575", 
+                    bg=COLOR_BLANCO,
+                    justify="center"
+                )
+                lbl_vacio.pack(pady=80, padx=50)
                 return
 
-            # Título
             lbl_titulo = tk.Label(
                 frame_container, 
-                text=f"Total de ofertas publicadas: {len(mis_promos)}", 
-                font=("Arial", 11, "bold"), 
+                text=f"Total de Ofertas Publicadas: {len(mis_promos)}", 
+                font=("Arial", 12, "bold"), 
                 fg=COLOR_TEXTO_MAIN,
                 bg=COLOR_BLANCO
             )
-            lbl_titulo.pack(anchor="w", padx=15, pady=(15, 10))
+            lbl_titulo.pack(anchor="w", padx=20, pady=(15, 10))
 
+            categorias_dict = {cat: [] for cat in CATEGORIAS_BODEGA}
             for idx, p in mis_promos:
-                # TARJETA BLANCA DE CADA OFERTA
-                card = tk.Frame(
+                cat = p.get("categoria", "Abarrotes y Despensa")
+                if cat in categorias_dict:
+                    categorias_dict[cat].append((idx, p))
+                else:
+                    categorias_dict["Abarrotes y Despensa"].append((idx, p))
+
+            for cat_nombre, lista_items in categorias_dict.items():
+                if not lista_items:
+                    continue
+
+                lbl_sec = tk.Label(
                     frame_container, 
-                    bg=COLOR_BLANCO, 
-                    bd=1, 
-                    relief="solid", 
-                    highlightbackground=COLOR_SECUNDARIO, 
-                    highlightthickness=1,
-                    padx=15, 
-                    pady=12
-                )
-                card.pack(fill="x", padx=15, pady=6)
-
-                stock_disp = p.get("stock", "10")
-                puntos_int = int(float(p.get('puntos', 0)))
-                txt_info = f"📌 {p.get('titulo', 'Oferta')} (Costo: {puntos_int} PTS / S/ {p.get('precio_soles', 0):.2f})\n📦 Stock Disponible: {stock_disp}\n📝 {p.get('descripcion', '')}"
-                
-                tk.Label(
-                    card, 
-                    text=txt_info, 
-                    font=("Arial", 9, "bold"), 
-                    bg=COLOR_BLANCO, 
+                    text=f"📂 {cat_nombre.upper()}", 
+                    font=("Arial", 10, "bold"), 
+                    bg=COLOR_FONDO_APP, 
                     fg=COLOR_TEXTO_MAIN, 
-                    justify="left"
-                ).pack(side="left", anchor="w", expand=True)
-
-                def borrar(i=idx):
-                    if messagebox.askyesno("Eliminar Promoción", "¿Deseas eliminar permanentemente esta oferta del sistema?"):
-                        if eliminar_promocion(i, self.id_usuario, self.nombre_negocio):
-                            messagebox.showinfo("Éxito", "La oferta ha sido eliminada correctamente.")
-                            refrescar()
-
-                tk.Button(
-                    card, 
-                    text="🗑️ Eliminar", 
-                    bg=COLOR_ROJO_ELIMINAR, 
-                    fg=COLOR_BLANCO, 
-                    activeforeground=COLOR_BLANCO, 
-                    font=("Arial", 9, "bold"), 
-                    relief="flat", 
-                    command=borrar, 
-                    cursor="hand2", 
-                    padx=12, 
+                    anchor="w",
+                    padx=10,
                     pady=6
-                ).pack(side="right", padx=5)
+                )
+                lbl_sec.pack(fill="x", padx=20, pady=(12, 6))
+
+                for idx, p in lista_items:
+                    card = tk.Frame(
+                        frame_container, 
+                        bg=COLOR_BLANCO, 
+                        bd=1, 
+                        relief="solid", 
+                        highlightbackground=COLOR_SECUNDARIO, 
+                        highlightthickness=1,
+                        padx=15, 
+                        pady=10
+                    )
+                    card.pack(fill="x", padx=20, pady=4)
+
+                    stock_disp = p.get("stock", "0")
+                    puntos_int = int(float(p.get('puntos', 0)))
+                    txt_info = f"• {p.get('titulo', 'Oferta')}  |  Costo: {puntos_int} PTS  |  S/ {p.get('precio_soles', 0):.2f}\n  Stock Disponible: {stock_disp} unids.  —  {p.get('descripcion', '')}"
+                    
+                    tk.Label(
+                        card, 
+                        text=txt_info, 
+                        font=("Arial", 9), 
+                        bg=COLOR_BLANCO, 
+                        fg=COLOR_TEXTO_MAIN, 
+                        justify="left"
+                    ).pack(side="left", anchor="w", expand=True)
+
+                    def borrar(i=idx):
+                        if messagebox.askyesno("Eliminar Promoción", "¿Deseas eliminar permanentemente esta oferta del sistema?"):
+                            if eliminar_promocion(i, self.id_usuario, self.nombre_negocio):
+                                messagebox.showinfo("Éxito", "La oferta ha sido eliminada correctamente.")
+                                refrescar()
+
+                    tk.Button(
+                        card, 
+                        text="Eliminar", 
+                        bg=COLOR_ROJO_ELIMINAR, 
+                        fg=COLOR_BLANCO, 
+                        activeforeground=COLOR_BLANCO, 
+                        font=("Arial", 9, "bold"), 
+                        relief="flat", 
+                        command=borrar, 
+                        cursor="hand2", 
+                        padx=10, 
+                        pady=5
+                    ).pack(side="right", padx=5)
+
+            win_list.update_idletasks()
+            canvas.configure(scrollregion=canvas.bbox("all"))
 
         refrescar()
