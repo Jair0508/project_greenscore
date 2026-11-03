@@ -299,5 +299,103 @@
         "tipo": "RESEÑA_TIENDA",
         "puntos": 0,
         "detalle": "Reseña para Tienda_Sebas: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: nice"
+    },
+    {
+        "fecha": "2026-11-03 01:06:22",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 60.0,
+        "detalle": "Entrega de 3.0kg de Componentes informáticos (Placas) en Tienda_Sebas (+60.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:32:42",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 30.0,
+        "detalle": "Entrega de 5.0kg de Botellas PET (Agua/Gaseosa) en Tienda_Sebas (+30.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:38:43",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 8.0,
+        "detalle": "Entrega de 1.0kg de Tapas plásticas (PP/HDPE) en Tienda_Sebas (+8.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:38:54",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 8.0,
+        "detalle": "Entrega de 2.0kg de Cuadernos usados / Impresiones en Tienda_Sebas (+8.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:41:15",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 2.0,
+        "detalle": "Entrega de 1.0kg de Latas de conservas (Hojalata/Fierro) en Tienda_Sebas (+2.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:41:38",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 2.0,
+        "detalle": "Entrega de 1.0kg de Revistas (Papel couche/plastificado) en Tienda_Sebas (+2.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:41:56",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 3.0,
+        "detalle": "Entrega de 1.0kg de Papel periódico en Tienda_Sebas (+3.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:46:13",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 30.0,
+        "detalle": "Entrega de 1.0kg de Cables viejos (Cobre/Plástico) en Tienda_Sebas (+30.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:46:40",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 25.0,
+        "detalle": "Entrega de 1.0kg de Latas de aluminio (Gaseosa/Cerveza) en Tienda_Sebas (+25.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:47:04",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 7.0,
+        "detalle": "Entrega de 1.0kg de Papel de cuaderno blanco (Limpio) en Tienda_Sebas (+7.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:47:16",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 2.0,
+        "detalle": "Entrega de 1.0kg de Cartón corrugado (Cajas) en Tienda_Sebas (+2.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 01:47:34",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 20.0,
+        "detalle": "Entrega de 10.0kg de Cartón corrugado (Cajas) en Tienda_Sebas (+20.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 02:18:51",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -40,
+        "detalle": "Canje de ofertas: 1x Jabon liquido en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-03 02:19:23",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 28.0,
+        "detalle": "Entrega de 4.0kg de Papel de cuaderno blanco (Limpio) en Tienda_Sebas (+28.0 PTS)"
     }
 ]

@@ -137,7 +137,7 @@ class VentanaVecino:
         notebook.add(tab_chat, text="💬 Soporte / Chat")
         notebook.add(tab_seguridad, text="🔐 Seguridad y Cuenta")
 
-        # --- 1. CATÁLOGO DE PROMOCIONES (Con Scroll y Secciones por Categoría) ---
+        # --- 1. CATÁLOGO DE PROMOCIONES ---
         self.frame_promos_container = tk.Frame(tab_promos, bg="white")
         self.frame_promos_container.pack(fill="both", expand=True, padx=5, pady=5)
 
@@ -162,13 +162,13 @@ class VentanaVecino:
                 tabla.column(col, width=w, minwidth=70, stretch=True)
             return tabla
 
-        # 2. TABLA DETALLADA DE RECICLAJE
+        # 2. TABLA DETALLADA DE RECICLAJE (Con anchos optimizados para evitar desbordes)
         cols_rec = ("fecha", "material", "peso", "puntos")
         config_rec = [
-            ("fecha", "Fecha / Hora", 160),
-            ("material", "Material Reciclado", 280),
-            ("peso", "Peso Entregado (kg)", 140),
-            ("puntos", "Puntos Obt.", 120)
+            ("fecha", "Fecha / Hora", 150),
+            ("material", "Material y Bodega", 320),
+            ("peso", "Peso (kg)", 120),
+            ("puntos", "Puntos Obt.", 100)
         ]
         self.tabla_reciclaje = crear_tabla_scroll(tab_reciclaje, cols_rec, config_rec)
 
@@ -178,19 +178,23 @@ class VentanaVecino:
 
         sub_tab_abonos = ttk.Frame(sub_notebook)
         sub_tab_entregas = ttk.Frame(sub_notebook)
+        sub_tab_canjes = ttk.Frame(sub_notebook)
         sub_tab_resenas = ttk.Frame(sub_notebook)
 
         sub_notebook.add(sub_tab_abonos, text="♻️ Abonos")
-        sub_notebook.add(sub_tab_entregas, text="📦 Entregas")
+        sub_notebook.add(sub_tab_entregas, text="📦 Entregas Generales")
+        sub_notebook.add(sub_tab_canjes, text="🛒 Canjes en Bodega")
         sub_notebook.add(sub_tab_resenas, text="⭐ Reseñas")
 
         cols_sub = ("fecha", "puntos", "detalle")
         config_abonos = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos Abonados", 140), ("detalle", "Detalle de Reciclaje", 450)]
-        config_entregas = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos / Descuento", 140), ("detalle", "Detalle de Canje / Entrega", 450)]
+        config_entregas = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos / Operación", 140), ("detalle", "Detalle de Movimiento", 450)]
+        config_canjes = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos Descontados", 140), ("detalle", "Detalle del Canje en Bodega", 450)]
         config_resenas = [("fecha", "Fecha / Hora", 160), ("puntos", "Puntos", 100), ("detalle", "Calificación y Comentario", 490)]
 
         self.tabla_abonos = crear_tabla_scroll(sub_tab_abonos, cols_sub, config_abonos)
         self.tabla_entregas = crear_tabla_scroll(sub_tab_entregas, cols_sub, config_entregas)
+        self.tabla_canjes = crear_tabla_scroll(sub_tab_canjes, cols_sub, config_canjes)
         self.tabla_resenas = crear_tabla_scroll(sub_tab_resenas, cols_sub, config_resenas)
 
         # 4. CANAL DE CHAT CON DEVS Y ADMIN
@@ -442,6 +446,7 @@ class VentanaVecino:
         for item in self.tabla_reciclaje.get_children(): self.tabla_reciclaje.delete(item)
         for item in self.tabla_entregas.get_children(): self.tabla_entregas.delete(item)
         for item in self.tabla_abonos.get_children(): self.tabla_abonos.delete(item)
+        for item in self.tabla_canjes.get_children(): self.tabla_canjes.delete(item)
         for item in self.tabla_resenas.get_children(): self.tabla_resenas.delete(item)
 
         logs_cliente = [reg for reg in cargar_log_clientes() if reg.get("dni_cliente") == self.id_usuario]
@@ -452,16 +457,41 @@ class VentanaVecino:
             fecha = reg.get("fecha", "-")
             detalle = reg.get("detalle", "")
 
-            if tipo == "ABONO_RECICLAJE":
+            if tipo in ["ABONO_RECICLAJE", "RECICLAJE_RECIBIDO"]:
                 self.tabla_abonos.insert("", "end", values=(fecha, puntos, detalle))
-                if "Reciclaje de" in detalle:
+                
+                # Extracción limpia y profesional para la tabla de reciclaje detallado
+                if "Entrega de" in detalle or "Reciclaje de" in detalle:
                     try:
-                        info = detalle.replace("Reciclaje de ", "").replace(" kg)", "")
-                        partes = info.split(" (")
-                        material, peso = partes[0], partes[1] if len(partes) > 1 else "-"
+                        texto_limpio = detalle.replace("Entrega de ", "").replace("Reciclaje de ", "")
+                        
+                        if "kg de " in texto_limpio:
+                            partes_peso = texto_limpio.split("kg de ")
+                            peso_val = partes_peso[0].strip() + " kg"
+                            resto = partes_peso[1]
+                        elif "kg " in texto_limpio:
+                            partes_peso = texto_limpio.split("kg ")
+                            peso_val = partes_peso[0].strip() + " kg"
+                            resto = partes_peso[1]
+                        else:
+                            peso_val = "-"
+                            resto = texto_limpio
+
+                        if " en " in resto:
+                            partes_tienda = resto.split(" en ")
+                            material_val = partes_tienda[0].strip()
+                            tienda_val = partes_tienda[1].split(" (")[0].strip()
+                            detalle_material_formateado = f"{material_val} (Bodega: {tienda_val})"
+                        else:
+                            detalle_material_formateado = resto.split(" (")[0].strip()
+
+                        self.tabla_reciclaje.insert("", "end", values=(fecha, detalle_material_formateado, peso_val, puntos))
                     except Exception:
-                        material, peso = detalle, "-"
-                    self.tabla_reciclaje.insert("", "end", values=(fecha, material, peso, puntos))
+                        self.tabla_reciclaje.insert("", "end", values=(fecha, detalle, "-", puntos))
+            elif "CANJE_TIENDA" in tipo:
+                puntos_descontados = abs(puntos)
+                self.tabla_canjes.insert("", "end", values=(fecha, f"-{puntos_descontados} PTS", detalle))
+                self.tabla_entregas.insert("", "end", values=(fecha, puntos, detalle))
             elif "ENTREGA" in tipo or "CANJE" in tipo:
                 self.tabla_entregas.insert("", "end", values=(fecha, puntos, detalle))
             elif "RESEÑA" in tipo:
@@ -518,11 +548,9 @@ class VentanaVecino:
         tk.Button(win_cal, text="Enviar Calificación 📤", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), command=enviar_calificacion, relief="flat", pady=6, cursor="hand2").pack(pady=15)
 
     def cargar_catalogo_promociones(self):
-        """Muestra el catálogo de ofertas organizado por categorías de forma limpia, sin imágenes."""
         for w in self.frame_promos_container.winfo_children():
             w.destroy()
 
-        # Canvas con scroll para el catálogo
         canvas = tk.Canvas(self.frame_promos_container, bg="white", highlightthickness=0)
         scrollbar = ttk.Scrollbar(self.frame_promos_container, orient="vertical", command=canvas.yview)
         scroll_frame = tk.Frame(canvas, bg="white")
@@ -549,7 +577,6 @@ class VentanaVecino:
         )
         lbl_aviso_cat.pack(anchor="w", padx=10, pady=(5, 10))
 
-        # Agrupar ofertas por categorías definidas
         categorias_dict = {cat: [] for cat in CATEGORIAS_BODEGA}
         for p in promos:
             cat = p.get("categoria")
@@ -557,12 +584,10 @@ class VentanaVecino:
                 cat = "Abarrotes y Despensa"
             categorias_dict[cat].append(p)
 
-        # Renderizar por Secciones
         for cat_nombre, lista_items in categorias_dict.items():
             if not lista_items:
                 continue
 
-            # Encabezado de la Categoría
             lbl_sec = tk.Label(
                 scroll_frame, 
                 text=f"📂 {cat_nombre.upper()}", 

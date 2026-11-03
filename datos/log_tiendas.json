@@ -180,5 +180,12 @@
         "tienda_nombre": "Tienda_Sebas",
         "dni_cliente": "952089997",
         "puntos_descontados": 130
+    },
+    {
+        "fecha": "2026-11-03 02:18:51",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 40
     }
 ]
