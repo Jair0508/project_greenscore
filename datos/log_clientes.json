@@ -250,5 +250,12 @@
         "tipo": "RESEÑA_TIENDA",
         "puntos": 0,
         "detalle": "Reseña para Bodega Luchito: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: waza3"
+    },
+    {
+        "fecha": "2026-11-02 23:06:21",
+        "dni_cliente": "952089997",
+        "tipo": "REDUCCION_ADMIN",
+        "puntos": -56510,
+        "detalle": "Ajuste manual de administración"
     }
 ]

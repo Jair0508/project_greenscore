@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox
 import os
 from datos.gestor import (
     cargar_usuarios, 
@@ -16,13 +16,24 @@ from datos.gestor import (
 # ==========================================
 # PALETA DE COLORES "ECO-GESTIÓN" (SIN NEGRO)
 # ==========================================
-COLOR_FONDO_APP      = "#F4F9F4"  # Blanco Menta Suave (Fondo general)
-COLOR_TEXTO_MAIN     = "#1B4332"  # Verde Bosque Profundo (Reemplazo de negro)
-COLOR_PRIMARIO       = "#40916C"  # Verde Hoja (Headers / Acciones principales)
-COLOR_SECUNDARIO     = "#52B788"  # Verde Claro Fresco (Bordes / Elementos activos)
-COLOR_ACENTO_CANJE   = "#E76F51"  # Terracota Suave (Recompensas, Puntos y Alertas)
-COLOR_BLANCO         = "#FFFFFF"  # Blanco puro para tarjetas e inputs
-COLOR_ROJO_ELIMINAR  = "#C62828"  # Rojo para el botón de eliminar
+COLOR_FONDO_APP      = "#F4F9F4"  # Blanco Menta Suave
+COLOR_TEXTO_MAIN     = "#1B4332"  # Verde Bosque Profundo
+COLOR_PRIMARIO       = "#40916C"  # Verde Hoja
+COLOR_SECUNDARIO     = "#52B788"  # Verde Claro Fresco
+COLOR_ACENTO_CANJE   = "#E76F51"  # Terracota Suave
+COLOR_BLANCO         = "#FFFFFF"  # Blanco puro
+COLOR_ROJO_ELIMINAR  = "#C62828"  # Rojo para eliminar
+
+# Categorías específicas e independientes para Bodega
+CATEGORIAS_BODEGA = [
+    "Abarrotes y Despensa",
+    "Bebidas y Gaseosas",
+    "Licores y Cervezas",
+    "Dulces, Biscochos y Snacks",
+    "Limpieza del Hogar",
+    "Cuidado Personal y Aseo",
+    "Utensilios de Cocina / Hogar"
+]
 
 class VentanaNegocio:
     def __init__(self, root, id_usuario, cerrar_sesion_cb):
@@ -39,7 +50,7 @@ class VentanaNegocio:
 
             self.aplicar_icono()
 
-            # 1. CARGA DE IMAGEN DE FONDO (Dimensiones requeridas: 980x740 px)
+            # Imagen de Fondo (980x740 px)
             ruta_fondo = os.path.join("img", "fondo_negocio.png")
             if os.path.exists(ruta_fondo):
                 try:
@@ -175,7 +186,7 @@ class VentanaNegocio:
             )
             self.lbl_saldo.pack(anchor="w", pady=5)
 
-            # Botón único de Canje Presencial (Acento Terracota)
+            # Botón único de Canje Presencial
             self.btn_canjear = tk.Button(
                 frame_central, 
                 text="💳 Canje de Ofertas en Caja", 
@@ -375,6 +386,7 @@ class VentanaNegocio:
             messagebox.showwarning("No Encontrado", "El DNI ingresado no pertenece a un vecino registrado.")
 
     def abrir_cuadro_canje(self):
+        """Muestra las ofertas disponibles y descuenta automáticamente el stock según las unidades canjeadas."""
         if not self.vecino_actual:
             return
 
@@ -386,16 +398,16 @@ class VentanaNegocio:
             return
 
         promos = cargar_promociones()
-        mis_promos = [p for p in promos if str(p.get("tienda_id")) == str(self.id_usuario)]
+        mis_promos = [(i, p) for i, p in enumerate(promos) if str(p.get("tienda_id")) == str(self.id_usuario) and int(p.get("stock", 0)) > 0]
 
         if not mis_promos:
-            messagebox.showwarning("Sin Ofertas", "Este comercio no tiene ofertas o promociones publicadas actualmente.")
+            messagebox.showwarning("Sin Ofertas Disponibles", "Este comercio no tiene ofertas con stock disponible en este momento.")
             return
 
         win_cobro = tk.Toplevel(self.root)
         win_cobro.config(bg=COLOR_FONDO_APP)
         win_cobro.title("Canje de Ofertas en Caja")
-        win_cobro.geometry("480x450")
+        win_cobro.geometry("520x480")
         win_cobro.resizable(False, False)
         win_cobro.grab_set()
 
@@ -413,7 +425,7 @@ class VentanaNegocio:
 
         tk.Label(
             win_cobro, 
-            text="Seleccione una o varias ofertas a canjear:", 
+            text="Seleccione las ofertas y la cantidad a canjear:", 
             font=("Arial", 9, "bold"),
             fg=COLOR_TEXTO_MAIN,
             bg=COLOR_FONDO_APP
@@ -433,27 +445,32 @@ class VentanaNegocio:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        vars_promos = []
-        for p in mis_promos:
-            var = tk.BooleanVar()
+        items_canje = []
+        for idx_promo, p in mis_promos:
+            row_frame = tk.Frame(scroll_frame, bg=COLOR_BLANCO)
+            row_frame.pack(fill="x", padx=10, pady=5)
+
+            var_chk = tk.BooleanVar()
             costo = int(float(p.get("puntos", 0)))
             titulo = p.get("titulo", "Oferta")
-            stock = p.get("stock", "10")
-            texto_chk = f"{titulo} — Costo: {costo} PTS (Stock: {stock})"
-            
+            stock_max = int(p.get("stock", 0))
+
             chk = tk.Checkbutton(
-                scroll_frame, 
-                text=texto_chk, 
-                variable=var, 
+                row_frame, 
+                text=f"{titulo} ({costo} PTS) - Stock: {stock_max}", 
+                variable=var_chk, 
                 bg=COLOR_BLANCO, 
                 fg=COLOR_TEXTO_MAIN,
-                activebackground=COLOR_BLANCO,
-                activeforeground=COLOR_TEXTO_MAIN,
-                font=("Arial", 9), 
+                font=("Arial", 9, "bold"), 
                 anchor="w"
             )
-            chk.pack(fill="x", padx=10, pady=4, anchor="w")
-            vars_promos.append((var, costo, titulo))
+            chk.pack(side="left", fill="x", expand=True)
+
+            tk.Label(row_frame, text="Cant:", font=("Arial", 9), bg=COLOR_BLANCO).pack(side="left", padx=(5, 2))
+            spin_cant = tk.Spinbox(row_frame, from_=1, to=stock_max, width=4, font=("Arial", 9))
+            spin_cant.pack(side="right", padx=5)
+
+            items_canje.append((idx_promo, var_chk, spin_cant, costo, titulo, stock_max))
 
         frame_btns = tk.Frame(win_cobro, bg=COLOR_FONDO_APP)
         frame_btns.pack(pady=15)
@@ -461,11 +478,25 @@ class VentanaNegocio:
         def procesar_canje_seleccionado():
             puntos_totales = 0
             ofertas_canjeadas = []
+            operaciones_stock = []
 
-            for var, costo, titulo in vars_promos:
+            for idx_promo, var, spin, costo, titulo, stock_max in items_canje:
                 if var.get():
-                    puntos_totales += costo
-                    ofertas_canjeadas.append(titulo)
+                    try:
+                        cant = int(spin.get())
+                        if cant <= 0:
+                            continue
+                        if cant > stock_max:
+                            messagebox.showerror("Error de Stock", f"La cantidad solicitada de '{titulo}' excede el stock disponible ({stock_max}).")
+                            return
+                        
+                        subtotal = costo * cant
+                        puntos_totales += subtotal
+                        ofertas_canjeadas.append(f"{cant}x {titulo}")
+                        operaciones_stock.append((idx_promo, cant))
+                    except ValueError:
+                        messagebox.showerror("Error", f"Ingrese una cantidad válida para '{titulo}'.")
+                        return
 
             if puntos_totales == 0:
                 messagebox.showwarning("Atención", "Debe seleccionar al menos una oferta para canjear.")
@@ -478,9 +509,20 @@ class VentanaNegocio:
                 )
                 return
 
+            # 1. Descontar Puntos al Vecino
             usuarios[self.vecino_actual]["puntos"] -= puntos_totales
             guardar_usuarios(usuarios)
 
+            # 2. Descontar Stock de las Ofertas en promociones.json
+            promos_actuales = cargar_promociones()
+            for idx_p, cant_descontar in operaciones_stock:
+                if idx_p < len(promos_actuales):
+                    stock_prev = int(promos_actuales[idx_p].get("stock", 0))
+                    nuevo_stock = max(0, stock_prev - cant_descontar)
+                    promos_actuales[idx_p]["stock"] = nuevo_stock
+            guardar_promociones(promos_actuales)
+
+            # 3. Registrar Transacción en Logs
             try:
                 registrar_accion_tienda(self.id_usuario, self.nombre_negocio, self.vecino_actual, puntos_totales)
                 registrar_accion_cliente(
@@ -492,7 +534,7 @@ class VentanaNegocio:
             except Exception as e:
                 print(f"Aviso log: {e}")
 
-            messagebox.showinfo("Éxito", f"¡Canje completado! Se han descontado {puntos_totales} PTS en total.")
+            messagebox.showinfo("Éxito", f"¡Canje completado!\nSe han descontado {puntos_totales} PTS y actualizado el stock de productos.")
             win_cobro.destroy()
             self.consultar_vecino()
 
@@ -523,20 +565,40 @@ class VentanaNegocio:
         ).pack(side="left", padx=5)
 
     def dialogo_publicar_promocion(self):
+        """Permite publicar una oferta especificando categoría clara y cantidad inicial en stock."""
         win_promo = tk.Toplevel(self.root)
         win_promo.config(bg=COLOR_FONDO_APP)
         win_promo.title("Publicar Oferta / Promoción")
-        win_promo.geometry("380x380")
+        win_promo.geometry("420x500")
         win_promo.resizable(False, False)
         win_promo.grab_set()
 
         if hasattr(self.root, 'icon_img'):
             win_promo.iconphoto(False, self.root.icon_img)
 
+        # Título
         tk.Label(win_promo, text="Título de Promoción (Máx 25 caract.):", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(15, 2))
         ent_titulo = tk.Entry(win_promo, font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
         ent_titulo.pack(fill="x", padx=20)
 
+        # Categoría
+        tk.Label(win_promo, text="Categoría de la Oferta:", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(10, 2))
+        combo_categoria = ttk.Combobox(
+            win_promo, 
+            state="readonly", 
+            values=CATEGORIAS_BODEGA, 
+            font=("Arial", 10)
+        )
+        combo_categoria.pack(fill="x", padx=20)
+        combo_categoria.set("Abarrotes y Despensa")
+
+        # Cantidad en Stock Inicial
+        tk.Label(win_promo, text="Cantidad Inicial en Stock (Unidades):", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(10, 2))
+        ent_stock = tk.Entry(win_promo, font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
+        ent_stock.pack(fill="x", padx=20)
+        ent_stock.insert(0, "10")
+
+        # Precio en Soles
         tk.Label(win_promo, text="Precio Normal en Soles (S/):", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(10, 2))
         ent_precio = tk.Entry(win_promo, font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
         ent_precio.pack(fill="x", padx=20)
@@ -554,17 +616,29 @@ class VentanaNegocio:
 
         ent_precio.bind("<KeyRelease>", calcular_pts_event)
 
+        # Descripción
         tk.Label(win_promo, text="Descripción:", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(10, 2))
         ent_desc = tk.Entry(win_promo, font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
         ent_desc.pack(fill="x", padx=20)
 
         def guardar_promo():
             titulo = ent_titulo.get().strip()
+            categoria = combo_categoria.get()
+            stock_str = ent_stock.get().strip()
             desc = ent_desc.get().strip()
             precio_str = ent_precio.get().strip()
 
             if len(titulo) == 0 or len(titulo) > 25:
                 messagebox.showerror("Error", "El título es obligatorio y debe tener como máximo 25 caracteres.")
+                return
+
+            try:
+                stock_val = int(stock_str)
+                if stock_val <= 0:
+                    messagebox.showerror("Error", "El stock inicial debe ser mayor a 0.")
+                    return
+            except ValueError:
+                messagebox.showerror("Error", "Ingrese un número entero válido para el stock.")
                 return
 
             if len(desc) == 0 or len(desc) > 100:
@@ -583,10 +657,11 @@ class VentanaNegocio:
                 "tienda_id": self.id_usuario,
                 "tienda_nombre": self.nombre_negocio,
                 "titulo": titulo,
+                "categoria": categoria,
                 "descripcion": desc,
                 "precio_soles": precio_soles,
                 "puntos": pts_requeridos,
-                "stock": 10,
+                "stock": stock_val,
                 "foto": ""
             })
             guardar_promociones(promos)
@@ -631,7 +706,7 @@ class VentanaNegocio:
         contenido = (
             "REGLAS DE OPERACIÓN PARA BODEGAS Y COMERCIOS — ECOPUNTOS\n\n"
             "1. GESTIÓN DE CANJES Y VENTAS PRESENCIALES\n"
-            "• Toda transacción de puntos, entrega de productos ofertados o descuentos en caja debe realizarse de forma estrictamente presencial mediante la validación del DNI del vecino en esta terminal.\n\n"
+            "• Toda transacción de puntos, entrega de productos ofertados o descuentos en caja debe realizarse de forma strictly presencial mediante la validación del DNI del vecino en esta terminal.\n\n"
             "2. LÍMITE DE PUNTOS POR CLIENTE\n"
             "• Ningún vecino podrá acumular más de 2,000 puntos (S/ 200.00) en su saldo activo. Si un cliente alcanza el tope, se le exhortará a realizar canjes antes de recibir nuevos abonos por reciclaje.\n\n"
             "3. CONTROL DE INVENTARIO Y STOCK\n"
@@ -709,113 +784,139 @@ class VentanaNegocio:
             self.lbl_total_resenas.config(text="📊 Total de Opiniones Recibidas: 0 reseñas")
 
     def dialogo_mis_promociones(self):
-        """Lista las promociones utilizando una imagen personalizada para el contenedor interno."""
+        """Muestra de forma robusta las ofertas agrupadas por secciones sin congelar el lienzo."""
         win_list = tk.Toplevel(self.root)
         win_list.title("Mis Ofertas Publicadas - Gestión")
-        win_list.geometry("640x480")
+        win_list.geometry("680x540")
         win_list.resizable(False, False)
         win_list.grab_set()
 
         if hasattr(self.root, 'icon_img'):
             win_list.iconphoto(False, self.root.icon_img)
 
-        # 1. Fondo de la ventana modal completa (640x480 px)
-        ruta_fondo_modal = os.path.join("img", "fondo_mis_ofertas.png")
-        if not os.path.exists(ruta_fondo_modal):
-            ruta_fondo_modal = os.path.join("img", "fondo_negocio.png")
+        # Contenedor principal con canvas y scroll
+        canvas = tk.Canvas(win_list, bg=COLOR_BLANCO, highlightthickness=0)
+        scrollbar = ttk.Scrollbar(win_list, orient="vertical", command=canvas.yview)
+        frame_container = tk.Frame(canvas, bg=COLOR_BLANCO)
 
-        padre_ui = win_list
-        if os.path.exists(ruta_fondo_modal):
-            try:
-                win_list.bg_img = tk.PhotoImage(file=ruta_fondo_modal)
-                lbl_fondo = tk.Label(win_list, image=win_list.bg_img)
-                lbl_fondo.place(x=0, y=0, relwidth=1, relheight=1)
-                padre_ui = lbl_fondo
-            except Exception as e:
-                print(f"Aviso imagen de fondo modal: {e}")
+        def actualizar_scroll(event=None):
+            canvas.configure(scrollregion=canvas.bbox("all"))
 
-        # 2. Imagen contenedora central (590x430 px) en reemplazo del recuadro gris
-        ruta_tarjeta = os.path.join("img", "tarjeta_contenedor.png")
-        if os.path.exists(ruta_tarjeta):
-            try:
-                win_list.img_tarjeta = tk.PhotoImage(file=ruta_tarjeta)
-                lbl_tarjeta = tk.Label(padre_ui, image=win_list.img_tarjeta, bg=COLOR_FONDO_APP)
-                lbl_tarjeta.pack(fill="both", expand=True, padx=25, pady=25)
-                frame_container = lbl_tarjeta
-            except Exception:
-                frame_container = tk.Frame(padre_ui, bg=COLOR_FONDO_APP)
-                frame_container.pack(fill="both", expand=True, padx=25, pady=25)
-        else:
-            # Si no hay imagen asignada, usa transparencia nativa
-            frame_container = tk.Frame(padre_ui, bg=COLOR_FONDO_APP)
-            frame_container.pack(fill="both", expand=True, padx=25, pady=25)
+        frame_container.bind("<Configure>", actualizar_scroll)
+        canvas_window = canvas.create_window((0, 0), window=frame_container, anchor="nw")
+
+        def ajustar_ancho_canvas(event):
+            canvas.itemconfig(canvas_window, width=event.width)
+
+        canvas.bind('<Configure>', ajustar_ancho_canvas)
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        scrollbar.pack(side="right", fill="y")
+        canvas.pack(side="left", fill="both", expand=True)
 
         def refrescar():
             for w in frame_container.winfo_children(): 
                 w.destroy()
+                
             promos = cargar_promociones()
             mis_promos = [(i, p) for i, p in enumerate(promos) if str(p.get("tienda_id")) == str(self.id_usuario)]
 
             if not mis_promos:
-                lbl_vacio = tk.Label(frame_container, text="No tienes ofertas publicadas actualmente.", font=("Arial", 11, "italic"), fg="#757575", bg=COLOR_BLANCO)
-                lbl_vacio.pack(pady=50)
+                lbl_vacio = tk.Label(
+                    frame_container, 
+                    text="No tienes ofertas publicadas actualmente.\n¡Usa el botón de 'Publicar Nueva Oferta' para agregar productos!", 
+                    font=("Arial", 11, "italic"), 
+                    fg="#757575", 
+                    bg=COLOR_BLANCO,
+                    justify="center"
+                )
+                lbl_vacio.pack(pady=80, padx=50)
                 return
 
-            # Título
+            # Título general
             lbl_titulo = tk.Label(
                 frame_container, 
-                text=f"Total de ofertas publicadas: {len(mis_promos)}", 
-                font=("Arial", 11, "bold"), 
+                text=f"Total de Ofertas Publicadas: {len(mis_promos)}", 
+                font=("Arial", 12, "bold"), 
                 fg=COLOR_TEXTO_MAIN,
                 bg=COLOR_BLANCO
             )
-            lbl_titulo.pack(anchor="w", padx=15, pady=(15, 10))
+            lbl_titulo.pack(anchor="w", padx=20, pady=(15, 10))
 
+            # Agrupar ofertas por categorías definidas
+            categorias_dict = {cat: [] for cat in CATEGORIAS_BODEGA}
             for idx, p in mis_promos:
-                # TARJETA BLANCA DE CADA OFERTA
-                card = tk.Frame(
+                cat = p.get("categoria", "Abarrotes y Despensa")
+                if cat in categorias_dict:
+                    categorias_dict[cat].append((idx, p))
+                else:
+                    categorias_dict["Abarrotes y Despensa"].append((idx, p))
+
+            # Renderizar Secciones
+            for cat_nombre, lista_items in categorias_dict.items():
+                if not lista_items:
+                    continue
+
+                # Header de Sección
+                lbl_sec = tk.Label(
                     frame_container, 
-                    bg=COLOR_BLANCO, 
-                    bd=1, 
-                    relief="solid", 
-                    highlightbackground=COLOR_SECUNDARIO, 
-                    highlightthickness=1,
-                    padx=15, 
-                    pady=12
-                )
-                card.pack(fill="x", padx=15, pady=6)
-
-                stock_disp = p.get("stock", "10")
-                puntos_int = int(float(p.get('puntos', 0)))
-                txt_info = f"📌 {p.get('titulo', 'Oferta')} (Costo: {puntos_int} PTS / S/ {p.get('precio_soles', 0):.2f})\n📦 Stock Disponible: {stock_disp}\n📝 {p.get('descripcion', '')}"
-                
-                tk.Label(
-                    card, 
-                    text=txt_info, 
-                    font=("Arial", 9, "bold"), 
-                    bg=COLOR_BLANCO, 
+                    text=f"📂 {cat_nombre.upper()}", 
+                    font=("Arial", 10, "bold"), 
+                    bg=COLOR_FONDO_APP, 
                     fg=COLOR_TEXTO_MAIN, 
-                    justify="left"
-                ).pack(side="left", anchor="w", expand=True)
-
-                def borrar(i=idx):
-                    if messagebox.askyesno("Eliminar Promoción", "¿Deseas eliminar permanentemente esta oferta del sistema?"):
-                        if eliminar_promocion(i, self.id_usuario, self.nombre_negocio):
-                            messagebox.showinfo("Éxito", "La oferta ha sido eliminada correctamente.")
-                            refrescar()
-
-                tk.Button(
-                    card, 
-                    text="🗑️ Eliminar", 
-                    bg=COLOR_ROJO_ELIMINAR, 
-                    fg=COLOR_BLANCO, 
-                    activeforeground=COLOR_BLANCO, 
-                    font=("Arial", 9, "bold"), 
-                    relief="flat", 
-                    command=borrar, 
-                    cursor="hand2", 
-                    padx=12, 
+                    anchor="w",
+                    padx=10,
                     pady=6
-                ).pack(side="right", padx=5)
+                )
+                lbl_sec.pack(fill="x", padx=20, pady=(12, 6))
+
+                for idx, p in lista_items:
+                    card = tk.Frame(
+                        frame_container, 
+                        bg=COLOR_BLANCO, 
+                        bd=1, 
+                        relief="solid", 
+                        highlightbackground=COLOR_SECUNDARIO, 
+                        highlightthickness=1,
+                        padx=15, 
+                        pady=10
+                    )
+                    card.pack(fill="x", padx=20, pady=4)
+
+                    stock_disp = p.get("stock", "0")
+                    puntos_int = int(float(p.get('puntos', 0)))
+                    txt_info = f"• {p.get('titulo', 'Oferta')}  |  Costo: {puntos_int} PTS  |  S/ {p.get('precio_soles', 0):.2f}\n  Stock Disponible: {stock_disp} unids.  —  {p.get('descripcion', '')}"
+                    
+                    tk.Label(
+                        card, 
+                        text=txt_info, 
+                        font=("Arial", 9), 
+                        bg=COLOR_BLANCO, 
+                        fg=COLOR_TEXTO_MAIN, 
+                        justify="left"
+                    ).pack(side="left", anchor="w", expand=True)
+
+                    def borrar(i=idx):
+                        if messagebox.askyesno("Eliminar Promoción", "¿Deseas eliminar permanentemente esta oferta del sistema?"):
+                            if eliminar_promocion(i, self.id_usuario, self.nombre_negocio):
+                                messagebox.showinfo("Éxito", "La oferta ha sido eliminada correctamente.")
+                                refrescar()
+
+                    tk.Button(
+                        card, 
+                        text="Eliminar", 
+                        bg=COLOR_ROJO_ELIMINAR, 
+                        fg=COLOR_BLANCO, 
+                        activeforeground=COLOR_BLANCO, 
+                        font=("Arial", 9, "bold"), 
+                        relief="flat", 
+                        command=borrar, 
+                        cursor="hand2", 
+                        padx=10, 
+                        pady=5
+                    ).pack(side="right", padx=5)
+
+            win_list.update_idletasks()
+            canvas.configure(scrollregion=canvas.bbox("all"))
 
         refrescar()

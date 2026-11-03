@@ -271,5 +271,19 @@
         "autor_nombre": "Administrador Desarrollador",
         "accion": "ELIMINAR_CUENTA",
         "objetivo": "Eliminó la cuenta 0885 (Magui)"
+    },
+    {
+        "fecha": "2026-11-02 23:06:21",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "RESTAR_PUNTOS",
+        "objetivo": "Restó 56510 pts a 952089997"
+    },
+    {
+        "fecha": "2026-11-02 23:08:24",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta Number1 (NEGOCIO)"
     }
 ]

@@ -18,5 +18,70 @@
         "puntos": 40.0,
         "stock": 10,
         "foto": ""
+    },
+    {
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Coca Cola",
+        "descripcion": "fria y buena",
+        "precio_soles": 10.0,
+        "puntos": 100.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Pilsen",
+        "categoria": "Licores y Cervezas",
+        "descripcion": "heladita",
+        "precio_soles": 6.5,
+        "puntos": 65.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Inka Cola 3L",
+        "categoria": "Bebidas y Gaseosas",
+        "descripcion": "heladita x2",
+        "precio_soles": 10.0,
+        "puntos": 100.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Chifles acevichados",
+        "categoria": "Dulces y Snacks",
+        "descripcion": "frescos pal ceviche",
+        "precio_soles": 5.0,
+        "puntos": 50.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Downi",
+        "categoria": "Utensilios y Limpieza",
+        "descripcion": "pa lavar platos",
+        "precio_soles": 5.0,
+        "puntos": 50.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "Arroz",
+        "categoria": "Abarrotes",
+        "descripcion": "que es abarrotes?",
+        "precio_soles": 7.0,
+        "puntos": 70.0,
+        "stock": 10,
+        "foto": ""
     }
 ]
