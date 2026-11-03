@@ -8,6 +8,7 @@ RUTA_LOG_TIENDAS = os.path.join("datos", "log_tiendas.json")
 RUTA_LOG_CLIENTES = os.path.join("datos", "log_clientes.json")
 RUTA_PROMOCIONES = os.path.join("datos", "promociones.json")
 RUTA_CHAT = os.path.join("datos", "chat.json")
+RUTA_ENTREGAS = os.path.join("datos", "entregas.json")
 
 
 
@@ -183,3 +184,41 @@ def obtener_puntos_recolectados_por_tienda(id_tienda):
         if str(reg.get("id_tienda", "")) == str(id_tienda):
             total_pts += float(reg.get("puntos", 0))
     return round(total_pts, 1)
+
+# --- FUNCIONES DE REGISTRO DE ENTREGAS DE RECICLAJE ---
+
+def registrar_entrega_reciclaje(tienda_id, dni_cliente, material, peso_kg, puntos):
+    """Registra una entrega física de reciclaje en datos/entregas.json."""
+    entregas = []
+    if os.path.exists(RUTA_ENTREGAS):
+        try:
+            with open(RUTA_ENTREGAS, "r", encoding="utf-8") as f:
+                entregas = json.load(f)
+        except Exception:
+            entregas = []
+
+    nueva_entrega = {
+        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "tienda_id": str(tienda_id),
+        "dni_cliente": str(dni_cliente),
+        "material": str(material),
+        "peso_kg": float(peso_kg),
+        "puntos": int(puntos)
+    }
+    
+    entregas.append(nueva_entrega)
+    try:
+        with open(RUTA_ENTREGAS, "w", encoding="utf-8") as f:
+            json.dump(entregas, f, indent=4, ensure_ascii=False)
+    except Exception as e:
+        print(f"Error al guardar entrega: {e}")
+
+def cargar_entregas_reciclaje():
+    """Carga todas las entregas de reciclaje registradas desde datos/entregas.json."""
+    if os.path.exists(RUTA_ENTREGAS):
+        try:
+            with open(RUTA_ENTREGAS, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return []
+    return []
