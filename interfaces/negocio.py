@@ -63,7 +63,6 @@ class VentanaNegocio:
 
             self.aplicar_icono()
 
-            # Imagen de Fondo (980x740 px)
             ruta_fondo = os.path.join("img", "fondo_negocio.png")
             if os.path.exists(ruta_fondo):
                 try:
@@ -76,7 +75,9 @@ class VentanaNegocio:
             self.aplicar_estilos_ttk()
 
             usuarios = cargar_usuarios()
-            self.nombre_negocio = usuarios.get(str(id_usuario), {}).get("nombre", "Comercio")
+            datos_tienda = usuarios.get(str(id_usuario), {})
+            self.nombre_negocio = datos_tienda.get("nombre", "Comercio")
+            reciclaje_permitido = datos_tienda.get("reciclaje_activo", True)
 
             # Header Principal
             frame_top = tk.Frame(self.root, bg=COLOR_PRIMARIO)
@@ -94,7 +95,7 @@ class VentanaNegocio:
             # Botón de Términos y Condiciones
             tk.Button(
                 frame_top,
-                text="📄! Términos de Bodega",
+                text="📄 Términos de Bodega",
                 bg=COLOR_SECUNDARIO,
                 fg=COLOR_BLANCO,
                 font=("Arial", 9, "bold"),
@@ -125,45 +126,20 @@ class VentanaNegocio:
             notebook_negocio.pack(fill="both", expand=True, padx=15, pady=10)
 
             tab_terminal = ttk.Frame(notebook_negocio)
-            tab_reciclaje = ttk.Frame(notebook_negocio)
-            tab_stats = ttk.Frame(notebook_negocio)       # NUEVA PESTAÑA: GRÁFICOS Y TOTALES
             tab_historial = ttk.Frame(notebook_negocio)
             tab_resenas = ttk.Frame(notebook_negocio)
 
             notebook_negocio.add(tab_terminal, text="💳 Terminal y Publicación")
-            notebook_negocio.add(tab_reciclaje, text="♻️ Recibir Reciclaje")
-            notebook_negocio.add(tab_stats, text="📊 Estadísticas y Gráficos") # Pestaña añadida[cite: 9]
-            notebook_negocio.add(tab_historial, text="📜 Historial y Gestión de Ofertas")
-            notebook_negocio.add(tab_resenas, text="⭐ Mis Reseñas y Calificación")
 
-            # ==========================================
-            # VERIFICACIÓN DE ABONO SUSPENDIDO
-            # ==========================================
-            datos_tienda = usuarios.get(str(self.id_usuario), {})
-            abono_suspendido = datos_tienda.get("abono_suspendido", False)
+            # SOLO SI TIENE ACTIVADA LA OPCIÓN SE AÑADEN LAS PESTAÑAS DE RECICLAJE Y GRÁFICOS
+            if reciclaje_permitido:
+                tab_reciclaje = ttk.Frame(notebook_negocio)
+                tab_stats = ttk.Frame(notebook_negocio)
 
-            if abono_suspendido:
-                frame_bloqueo = tk.Frame(tab_reciclaje, bg=COLOR_BLANCO, padx=25, pady=25)
-                frame_bloqueo.pack(fill="both", expand=True, padx=15, pady=15)
-                tk.Label(
-                    frame_bloqueo,
-                    text="⚠️ ATENCIÓN: ABONO SUSPENDIDO",
-                    font=("Arial", 14, "bold"),
-                    fg=COLOR_ROJO_ELIMINAR,
-                    bg=COLOR_BLANCO
-                ).pack(pady=(20, 10))
-                tk.Label(
-                    frame_bloqueo,
-                    text="Su cuenta comercial tiene los abonos suspendidos.\nPor favor, contacte al administrador del sistema para más información.",
-                    font=("Arial", 11),
-                    fg=COLOR_TEXTO_MAIN,
-                    bg=COLOR_BLANCO,
-                    justify="center"
-                ).pack(pady=10)
-            else:
-                # ==========================================
+                notebook_negocio.add(tab_reciclaje, text="♻️ Recibir Reciclaje")
+                notebook_negocio.add(tab_stats, text="📊 Estadísticas y Gráficos")
+
                 # PESTAÑA: RECIBIR RECICLAJE
-                # ==========================================
                 frame_rec_box = tk.Frame(tab_reciclaje, bg=COLOR_BLANCO, padx=15, pady=15)
                 frame_rec_box.pack(fill="both", expand=True, padx=15, pady=15)
 
@@ -353,85 +329,165 @@ class VentanaNegocio:
 
                 actualizar_tabla_entregas()
 
-            # ==========================================
-            # PESTAÑA: ESTADÍSTICAS Y GRÁFICOS
-            # ==========================================
-            frame_stats_box = tk.Frame(tab_stats, bg=COLOR_BLANCO, padx=15, pady=15)
-            frame_stats_box.pack(fill="both", expand=True, padx=15, pady=15)
+                # PESTAÑA: ESTADÍSTICAS Y GRÁFICOS
+                frame_stats_box = tk.Frame(tab_stats, bg=COLOR_BLANCO, padx=15, pady=15)
+                frame_stats_box.pack(fill="both", expand=True, padx=15, pady=15)
 
-            tk.Label(
-                frame_stats_box,
-                text="📈 Resumen de Kilogramos Reciclados por Material",
-                font=("Arial", 12, "bold"),
-                bg=COLOR_BLANCO,
-                fg=COLOR_TEXTO_MAIN
-            ).pack(anchor="w", pady=(0, 10))
+                tk.Label(
+                    frame_stats_box,
+                    text="📈 Resumen de Kilogramos Reciclados por Material (Esta Bodega)",
+                    font=("Arial", 12, "bold"),
+                    bg=COLOR_BLANCO,
+                    fg=COLOR_TEXTO_MAIN
+                ).pack(anchor="w", pady=(0, 10))
 
-            frame_grafico_container = tk.Frame(frame_stats_box, bg=COLOR_BLANCO, bd=1, relief="solid", highlightbackground=COLOR_SECUNDARIO)
-            frame_grafico_container.pack(fill="both", expand=True)
+                frame_grafico_container = tk.Frame(frame_stats_box, bg=COLOR_BLANCO, bd=1, relief="solid", highlightbackground=COLOR_SECUNDARIO)
+                frame_grafico_container.pack(fill="both", expand=True)
 
-            def actualizar_panel_estadisticas():
-                for w in frame_grafico_container.winfo_children():
-                    w.destroy()
+                def actualizar_panel_estadisticas():
+                    for w in frame_grafico_container.winfo_children():
+                        w.destroy()
 
-                todas_entregas = cargar_entregas_reciclaje()
-                mis_entregas = [e for e in todas_entregas if str(e.get("tienda_id")) == str(self.id_usuario)]
+                    todas_entregas = cargar_entregas_reciclaje()
+                    mis_entregas = [e for e in todas_entregas if str(e.get("tienda_id")) == str(self.id_usuario)]
 
-                totales_material = {}
-                for ent in mis_entregas:
-                    mat = ent.get("material", "Desconocido")
-                    peso = float(ent.get("peso_kg", 0))
-                    totales_material[mat] = totales_material.get(mat, 0.0) + peso
+                    totales_material = {}
+                    total_general_kg = 0.0
+                    for ent in mis_entregas:
+                        mat = ent.get("material", "Desconocido")
+                        peso = float(ent.get("peso_kg", 0))
+                        totales_material[mat] = totales_material.get(mat, 0.0) + peso
+                        total_general_kg += peso
 
-                if not mis_entregas or not totales_material:
-                    tk.Label(
-                        frame_grafico_container,
-                        text="No hay registros de reciclaje suficientes para mostrar estadísticas.",
-                        font=("Arial", 11, "italic"),
-                        fg="#757575",
-                        bg=COLOR_BLANCO
-                    ).pack(pady=100)
-                    return
+                    if not mis_entregas or not totales_material:
+                        tk.Label(
+                            frame_grafico_container,
+                            text="No hay registros de reciclaje suficientes para mostrar estadísticas.",
+                            font=("Arial", 11, "italic"),
+                            fg="#757575",
+                            bg=COLOR_BLANCO
+                        ).pack(pady=100)
+                        return
 
-                if MATPLOTLIB_DISPONIBLE:
-                    # Ajuste definitivo de dimensiones y márgenes amplios para que las etiquetas no se corten
-                    fig, ax = plt.subplots(figsize=(6.8, 3.8), dpi=100)
-                    fig.patch.set_facecolor(COLOR_BLANCO)
-                    ax.set_facecolor(COLOR_FONDO_APP)
+                    frame_grafico_izq = tk.Frame(frame_grafico_container, bg=COLOR_BLANCO)
+                    frame_grafico_izq.pack(side="left", fill="both", expand=True, padx=(5, 0))
 
-                    materiales = list(totales_material.keys())
-                    kilos = list(totales_material.values())
+                    frame_resena_der = tk.Frame(
+                        frame_grafico_container, 
+                        bg=COLOR_FONDO_APP, 
+                        bd=1, 
+                        relief="solid", 
+                        highlightbackground=COLOR_SECUNDARIO
+                    )
+                    frame_resena_der.pack(side="right", fill="both", expand=False, padx=10, pady=10)
 
-                    colores_palette = ['#40916C', '#52B788', '#E76F51', '#2D6A4F', '#95D5B2', '#D8F3DC']
-                    colores_usados = [colores_palette[i % len(colores_palette)] for i in range(len(materiales))]
+                    if MATPLOTLIB_DISPONIBLE:
+                        import numpy as np
+                        fig, ax = plt.subplots(figsize=(5.2, 3.8), dpi=100)
+                        fig.patch.set_facecolor(COLOR_BLANCO)
+                        ax.set_facecolor(COLOR_BLANCO)
 
-                    # Barras ligeramente más angostas para perfecta separación
-                    barras = ax.bar(materiales, kilos, color=colores_usados, width=0.3)
-                    ax.set_title("Total de Kilogramos Recogidos por Material", fontsize=11, fontweight="bold", color=COLOR_TEXTO_MAIN)
-                    ax.set_ylabel("Kilogramos (kg)", fontsize=10, color=COLOR_TEXTO_MAIN)
+                        materiales = list(totales_material.keys())
+                        kilos = list(totales_material.values())
+
+                        colores_vivos = [
+                            "#E76F51", "#F4A261", "#E9C46A", "#2A9D8F", "#264653", 
+                            "#E63946", "#457B9D", "#1D3557", "#9b5de5", "#f15bb5", "#00bbf9"
+                        ]
+                        colores_usados = [colores_vivos[i % len(colores_vivos)] for i in range(len(materiales))]
+
+                        wedges, texts, autotexts = ax.pie(
+                            kilos, 
+                            labels=None, 
+                            autopct='%1.1f%%', 
+                            startangle=140, 
+                            colors=colores_usados,
+                            pctdistance=0.72,
+                            textprops=dict(color="white", weight="bold", fontsize=8)
+                        )
+
+                        centre_circle = plt.Circle((0, 0), 0.45, fc=COLOR_BLANCO, zorder=2)
+                        ax.add_patch(centre_circle)
+
+                        ax.set_title("Proporción Recolectada por Material (%)", fontsize=10, fontweight="bold", color=COLOR_TEXTO_MAIN, pad=10)
+
+                        ax.legend(
+                            wedges, 
+                            materiales, 
+                            title="Materiales", 
+                            loc="center left", 
+                            bbox_to_anchor=(-0.78, 0.5),
+                            fontsize=7.5,
+                            title_fontsize=8.5,
+                            frameon=True,
+                            facecolor=COLOR_FONDO_APP,
+                            edgecolor="#CBD5E1"
+                        )
+
+                        plt.subplots_adjust(left=0.42, right=0.98, top=0.88, bottom=0.08)
+
+                        canvas_grafico = FigureCanvasTkAgg(fig, master=frame_grafico_izq)
+                        canvas_grafico.draw()
+                        canvas_widget = canvas_grafico.get_tk_widget()
+                        canvas_widget.pack(fill="both", expand=True)
+
+                        def on_hover(event):
+                            if event.inaxes == ax:
+                                contiene_alguno = False
+                                for i, wedge in enumerate(wedges):
+                                    contiene, _ = wedge.contains(event)
+                                    if contiene:
+                                        contiene_alguno = True
+                                        theta = (wedge.theta1 + wedge.theta2) / 2.0
+                                        theta_rad = np.deg2rad(theta)
+                                        wedge.set_center((0.35 * np.cos(theta_rad), 0.35 * np.sin(theta_rad)))
+                                        wedge.set_zorder(10)
+                                        
+                                        color_porcion = colores_usados[i]
+                                        autotexts[i].set_fontsize(11)
+                                        autotexts[i].set_color("#FFFFFF")
+                                        autotexts[i].set_zorder(20)
+                                        autotexts[i].set_bbox(dict(boxstyle="round,pad=0.35", fc=color_porcion, ec="#FFFFFF", lw=1.5))
+                                    else:
+                                        wedge.set_center((0, 0))
+                                        wedge.set_zorder(1)
+                                        autotexts[i].set_fontsize(8)
+                                        autotexts[i].set_zorder(3)
+                                        autotexts[i].set_bbox(None)
+
+                                if contiene_alguno:
+                                    canvas_grafico.draw_idle()
+                                else:
+                                    for i, wedge in enumerate(wedges):
+                                        wedge.set_center((0, 0))
+                                        wedge.set_zorder(1)
+                                        autotexts[i].set_fontsize(8)
+                                        autotexts[i].set_zorder(3)
+                                        autotexts[i].set_bbox(None)
+                                    canvas_grafico.draw_idle()
+
+                        canvas_grafico.mpl_connect("motion_notify_event", on_hover)
+
+                    tk.Label(frame_resena_der, text="📋 Resumen Bodega", font=("Arial", 10, "bold"), bg=COLOR_PRIMARIO, fg=COLOR_BLANCO, pady=6).pack(fill="x")
                     
-                    # Rotación limpia de 30° con fuente ajustada
-                    plt.xticks(range(len(materiales)), materiales, rotation=30, ha="right", fontsize=8, color=COLOR_TEXTO_MAIN)
+                    box_resena = tk.Frame(frame_resena_der, bg=COLOR_FONDO_APP, padx=8, pady=8)
+                    box_resena.pack(fill="both", expand=True)
+
+                    tk.Label(box_resena, text=f"⚖️ Total: {total_general_kg:.2f} kg", font=("Arial", 9, "bold"), fg=COLOR_PRIMARIO, bg=COLOR_FONDO_APP, anchor="w").pack(fill="x", pady=(0, 4))
+                    tk.Label(box_resena, text=f"📦 Operaciones: {len(mis_entregas)}", font=("Arial", 8, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, anchor="w").pack(fill="x", pady=(0, 8))
                     
-                    ax.spines['top'].set_visible(False)
-                    ax.spines['right'].set_visible(False)
+                    tk.Frame(box_resena, height=1, bg="#CBD5E1").pack(fill="x", pady=4)
+                    
+                    for mat, kg in sorted(totales_material.items(), key=lambda x: x[1], reverse=True):
+                        porcentaje = (kg / total_general_kg) * 100 if total_general_kg > 0 else 0
+                        tk.Label(box_resena, text=f"• {mat}\n   └─ {kg:.2f} kg ({porcentaje:.1f}%)", font=("Arial", 8), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, justify="left", anchor="w").pack(fill="x", pady=2)
 
-                    # Márgenes perfectamente calculados para evitar que se corte por los lados o abajo
-                    plt.subplots_adjust(bottom=0.42, top=0.9, left=0.08, right=0.98)
+                actualizar_panel_estadisticas()
 
-                    canvas_grafico = FigureCanvasTkAgg(fig, master=frame_grafico_container)
-                    canvas_grafico.draw()
-                    canvas_grafico.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
-                else:
-                    tk.Label(frame_grafico_container, text="Totales acumulados:", font=("Arial", 11, "bold"), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(anchor="w", padx=20, pady=10)
-                    for mat, kg in totales_material.items():
-                        tk.Label(frame_grafico_container, text=f"• {mat}: {kg:.2f} kg", font=("Arial", 10), bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(anchor="w", padx=30, pady=2)
+            notebook_negocio.add(tab_historial, text="📜 Historial y Gestión de Ofertas")
+            notebook_negocio.add(tab_resenas, text="⭐ Mis Reseñas y Calificación")
 
-            actualizar_panel_estadisticas()
-
-            # ==========================================
             # PESTAÑA 1: TERMINAL Y PUBLICACIÓN
-            # ==========================================
             frame_central = tk.Frame(tab_terminal, bg=COLOR_BLANCO, bd=1, relief="solid", highlightbackground=COLOR_SECUNDARIO, padx=25, pady=20)
             frame_central.pack(fill="both", expand=True, padx=15, pady=15)
 
@@ -527,9 +583,7 @@ class VentanaNegocio:
                 cursor="hand2"
             ).pack(fill="x")
 
-            # ==========================================
             # PESTAÑA: HISTORIAL Y GESTIÓN DE OFERTAS
-            # ==========================================
             frame_hist_box = tk.Frame(tab_historial, bg=COLOR_BLANCO, padx=15, pady=15)
             frame_hist_box.pack(fill="both", expand=True, padx=15, pady=15)
 
@@ -541,7 +595,7 @@ class VentanaNegocio:
                 activeforeground=COLOR_BLANCO,
                 font=("Arial", 10, "bold"), 
                 relief="flat", 
-                command=self.dialogo_mis_promociones,
+                command=self.dialogo_mis_ofertas,
                 padx=15,
                 pady=8,
                 cursor="hand2"
@@ -586,9 +640,7 @@ class VentanaNegocio:
                 self.tabla_historial_tienda.heading(col, text=txt)
                 self.tabla_historial_tienda.column(col, width=w, minwidth=80, stretch=True)
 
-            # ==========================================
             # PESTAÑA: RESEÑAS Y CALIFICACIONES DEL NEGOCIO
-            # ==========================================
             frame_res_box = tk.Frame(tab_resenas, bg=COLOR_BLANCO, padx=15, pady=15)
             frame_res_box.pack(fill="both", expand=True, padx=15, pady=15)
 
@@ -1090,134 +1142,201 @@ class VentanaNegocio:
             self.lbl_promedio_estrellas.config(text="⭐ Calificación Promedio: Sin calificaciones aún")
             self.lbl_total_resenas.config(text="📊 Total de Opiniones Recibidas: 0 reseñas")
 
-    def dialogo_mis_promociones(self):
-        win_list = tk.Toplevel(self.root)
-        win_list.title("Mis Ofertas Publicadas - Gestión")
-        win_list.geometry("680x540")
-        win_list.resizable(False, False)
-        win_list.grab_set()
+    def dialogo_mis_ofertas(self):
+        win_promos = tk.Toplevel(self.root)
+        win_promos.config(bg=COLOR_BLANCO)
+        win_promos.title("Panel de Promociones")
+        win_promos.geometry("720x540")
+        win_promos.resizable(False, False)
+        win_promos.grab_set()
 
         if hasattr(self.root, 'icon_img'):
-            win_list.iconphoto(False, self.root.icon_img)
+            win_promos.iconphoto(False, self.root.icon_img)
 
-        canvas = tk.Canvas(win_list, bg=COLOR_BLANCO, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(win_list, orient="vertical", command=canvas.yview)
-        frame_container = tk.Frame(canvas, bg=COLOR_BLANCO)
+        canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
+        scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
 
-        def actualizar_scroll(event=None):
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
+        ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
+
+        if ruta_encontrada:
+            try:
+                from PIL import Image, ImageTk
+                img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
+                win_promos.bg_img = ImageTk.PhotoImage(img_pil)
+                canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+            except Exception as e:
+                print(f"Aviso imagen de fondo: {e}")
+
+        frame_grid = tk.Frame(canvas, bg="")
+        canvas.create_window((15, 15), window=frame_grid, anchor="nw")
+
+        def _actualizar_scrollregion(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
 
-        frame_container.bind("<Configure>", actualizar_scroll)
-        canvas_window = canvas.create_window((0, 0), window=frame_container, anchor="nw")
-
-        def ajustar_ancho_canvas(event):
-            canvas.itemconfig(canvas_window, width=event.width)
-
-        canvas.bind('<Configure>', ajustar_ancho_canvas)
+        frame_grid.bind("<Configure>", _actualizar_scrollregion)
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        scrollbar.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
+        def mostrar_descripcion_completa(titulo, descripcion):
+            win_desc = tk.Toplevel(win_promos)
+            win_desc.config(bg=COLOR_FONDO_APP)
+            win_desc.title(f"Detalle: {titulo}")
+            win_desc.geometry("380x220")
+            win_desc.resizable(False, False)
+            win_desc.grab_set()
 
-        def refrescar():
-            for w in frame_container.winfo_children(): 
+            if hasattr(self.root, 'icon_img'):
+                win_desc.iconphoto(False, self.root.icon_img)
+
+            tk.Label(
+                win_desc, 
+                text=f"📌 {titulo}", 
+                font=("Arial", 11, "bold"), 
+                fg=COLOR_TEXTO_MAIN, 
+                bg=COLOR_FONDO_APP
+            ).pack(anchor="w", padx=15, pady=(15, 5))
+
+            frame_txt = tk.Frame(win_desc, bg=COLOR_BLANCO, bd=1, relief="solid")
+            frame_txt.pack(fill="both", expand=True, padx=15, pady=5)
+
+            txt_box = tk.Text(frame_txt, font=("Arial", 9), wrap="word", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat")
+            txt_box.pack(fill="both", expand=True, padx=5, pady=5)
+            txt_box.insert("1.0", descripcion)
+            txt_box.config(state="disabled")
+
+            tk.Button(
+                win_desc, 
+                text="Cerrar", 
+                bg=COLOR_PRIMARIO, 
+                fg=COLOR_BLANCO, 
+                font=("Arial", 9, "bold"), 
+                command=win_desc.destroy, 
+                relief="flat", 
+                padx=15, 
+                pady=3,
+                cursor="hand2"
+            ).pack(pady=10)
+
+        def refrescar_grid():
+            for w in frame_grid.winfo_children():
                 w.destroy()
-                
-            promos = cargar_promociones()
-            mis_promos = [(i, p) for i, p in enumerate(promos) if str(p.get("tienda_id")) == str(self.id_usuario)]
 
-            if not mis_promos:
-                lbl_vacio = tk.Label(
-                    frame_container, 
-                    text="No tienes ofertas publicadas actualmente.\n¡Usa el botón de 'Publicar Nueva Oferta' para agregar productos!", 
+            todas_promos = cargar_promociones()
+            promos_propias = [
+                (idx, p) for idx, p in enumerate(todas_promos) 
+                if str(p.get("tienda_id")) == str(self.id_usuario)
+            ]
+
+            if not promos_propias:
+                tk.Label(
+                    frame_grid, 
+                    text="No tienes ofertas publicadas en este momento.", 
                     font=("Arial", 11, "italic"), 
-                    fg="#757575", 
-                    bg=COLOR_BLANCO,
-                    justify="center"
-                )
-                lbl_vacio.pack(pady=80, padx=50)
+                    fg="#64748B", 
+                    bg=COLOR_BLANCO
+                ).pack(pady=50, padx=20)
                 return
 
-            lbl_titulo = tk.Label(
-                frame_container, 
-                text=f"Total de Ofertas Publicadas: {len(mis_promos)}", 
-                font=("Arial", 12, "bold"), 
-                fg=COLOR_TEXTO_MAIN,
-                bg=COLOR_BLANCO
-            )
-            lbl_titulo.pack(anchor="w", padx=20, pady=(15, 10))
+            cols = 3
+            LIMITE_CARACTERES = 28
 
-            categorias_dict = {cat: [] for cat in CATEGORIAS_BODEGA}
-            for idx, p in mis_promos:
-                cat = p.get("categoria", "Abarrotes y Despensa")
-                if cat in categorias_dict:
-                    categorias_dict[cat].append((idx, p))
-                else:
-                    categorias_dict["Abarrotes y Despensa"].append((idx, p))
-
-            for cat_nombre, lista_items in categorias_dict.items():
-                if not lista_items:
-                    continue
-
-                lbl_sec = tk.Label(
-                    frame_container, 
-                    text=f"📂 {cat_nombre.upper()}", 
-                    font=("Arial", 10, "bold"), 
-                    bg=COLOR_FONDO_APP, 
-                    fg=COLOR_TEXTO_MAIN, 
-                    anchor="w",
-                    padx=10,
-                    pady=6
+            for i, (idx_global, p) in enumerate(promos_propias):
+                row, col = i // cols, i % cols
+                
+                card = tk.Frame(
+                    frame_grid, 
+                    bg=COLOR_BLANCO, 
+                    bd=1, 
+                    relief="solid", 
+                    highlightbackground=COLOR_SECUNDARIO, 
+                    highlightthickness=1, 
+                    padx=8, 
+                    pady=8, 
+                    width=210, 
+                    height=165
                 )
-                lbl_sec.pack(fill="x", padx=20, pady=(12, 6))
+                card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+                card.grid_propagate(False)
 
-                for idx, p in lista_items:
-                    card = tk.Frame(
-                        frame_container, 
+                pts_oferta = int(float(p.get('puntos', 0)))
+                titulo_oferta = p.get('titulo', 'Oferta')
+                desc_original = str(p.get('descripcion', '-'))
+
+                txt_cabecera = (
+                    f"🏪 {p.get('tienda_nombre')}\n"
+                    f"(ID: {p.get('tienda_id')})\n\n"
+                    f"📌 {titulo_oferta}\n"
+                    f"💰 S/ {float(p.get('precio_soles', 0)):.2f} ➔ {pts_oferta} PTS\n\n"
+                    f"📝 "
+                )
+
+                lbl_cabecera = tk.Label(
+                    card, 
+                    text=txt_cabecera, 
+                    font=("Arial", 8, "bold"), 
+                    fg=COLOR_TEXTO_MAIN, 
+                    bg=COLOR_BLANCO, 
+                    justify="left", 
+                    anchor="nw"
+                )
+                lbl_cabecera.pack(anchor="w", fill="x")
+
+                es_larga = len(desc_original) > LIMITE_CARACTERES
+                desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
+
+                frame_desc = tk.Frame(card, bg=COLOR_BLANCO)
+                frame_desc.pack(anchor="w", fill="x")
+
+                lbl_desc = tk.Label(
+                    frame_desc, 
+                    text=desc_mostrar, 
+                    font=("Arial", 8), 
+                    fg=COLOR_TEXTO_MAIN, 
+                    bg=COLOR_BLANCO, 
+                    justify="left", 
+                    anchor="nw",
+                    wraplength=180
+                )
+                lbl_desc.pack(side="left", anchor="nw")
+
+                if es_larga:
+                    btn_ver_mas = tk.Button(
+                        frame_desc, 
+                        text="ver más", 
+                        font=("Arial", 7, "bold", "underline"), 
+                        fg="#0284C7", 
                         bg=COLOR_BLANCO, 
-                        bd=1, 
-                        relief="solid", 
-                        highlightbackground=COLOR_SECUNDARIO, 
-                        highlightthickness=1,
-                        padx=15, 
-                        pady=10
+                        bd=0, 
+                        activebackground=COLOR_BLANCO, 
+                        activeforeground="#0369A1",
+                        cursor="hand2",
+                        command=lambda t=titulo_oferta, d=desc_original: mostrar_descripcion_completa(t, d)
                     )
-                    card.pack(fill="x", padx=20, pady=4)
+                    btn_ver_mas.pack(side="left", anchor="nw", padx=(2, 0))
 
-                    stock_disp = p.get("stock", "0")
-                    puntos_int = int(float(p.get('puntos', 0)))
-                    txt_info = f"• {p.get('titulo', 'Oferta')}  |  Costo: {puntos_int} PTS  |  S/ {p.get('precio_soles', 0):.2f}\n  Stock Disponible: {stock_disp} unids.  —  {p.get('descripcion', '')}"
-                    
-                    tk.Label(
-                        card, 
-                        text=txt_info, 
-                        font=("Arial", 9), 
-                        bg=COLOR_BLANCO, 
-                        fg=COLOR_TEXTO_MAIN, 
-                        justify="left"
-                    ).pack(side="left", anchor="w", expand=True)
+                def eliminar_propia(idx_a_borrar=idx_global, titulo=titulo_oferta):
+                    if messagebox.askyesno("Confirmar", f"¿Deseas eliminar tu oferta '{titulo}'?"):
+                        promos = cargar_promociones()
+                        if 0 <= idx_a_borrar < len(promos):
+                            promos.pop(idx_a_borrar)
+                            guardar_promociones(promos)
+                            messagebox.showinfo("Éxito", "La oferta ha sido eliminada.")
+                            refrescar_grid()
 
-                    def borrar(i=idx):
-                        if messagebox.askyesno("Eliminar Promoción", "¿Deseas eliminar permanentemente esta oferta del sistema?"):
-                            if eliminar_promocion(i, self.id_usuario, self.nombre_negocio):
-                                messagebox.showinfo("Éxito", "La oferta ha sido eliminada correctamente.")
-                                refrescar()
+                btn_eliminar = tk.Button(
+                    card, 
+                    text="🗑️ Eliminar Oferta", 
+                    bg="#DC2626", 
+                    fg=COLOR_BLANCO, 
+                    font=("Arial", 8, "bold"), 
+                    relief="flat", 
+                    command=eliminar_propia, 
+                    cursor="hand2", 
+                    pady=2
+                )
+                btn_eliminar.pack(fill="x", side="bottom")
 
-                    tk.Button(
-                        card, 
-                        text="Eliminar", 
-                        bg=COLOR_ROJO_ELIMINAR, 
-                        fg=COLOR_BLANCO, 
-                        activeforeground=COLOR_BLANCO, 
-                        font=("Arial", 9, "bold"), 
-                        relief="flat", 
-                        command=borrar, 
-                        cursor="hand2", 
-                        padx=10, 
-                        pady=5
-                    ).pack(side="right", padx=5)
-
-            win_list.update_idletasks()
-            canvas.configure(scrollregion=canvas.bbox("all"))
-
-        refrescar()
+        refrescar_grid()

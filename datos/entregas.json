@@ -102,5 +102,29 @@
         "material": "Papel de cuaderno blanco (Limpio)",
         "peso_kg": 4.0,
         "puntos": 28
+    },
+    {
+        "fecha": "2026-11-03 19:35:07",
+        "tienda_id": "75246852",
+        "dni_cliente": "68452135",
+        "material": "Botellas PET (Agua/Gaseosa)",
+        "peso_kg": 10.0,
+        "puntos": 60
+    },
+    {
+        "fecha": "2026-11-03 19:36:00",
+        "tienda_id": "75246852",
+        "dni_cliente": "68452135",
+        "material": "Cables viejos (Cobre/Plástico)",
+        "peso_kg": 5.0,
+        "puntos": 150
+    },
+    {
+        "fecha": "2026-11-03 19:44:25",
+        "tienda_id": "75246852",
+        "dni_cliente": "68452135",
+        "material": "Latas de aluminio (Gaseosa/Cerveza)",
+        "peso_kg": 8.0,
+        "puntos": 200
     }
 ]
