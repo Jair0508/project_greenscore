@@ -349,13 +349,13 @@ class VentanaNegocio:
 
                 actualizar_tabla_entregas()
 
-            # PESTAÑA: ESTADÍSTICAS Y GRÁFICOS
+            # PESTAÑA: ESTADÍSTICAS Y GRÁFICOS (DONA INTERACTIVA + RESUMEN OPERATIVO)
             frame_stats_box = tk.Frame(tab_stats, bg=COLOR_BLANCO, padx=15, pady=15)
             frame_stats_box.pack(fill="both", expand=True, padx=15, pady=15)
 
             tk.Label(
                 frame_stats_box,
-                text="📈 Resumen de Kilogramos Reciclados por Material",
+                text="📈 Resumen de Kilogramos Reciclados por Material (Esta Bodega)",
                 font=("Arial", 12, "bold"),
                 bg=COLOR_BLANCO,
                 fg=COLOR_TEXTO_MAIN
@@ -372,10 +372,12 @@ class VentanaNegocio:
                 mis_entregas = [e for e in todas_entregas if str(e.get("tienda_id")) == str(self.id_usuario)]
 
                 totales_material = {}
+                total_general_kg = 0.0
                 for ent in mis_entregas:
                     mat = ent.get("material", "Desconocido")
                     peso = float(ent.get("peso_kg", 0))
                     totales_material[mat] = totales_material.get(mat, 0.0) + peso
+                    total_general_kg += peso
 
                 if not mis_entregas or not totales_material:
                     tk.Label(
@@ -387,47 +389,121 @@ class VentanaNegocio:
                     ).pack(pady=100)
                     return
 
+                # CONTENEDOR DE 2 COLUMNAS
+                frame_grafico_izq = tk.Frame(frame_grafico_container, bg=COLOR_BLANCO)
+                frame_grafico_izq.pack(side="left", fill="both", expand=True, padx=(5, 0))
+
+                frame_resena_der = tk.Frame(
+                    frame_grafico_container, 
+                    bg=COLOR_FONDO_APP, 
+                    bd=1, 
+                    relief="solid", 
+                    highlightbackground=COLOR_SECUNDARIO
+                )
+                frame_resena_der.pack(side="right", fill="both", expand=False, padx=10, pady=10)
+
                 if MATPLOTLIB_DISPONIBLE:
-                    fig, ax = plt.subplots(figsize=(6.8, 3.8), dpi=100)
+                    import numpy as np
+                    fig, ax = plt.subplots(figsize=(5.2, 3.8), dpi=100)
                     fig.patch.set_facecolor(COLOR_BLANCO)
-                    ax.set_facecolor(COLOR_FONDO_APP)
+                    ax.set_facecolor(COLOR_BLANCO)
 
                     materiales = list(totales_material.keys())
                     kilos = list(totales_material.values())
 
-                    # Lista de colores vivos adaptada a tu paleta personalizada
                     colores_vivos = [
-                        "#E76F51", # Terracota Suave (Acento)
-                        "#F4A261", # Naranja Cálido / Sol
-                        "#E9C46A", # Amarillo Vibrante / Energía
-                        "#2A9D8F", # Turquesa Oceánico / Frescura
-                        "#264653", # Azul Petróleo Profundo / Contraste
-                        "#E63946", # Rojo Coral / Alerta Dinámica
-                        "#457B9D", # Azul Acero / Confianza
-                        "#1D3557", # Azul Marino / Base Oscura
-                        "#9b5de5", # Púrpura Brillante / Creatividad
-                        "#f15bb5", # Rosa Vivo / Alto Impacto
-                        "#00bbf9"  # Celeste Brillante / Claridad
+                        "#E76F51", "#F4A261", "#E9C46A", "#2A9D8F", "#264653", 
+                        "#E63946", "#457B9D", "#1D3557", "#9b5de5", "#f15bb5", "#00bbf9"
                     ]
-                    
-                    # Selección de colores para cada barra según la cantidad de materiales
                     colores_usados = [colores_vivos[i % len(colores_vivos)] for i in range(len(materiales))]
 
-                    # Dibujar barras utilizando la nueva paleta de colores vivos
-                    barras = ax.bar(materiales, kilos, color=colores_usados, width=0.3)
-                    ax.set_title("Total de Kilogramos Recogidos por Material", fontsize=11, fontweight="bold", color=COLOR_TEXTO_MAIN)
-                    ax.set_ylabel("Kilogramos (kg)", fontsize=10, color=COLOR_TEXTO_MAIN)
-                    
-                    plt.xticks(range(len(materiales)), materiales, rotation=30, ha="right", fontsize=8, color=COLOR_TEXTO_MAIN)
-                    
-                    ax.spines['top'].set_visible(False)
-                    ax.spines['right'].set_visible(False)
+                    wedges, texts, autotexts = ax.pie(
+                        kilos, 
+                        labels=None, 
+                        autopct='%1.1f%%', 
+                        startangle=140, 
+                        colors=colores_usados,
+                        pctdistance=0.72,
+                        textprops=dict(color="white", weight="bold", fontsize=8)
+                    )
 
-                    plt.subplots_adjust(bottom=0.42, top=0.9, left=0.08, right=0.98)
+                    centre_circle = plt.Circle((0, 0), 0.45, fc=COLOR_BLANCO, zorder=2)
+                    ax.add_patch(centre_circle)
 
-                    canvas_grafico = FigureCanvasTkAgg(fig, master=frame_grafico_container)
+                    ax.set_title("Proporción Recolectada por Material (%)", fontsize=10, fontweight="bold", color=COLOR_TEXTO_MAIN, pad=10)
+
+                    ax.legend(
+                        wedges, 
+                        materiales, 
+                        title="Materiales", 
+                        loc="center left", 
+                        bbox_to_anchor=(-0.78, 0.5),
+                        fontsize=7.5,
+                        title_fontsize=8.5,
+                        frameon=True,
+                        facecolor=COLOR_FONDO_APP,
+                        edgecolor="#CBD5E1"
+                    )
+
+                    plt.subplots_adjust(left=0.42, right=0.98, top=0.88, bottom=0.08)
+
+                    canvas_grafico = FigureCanvasTkAgg(fig, master=frame_grafico_izq)
                     canvas_grafico.draw()
-                    canvas_grafico.get_tk_widget().pack(fill="both", expand=True, padx=10, pady=10)
+                    canvas_widget = canvas_grafico.get_tk_widget()
+                    canvas_widget.pack(fill="both", expand=True)
+
+                    def on_hover(event):
+                        if event.inaxes == ax:
+                            contiene_alguno = False
+                            for i, wedge in enumerate(wedges):
+                                contiene, _ = wedge.contains(event)
+                                if contiene:
+                                    contiene_alguno = True
+                                    theta = (wedge.theta1 + wedge.theta2) / 2.0
+                                    theta_rad = np.deg2rad(theta)
+                                    wedge.set_center((0.35 * np.cos(theta_rad), 0.35 * np.sin(theta_rad)))
+                                    wedge.set_zorder(10)
+                                    
+                                    color_porcion = colores_usados[i]
+                                    autotexts[i].set_fontsize(11)
+                                    autotexts[i].set_color("#FFFFFF")
+                                    autotexts[i].set_zorder(20)
+                                    autotexts[i].set_bbox(dict(boxstyle="round,pad=0.35", fc=color_porcion, ec="#FFFFFF", lw=1.5))
+                                else:
+                                    wedge.set_center((0, 0))
+                                    wedge.set_zorder(1)
+                                    autotexts[i].set_fontsize(8)
+                                    autotexts[i].set_zorder(3)
+                                    autotexts[i].set_bbox(None)
+
+                            if contiene_alguno:
+                                canvas_grafico.draw_idle()
+                            else:
+                                for i, wedge in enumerate(wedges):
+                                    wedge.set_center((0, 0))
+                                    wedge.set_zorder(1)
+                                    autotexts[i].set_fontsize(8)
+                                    autotexts[i].set_zorder(3)
+                                    autotexts[i].set_bbox(None)
+                                canvas_grafico.draw_idle()
+
+                    canvas_grafico.mpl_connect("motion_notify_event", on_hover)
+
+                # RESEÑA OPERATIVA LATERAL DERECHA
+                tk.Label(frame_resena_der, text="📋 Resumen Bodega", font=("Arial", 10, "bold"), bg=COLOR_PRIMARIO, fg=COLOR_BLANCO, pady=6).pack(fill="x")
+                
+                box_resena = tk.Frame(frame_resena_der, bg=COLOR_FONDO_APP, padx=8, pady=8)
+                box_resena.pack(fill="both", expand=True)
+
+                tk.Label(box_resena, text=f"⚖️ Total: {total_general_kg:.2f} kg", font=("Arial", 9, "bold"), fg=COLOR_PRIMARIO, bg=COLOR_FONDO_APP, anchor="w").pack(fill="x", pady=(0, 4))
+                tk.Label(box_resena, text=f"📦 Operaciones: {len(mis_entregas)}", font=("Arial", 8, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, anchor="w").pack(fill="x", pady=(0, 8))
+                
+                tk.Frame(box_resena, height=1, bg="#CBD5E1").pack(fill="x", pady=4)
+                
+                for mat, kg in sorted(totales_material.items(), key=lambda x: x[1], reverse=True):
+                    porcentaje = (kg / total_general_kg) * 100 if total_general_kg > 0 else 0
+                    tk.Label(box_resena, text=f"• {mat}\n   └─ {kg:.2f} kg ({porcentaje:.1f}%)", font=("Arial", 8), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, justify="left", anchor="w").pack(fill="x", pady=2)
+
             actualizar_panel_estadisticas()
 
             # PESTAÑA 1: TERMINAL Y PUBLICACIÓN
@@ -1086,6 +1162,7 @@ class VentanaNegocio:
             self.lbl_total_resenas.config(text="📊 Total de Opiniones Recibidas: 0 reseñas")
 
     def dialogo_mis_ofertas(self):
+        """Muestra el catálogo de ofertas del negocio en una cuadrícula de 3 columnas con tarjetas estandarizadas."""
         win_promos = tk.Toplevel(self.root)
         win_promos.config(bg=COLOR_BLANCO)
         win_promos.title("Panel de Promociones")
@@ -1096,14 +1173,12 @@ class VentanaNegocio:
         if hasattr(self.root, 'icon_img'):
             win_promos.iconphoto(False, self.root.icon_img)
 
-        # Canvas con scrollbar y fondo blanco
         canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
         scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Fondo ilustrado con lirios
         nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
         ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
 
@@ -1112,19 +1187,19 @@ class VentanaNegocio:
                 from PIL import Image, ImageTk
                 img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
                 win_promos.bg_img = ImageTk.PhotoImage(img_pil)
-                img_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
-                canvas.tag_lower(img_id)
-            except Exception:
-                pass
+                canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+            except Exception as e:
+                print(f"Aviso imagen de fondo: {e}")
 
-        # Contenedor para la cuadrícula (transparente para ver el fondo)
         frame_grid = tk.Frame(canvas, bg="")
-        frame_grid.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        
-        canvas.create_window((0, 0), window=frame_grid, anchor="nw")
+        canvas.create_window((15, 15), window=frame_grid, anchor="nw")
+
+        def _actualizar_scrollregion(event):
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        frame_grid.bind("<Configure>", _actualizar_scrollregion)
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # Función para abrir la ventana emergente de "Ver más"
         def mostrar_descripcion_completa(titulo, descripcion):
             win_desc = tk.Toplevel(win_promos)
             win_desc.config(bg=COLOR_FONDO_APP)
@@ -1185,24 +1260,23 @@ class VentanaNegocio:
                 ).pack(pady=50, padx=20)
                 return
 
-            cols = 2
-            LIMITE_CARACTERES = 32  # Límite para mantener la tarjeta compacta
+            cols = 3
+            LIMITE_CARACTERES = 28
 
             for i, (idx_global, p) in enumerate(promos_propias):
                 row, col = i // cols, i % cols
                 
-                # Tarjeta compacta original (220x170 px)
                 card = tk.Frame(
                     frame_grid, 
                     bg=COLOR_BLANCO, 
                     bd=1, 
                     relief="solid", 
-                    highlightbackground="#52B788", 
+                    highlightbackground=COLOR_SECUNDARIO, 
                     highlightthickness=1, 
-                    padx=10, 
+                    padx=8, 
                     pady=8, 
-                    width=220, 
-                    height=170
+                    width=210, 
+                    height=165
                 )
                 card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                 card.grid_propagate(False)
@@ -1211,7 +1285,6 @@ class VentanaNegocio:
                 titulo_oferta = p.get('titulo', 'Oferta')
                 desc_original = str(p.get('descripcion', '-'))
 
-                # Cabecera corta
                 txt_cabecera = (
                     f"🏪 {p.get('tienda_nombre')}\n"
                     f"(ID: {p.get('tienda_id')})\n\n"
@@ -1224,14 +1297,13 @@ class VentanaNegocio:
                     card, 
                     text=txt_cabecera, 
                     font=("Arial", 8, "bold"), 
-                    fg="#1B4332", 
+                    fg=COLOR_TEXTO_MAIN, 
                     bg=COLOR_BLANCO, 
                     justify="left", 
                     anchor="nw"
                 )
                 lbl_cabecera.pack(anchor="w", fill="x")
 
-                # Evaluación de longitud de descripción
                 es_larga = len(desc_original) > LIMITE_CARACTERES
                 desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
 
@@ -1242,15 +1314,14 @@ class VentanaNegocio:
                     frame_desc, 
                     text=desc_mostrar, 
                     font=("Arial", 8), 
-                    fg="#1B4332", 
+                    fg=COLOR_TEXTO_MAIN, 
                     bg=COLOR_BLANCO, 
                     justify="left", 
                     anchor="nw",
-                    wraplength=190
+                    wraplength=180
                 )
                 lbl_desc.pack(side="left", anchor="nw")
 
-                # Botón de "Ver más" cuando la descripción se recorta
                 if es_larga:
                     btn_ver_mas = tk.Button(
                         frame_desc, 

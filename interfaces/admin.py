@@ -4,10 +4,20 @@ import os
 from datos.gestor import (
     cargar_usuarios, guardar_usuarios, registrar_accion_dev, 
     cargar_log_devs, cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente,
-    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido, 
-    obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin
+    cargar_promociones, guardar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido, 
+    obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin, cargar_entregas_reciclaje
 )
 from logica.modelos import Material
+
+# Importación de matplotlib para renderizar el gráfico estadístico global
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+    from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+    MATPLOTLIB_DISPONIBLE = True
+except ImportError:
+    MATPLOTLIB_DISPONIBLE = False
 
 # ==========================================
 # PALETA DE COLORES - TONOS AZULES
@@ -102,25 +112,73 @@ class VentanaAdmin:
         tk.Button(btn_box, text="🔑 Renovar Clave", bg="#D97706", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_cambiar_clave, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="✏️ Editar Datos", bg="#0284C7", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_editar_datos, cursor="hand2").pack(side="left", padx=3, pady=2)
 
-        # 4. CONTROL DE PESTAÑAS PRINCIPALES
-        notebook = ttk.Notebook(self.root)
-        notebook.pack(fill="both", expand=True, padx=15, pady=(5, 2))
+        # 4. CONTROL DE PESTAÑAS PRINCIPALES CON NAVEGACIÓN Y SCROLLBAR
+        frame_nav = tk.Frame(self.root, bg=COLOR_FONDO_APP)
+        frame_nav.pack(fill="x", padx=15, pady=(5, 2))
 
-        tab_usuarios = ttk.Frame(notebook)
-        tab_promos = ttk.Frame(notebook)
-        tab_log_tiendas = ttk.Frame(notebook)
-        tab_log_clientes = ttk.Frame(notebook)
-        tab_soporte_general = ttk.Frame(notebook)
+        canvas_tabs = tk.Canvas(frame_nav, bg=COLOR_FONDO_APP, height=38, highlightthickness=0)
+        scroll_tabs = ttk.Scrollbar(frame_nav, orient="horizontal", command=canvas_tabs.xview)
+        
+        box_tabs = tk.Frame(canvas_tabs, bg=COLOR_FONDO_APP)
+        box_tabs.bind("<Configure>", lambda e: canvas_tabs.configure(scrollregion=canvas_tabs.bbox("all")))
 
-        notebook.add(tab_usuarios, text="👥 Cuentas y Suspensiones")
-        notebook.add(tab_promos, text="🛍️ Promociones Activas")
-        notebook.add(tab_log_tiendas, text="🏪 Actividad Tiendas")
-        notebook.add(tab_log_clientes, text="👤 Actividad Clientes")
-        notebook.add(tab_soporte_general, text="🔔 Soporte (Bandeja)")
+        canvas_tabs.create_window((0, 0), window=box_tabs, anchor="nw")
+        canvas_tabs.configure(xscrollcommand=scroll_tabs.set)
+
+        canvas_tabs.pack(fill="x", expand=True)
+        scroll_tabs.pack(fill="x", pady=(2, 0))
+
+        frame_vistas = tk.Frame(self.root, bg=COLOR_FONDO_APP)
+        frame_vistas.pack(fill="both", expand=True, padx=15, pady=5)
+
+        tab_usuarios = ttk.Frame(frame_vistas)
+        tab_promos = ttk.Frame(frame_vistas)
+        tab_stats = ttk.Frame(frame_vistas)
+        tab_log_tiendas = ttk.Frame(frame_vistas)
+        tab_log_clientes = ttk.Frame(frame_vistas)
+        tab_soporte_general = ttk.Frame(frame_vistas)
+
+        vistas = {
+            "👥 Cuentas y Suspensiones": tab_usuarios,
+            "🛍️ Promociones Activas": tab_promos,
+            "📊 Estadísticas Globales": tab_stats,
+            "🏪 Actividad Tiendas": tab_log_tiendas,
+            "👤 Actividad Clientes": tab_log_clientes,
+            "🔔 Soporte (Bandeja)": tab_soporte_general
+        }
 
         if self.es_admin_supremo:
-            self.tab_log_devs = ttk.Frame(notebook)
-            notebook.add(self.tab_log_devs, text="🕵️ Actividad Gestores / Admins")
+            self.tab_log_devs = ttk.Frame(frame_vistas)
+            vistas["🕵️ Actividad Gestores / Admins"] = self.tab_log_devs
+
+        botones_tabs = {}
+
+        def cambiar_vista(nombre_tab):
+            for nom, frame in vistas.items():
+                if nom == nombre_tab:
+                    frame.pack(fill="both", expand=True)
+                    botones_tabs[nom].config(bg=COLOR_BLANCO, fg=COLOR_PRIMARIO_AZUL, relief="solid", bd=1)
+                else:
+                    frame.pack_forget()
+                    botones_tabs[nom].config(bg=COLOR_FONDO_APP, fg=COLOR_TEXTO_MAIN, relief="flat", bd=0)
+
+        for nombre in vistas.keys():
+            btn = tk.Button(
+                box_tabs, 
+                text=nombre, 
+                font=("Arial", 9, "bold"), 
+                bg=COLOR_FONDO_APP, 
+                fg=COLOR_TEXTO_MAIN, 
+                relief="flat", 
+                padx=12, 
+                pady=5, 
+                cursor="hand2",
+                command=lambda n=nombre: cambiar_vista(n)
+            )
+            btn.pack(side="left", padx=3)
+            botones_tabs[nombre] = btn
+
+        cambiar_vista("👥 Cuentas y Suspensiones")
 
         def crear_tabla_con_scroll(parent, columnas, configuracion_columnas):
             frame_tabla = ttk.Frame(parent)
@@ -144,7 +202,6 @@ class VentanaAdmin:
             scroll_x.pack(side="bottom", fill="x")
             tabla.pack(side="left", fill="both", expand=True)
 
-            # Configuración de colores para estados
             tabla.tag_configure("suspendido", foreground=COLOR_ROJO_ALERTA, background="#FEE2E2")
             tabla.tag_configure("activo", foreground="#047857")
 
@@ -209,6 +266,217 @@ class VentanaAdmin:
             ("descripcion", "Descripción", 280)
         ]
         self.tabla_promos = crear_tabla_con_scroll(tab_promos, cols_pr, config_pr)
+
+        # PESTAÑA: ESTADÍSTICAS GLOBALES CON GRÁFICO DE DONA Y RESEÑA
+        frame_stats_box = tk.Frame(tab_stats, bg=COLOR_BLANCO, padx=15, pady=15)
+        frame_stats_box.pack(fill="both", expand=True, padx=15, pady=15)
+
+        tk.Label(
+            frame_stats_box,
+            text="📈 Resumen Global de Reciclaje (Todas las Puntos y Bodegas)",
+            font=("Arial", 12, "bold"),
+            bg=COLOR_BLANCO,
+            fg=COLOR_TEXTO_MAIN
+        ).pack(anchor="w", pady=(0, 10))
+
+        frame_grafico_container = tk.Frame(frame_stats_box, bg=COLOR_BLANCO, bd=1, relief="solid", highlightbackground=COLOR_SECUNDARIO_AZUL)
+        frame_grafico_container.pack(fill="both", expand=True)
+
+        def actualizar_panel_estadisticas_globales():
+            for w in frame_grafico_container.winfo_children():
+                w.destroy()
+
+            todas_entregas = cargar_entregas_reciclaje()
+            totales_material = {}
+            total_general_kg = 0.0
+
+            for ent in todas_entregas:
+                mat = ent.get("material", "Desconocido")
+                peso = float(ent.get("peso_kg", 0))
+                totales_material[mat] = totales_material.get(mat, 0.0) + peso
+                total_general_kg += peso
+
+            if not todas_entregas or not totales_material:
+                tk.Label(
+                    frame_grafico_container,
+                    text="No hay registros de reciclaje registrados en el sistema.",
+                    font=("Arial", 11, "italic"),
+                    fg="#757575",
+                    bg=COLOR_BLANCO
+                ).pack(pady=100)
+                return
+
+            # CONTENEDOR 2 COLUMNAS
+            frame_grafico_izq = tk.Frame(frame_grafico_container, bg=COLOR_BLANCO)
+            frame_grafico_izq.pack(side="left", fill="both", expand=True, padx=(5, 0))
+
+            frame_resena_der = tk.Frame(
+                frame_grafico_container, 
+                bg=COLOR_FONDO_APP, 
+                bd=1, 
+                relief="solid", 
+                highlightbackground=COLOR_SECUNDARIO_AZUL if hasattr(self, 'es_admin_supremo') else "#52B788"
+            )
+            frame_resena_der.pack(side="right", fill="both", expand=False, padx=10, pady=10)
+
+            # --- PARTE 1: DONA CON LEYENDA A LA IZQUIERDA Y Z-ORDER ELEVADO ---
+            if MATPLOTLIB_DISPONIBLE:
+                import numpy as np
+                fig, ax = plt.subplots(figsize=(5.2, 3.8), dpi=100)
+                fig.patch.set_facecolor(COLOR_BLANCO)
+                ax.set_facecolor(COLOR_BLANCO)
+
+                materiales = list(totales_material.keys())
+                kilos = list(totales_material.values())
+
+                colores_vivos = [
+                    "#E76F51", "#F4A261", "#E9C46A", "#2A9D8F", "#264653", 
+                    "#E63946", "#457B9D", "#1D3557", "#9b5de5", "#f15bb5", "#00bbf9"
+                ]
+                colores_usados = [colores_vivos[i % len(colores_vivos)] for i in range(len(materiales))]
+
+                wedges, texts, autotexts = ax.pie(
+                    kilos, 
+                    labels=None, 
+                    autopct='%1.1f%%', 
+                    startangle=140, 
+                    colors=colores_usados,
+                    pctdistance=0.72,
+                    textprops=dict(color="white", weight="bold", fontsize=8)
+                )
+
+                # Anillo interior para la dona
+                centre_circle = plt.Circle((0, 0), 0.45, fc=COLOR_BLANCO, zorder=2)
+                ax.add_patch(centre_circle)
+
+                ax.set_title("Proporción por Material (%)", fontsize=10, fontweight="bold", color=COLOR_TEXTO_MAIN, pad=10)
+
+                # LEYENDA A LA IZQUIERDA FUERA DEL GRÁFICO
+                ax.legend(
+                    wedges, 
+                    materiales, 
+                    title="Materiales", 
+                    loc="center left", 
+                    bbox_to_anchor=(-0.78, 0.5),
+                    fontsize=7.5,
+                    title_fontsize=8.5,
+                    frameon=True,
+                    facecolor=COLOR_FONDO_APP,
+                    edgecolor="#CBD5E1"
+                )
+
+                # Ajuste de márgenes para la leyenda izquierda
+                plt.subplots_adjust(left=0.42, right=0.98, top=0.88, bottom=0.08)
+
+                canvas_grafico = FigureCanvasTkAgg(fig, master=frame_grafico_izq)
+                canvas_grafico.draw()
+                canvas_widget = canvas_grafico.get_tk_widget()
+                canvas_widget.pack(fill="both", expand=True)
+
+                # HOVER: EXPANSIÓN, ZORDER ELEVADO Y RECTÁNGULO DE FONDO QUE CUBRE A LOS DEMÁS NÚMEROS
+                def on_hover(event):
+                    if event.inaxes == ax:
+                        contiene_alguno = False
+                        for i, wedge in enumerate(wedges):
+                            contiene, _ = wedge.contains(event)
+                            if contiene:
+                                contiene_alguno = True
+                                theta = (wedge.theta1 + wedge.theta2) / 2.0
+                                theta_rad = np.deg2rad(theta)
+                                wedge.set_center((0.35 * np.cos(theta_rad), 0.35 * np.sin(theta_rad)))
+                                wedge.set_zorder(10)
+                                
+                                # Eleva la capa zorder del texto y su recuadro por encima de todos los elementos
+                                color_porcion = colores_usados[i]
+                                autotexts[i].set_fontsize(11)
+                                autotexts[i].set_color("#FFFFFF")
+                                autotexts[i].set_zorder(20)
+                                autotexts[i].set_bbox(dict(
+                                    boxstyle="round,pad=0.35", 
+                                    fc=color_porcion, 
+                                    ec="#FFFFFF", 
+                                    lw=1.5
+                                ))
+                            else:
+                                wedge.set_center((0, 0))
+                                wedge.set_zorder(1)
+                                autotexts[i].set_fontsize(8)
+                                autotexts[i].set_zorder(3)
+                                autotexts[i].set_bbox(None)
+
+                        if contiene_alguno:
+                            canvas_grafico.draw_idle()
+                        else:
+                            for i, wedge in enumerate(wedges):
+                                wedge.set_center((0, 0))
+                                wedge.set_zorder(1)
+                                autotexts[i].set_fontsize(8)
+                                autotexts[i].set_zorder(3)
+                                autotexts[i].set_bbox(None)
+                            canvas_grafico.draw_idle()
+
+                canvas_grafico.mpl_connect("motion_notify_event", on_hover)
+
+            # --- PARTE 2: RESEÑA DERECHA ---
+            lbl_header_color = COLOR_AZUL_HEADER if hasattr(self, 'es_admin_supremo') else COLOR_PRIMARIO_AZUL
+            tk.Label(
+                frame_resena_der, 
+                text="📋 Resumen Operativo", 
+                font=("Arial", 10, "bold"), 
+                bg=lbl_header_color, 
+                fg=COLOR_BLANCO, 
+                pady=6
+            ).pack(fill="x")
+
+            canvas_resena = tk.Canvas(frame_resena_der, bg=COLOR_FONDO_APP, width=250, highlightthickness=0)
+            scroll_resena = ttk.Scrollbar(frame_resena_der, orient="vertical", command=canvas_resena.yview)
+            
+            box_resena = tk.Frame(canvas_resena, bg=COLOR_FONDO_APP, padx=8, pady=8)
+            box_resena.bind("<Configure>", lambda e: canvas_resena.configure(scrollregion=canvas_resena.bbox("all")))
+
+            canvas_resena.create_window((0, 0), window=box_resena, anchor="nw")
+            canvas_resena.configure(yscrollcommand=scroll_resena.set)
+
+            canvas_resena.pack(side="left", fill="both", expand=True)
+            scroll_resena.pack(side="right", fill="y")
+
+            p_color = COLOR_PRIMARIO_AZUL if hasattr(self, 'es_admin_supremo') else COLOR_PRIMARIO_AZUL
+            tk.Label(
+                box_resena, 
+                text=f"⚖️ Total Recolectado: {total_general_kg:.2f} kg", 
+                font=("Arial", 9, "bold"), 
+                fg=p_color, 
+                bg=COLOR_FONDO_APP,
+                anchor="w"
+            ).pack(fill="x", pady=(0, 4))
+
+            tk.Label(
+                box_resena, 
+                text=f"📦 Operaciones Registradas: {len(todas_entregas)}", 
+                font=("Arial", 8, "bold"), 
+                fg=COLOR_TEXTO_MAIN, 
+                bg=COLOR_FONDO_APP,
+                anchor="w"
+            ).pack(fill="x", pady=(0, 8))
+
+            tk.Frame(box_resena, height=1, bg="#CBD5E1").pack(fill="x", pady=4)
+            tk.Label(box_resena, text="Desglose por Material:", font=("Arial", 8, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", pady=2)
+
+            totales_ordenados = sorted(totales_material.items(), key=lambda x: x[1], reverse=True)
+            for mat, kg in totales_ordenados:
+                porcentaje = (kg / total_general_kg) * 100 if total_general_kg > 0 else 0
+                txt_item = f"• {mat}\n   └─ {kg:.2f} kg ({porcentaje:.1f}%)"
+                tk.Label(
+                    box_resena, 
+                    text=txt_item, 
+                    font=("Arial", 8), 
+                    fg=COLOR_TEXTO_MAIN, 
+                    bg=COLOR_FONDO_APP, 
+                    justify="left",
+                    anchor="w"
+                ).pack(fill="x", pady=2)
+
+        actualizar_panel_estadisticas_globales()
 
         # LOG TIENDAS
         cols_tnd = ("fecha", "tienda_id", "tienda_nombre", "dni_cliente", "puntos")
@@ -785,7 +1053,6 @@ class VentanaAdmin:
 
         tk.Label(win_modal, text="Seleccione Tipo de Cuenta:", font=("Arial", 10, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(pady=5)
         
-        # OPCIONES DE DESPLEGABLE ACTUALIZADAS
         roles_disponibles = ["vecino", "negocio"]
         if self.es_admin_supremo: 
             roles_disponibles.append("gestor de reciclaje")
@@ -997,7 +1264,7 @@ class VentanaAdmin:
         messagebox.showinfo("Éxito", "Datos actualizados.")
 
     def dialogo_ver_promociones_con_foto(self):
-        """Muestra las promociones en cuadrícula sobre fondo blanco con la ilustración de lirios."""
+        """Muestra el panel de promociones con 3 columnas, fondo fijo e ilustración floral visible."""
         win_promos = tk.Toplevel(self.root)
         win_promos.config(bg=COLOR_BLANCO)
         win_promos.title("Panel de Promociones")
@@ -1008,52 +1275,80 @@ class VentanaAdmin:
         if hasattr(self.root, 'icon_img'):
             win_promos.iconphoto(False, self.root.icon_img)
 
-        # 1. CANVAS CON FONDO BLANCO PURO (#FFFFFF)
+        # 1. Canvas principal (donde estará la imagen estática)
         canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
         scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # 2. CARGA FORZADA DE LA IMAGEN CON LIRIOS (fondo_ofertas_admin)
-        nombres_archivos = [
-            "fondo_ofertas_admin.png",
-            "fondo_ofertas_admin.jpg",
-            "tarjeta_contenedor.png",
-            "tarjeta_contenedor.jpg"
-        ]
-
-        ruta_encontrada = None
-        for nombre in nombres_archivos:
-            r = os.path.join("img", nombre)
-            if os.path.exists(r):
-                ruta_encontrada = r
-                break
+        # 2. Carga de la ilustración floral fija en la capa base
+        nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
+        ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
 
         if ruta_encontrada:
             try:
                 from PIL import Image, ImageTk
                 img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
                 win_promos.bg_img = ImageTk.PhotoImage(img_pil)
-                img_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
-                canvas.tag_lower(img_id)
+                # La imagen se dibuja fija en las coordenadas (0,0) del Canvas
+                canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
             except Exception as e:
-                try:
-                    win_promos.bg_img = tk.PhotoImage(file=ruta_encontrada)
-                    img_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
-                    canvas.tag_lower(img_id)
-                except Exception as ex:
-                    print(f"Error al cargar fondo de lirios: {ex}")
+                print(f"Aviso imagen de fondo: {e}")
 
-        # 3. CONTENEDOR FLOTANTE TRANSPARENTE
+        # 3. Frame contenedor de tarjetas sin fondo (transparente sobre la imagen)
         frame_grid = tk.Frame(canvas, bg="")
+        
+        # Inserción del contenedor en el canvas
+        window_id = canvas.create_window((15, 15), window=frame_grid, anchor="nw")
 
-        def _on_frame_configure(event):
+        def _actualizar_scrollregion(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
 
-        frame_grid.bind("<Configure>", _on_frame_configure)
-        canvas.create_window((0, 0), window=frame_grid, anchor="nw")
+        frame_grid.bind("<Configure>", _actualizar_scrollregion)
         canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Modal para el desglose completo de la descripción
+        def mostrar_descripcion_completa(titulo, descripcion):
+            win_desc = tk.Toplevel(win_promos)
+            win_desc.config(bg=COLOR_FONDO_APP)
+            win_desc.title(f"Detalle: {titulo}")
+            win_desc.geometry("380x220")
+            win_desc.resizable(False, False)
+            win_desc.grab_set()
+
+            if hasattr(self.root, 'icon_img'):
+                win_desc.iconphoto(False, self.root.icon_img)
+
+            tk.Label(
+                win_desc, 
+                text=f"📌 {titulo}", 
+                font=("Arial", 11, "bold"), 
+                fg=COLOR_TEXTO_MAIN, 
+                bg=COLOR_FONDO_APP
+            ).pack(anchor="w", padx=15, pady=(15, 5))
+
+            frame_txt = tk.Frame(win_desc, bg=COLOR_BLANCO, bd=1, relief="solid")
+            frame_txt.pack(fill="both", expand=True, padx=15, pady=5)
+
+            txt_box = tk.Text(frame_txt, font=("Arial", 9), wrap="word", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat")
+            txt_box.pack(fill="both", expand=True, padx=5, pady=5)
+            txt_box.insert("1.0", descripcion)
+            txt_box.config(state="disabled")
+
+            btn_color = COLOR_PRIMARIO_AZUL
+            tk.Button(
+                win_desc, 
+                text="Cerrar", 
+                bg=btn_color, 
+                fg=COLOR_BLANCO, 
+                font=("Arial", 9, "bold"), 
+                command=win_desc.destroy, 
+                relief="flat", 
+                padx=15, 
+                pady=3,
+                cursor="hand2"
+            ).pack(pady=10)
 
         def refrescar_grid():
             for w in frame_grid.winfo_children():
@@ -1065,78 +1360,146 @@ class VentanaAdmin:
                     frame_grid, 
                     text="No hay promociones registradas actualmente.", 
                     font=("Arial", 11, "italic"), 
-                    fg=COLOR_GRIS_BOTON, 
+                    fg=COLOR_GRIS_BOTON,
                     bg=COLOR_BLANCO
-                ).pack(pady=50)
+                ).pack(pady=50, padx=20)
                 return
 
-            cols = 2
+            # AHORA 3 COLUMNAS PARA APROVECHAR EL ESPACIO A LA DERECHA
+            cols = 3
+            LIMITE_CARACTERES = 28
+
             for idx, p in enumerate(promos):
                 row = idx // cols
                 col = idx % cols
 
+                # Tarjeta compacta de 210x165 px con bordes limpios
+                border_color = COLOR_SECUNDARIO_AZUL if hasattr(self, 'es_admin_supremo') else "#52B788"
                 card = tk.Frame(
                     frame_grid, 
                     bg=COLOR_BLANCO, 
                     bd=1, 
                     relief="solid", 
-                    highlightbackground=COLOR_SECUNDARIO_AZUL, 
+                    highlightbackground=border_color, 
                     highlightthickness=1,
-                    padx=12, 
-                    pady=12,
-                    width=240,
-                    height=240
+                    padx=8, 
+                    pady=8,
+                    width=210,
+                    height=165
                 )
-                card.grid(row=row, column=col, padx=12, pady=12, sticky="nsew")
+                # Separación de 10px entre recuadros en todas las direcciones
+                card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                 card.grid_propagate(False)
 
                 pts_oferta = int(float(p.get('puntos', 0)))
-                txt_info = (
+                titulo_oferta = p.get('titulo', 'Oferta')
+                desc_original = str(p.get('descripcion', '-'))
+
+                txt_cabecera = (
                     f"🏪 {p.get('tienda_nombre')}\n(ID: {p.get('tienda_id')})\n\n"
-                    f"📌 {p.get('titulo')}\n"
-                    f"💰 S/ {p.get('precio_soles', 0):.2f} ➔ {pts_oferta} PTS\n\n"
-                    f"📝 {p.get('descripcion')}"
+                    f"📌 {titulo_oferta}\n"
+                    f"💰 S/ {float(p.get('precio_soles', 0)):.2f} ➔ {pts_oferta} PTS\n\n"
+                    f"📝 "
                 )
 
-                tk.Label(
+                lbl_cabecera = tk.Label(
                     card, 
-                    text=txt_info, 
+                    text=txt_cabecera, 
                     font=("Arial", 8, "bold"), 
                     fg=COLOR_TEXTO_MAIN, 
                     bg=COLOR_BLANCO, 
                     justify="left",
-                    wraplength=210
-                ).pack(anchor="w", expand=True)
+                    anchor="nw"
+                )
+                lbl_cabecera.pack(anchor="w", fill="x")
 
-                def eliminar_con_motivo(i=idx, tienda_id=p.get('tienda_id'), titulo=p.get('titulo')):
-                    motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
-                    if not motivo:
-                        messagebox.showwarning("Requerido", "Debe ingresar una justificación para eliminar la oferta.")
-                        return
+                es_larga = len(desc_original) > LIMITE_CARACTERES
+                desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
 
-                    if messagebox.askyesno("Confirmar", f"¿Eliminar definitivamente la oferta '{titulo}'?"):
-                        if eliminar_promocion_admin(i, tienda_id, motivo, self.datos_sesion.get("nombre", "Administración")):
-                            registrar_accion_dev(
-                                self.id_usuario, 
-                                self.datos_sesion.get("nombre"), 
-                                "ELIMINAR_OFERTA", 
-                                f"Eliminó oferta '{titulo}' de la tienda {tienda_id}. Motivo: {motivo}"
-                            )
-                            messagebox.showinfo("Éxito", "La oferta ha sido eliminada y la tienda notificada.")
-                            self.actualizar_tablas()
-                            refrescar_grid()
+                frame_desc = tk.Frame(card, bg=COLOR_BLANCO)
+                frame_desc.pack(anchor="w", fill="x")
 
-                tk.Button(
-                    card, 
-                    text="🗑️ Eliminar Oferta", 
-                    bg=COLOR_ROJO_ALERTA, 
-                    fg=COLOR_BLANCO, 
-                    activeforeground=COLOR_BLANCO, 
-                    font=("Arial", 8, "bold"), 
-                    relief="flat", 
-                    command=eliminar_con_motivo, 
-                    cursor="hand2", 
-                    pady=4
-                ).pack(fill="x", side="bottom")
+                lbl_desc = tk.Label(
+                    frame_desc, 
+                    text=desc_mostrar, 
+                    font=("Arial", 8), 
+                    fg=COLOR_TEXTO_MAIN, 
+                    bg=COLOR_BLANCO, 
+                    justify="left", 
+                    anchor="nw",
+                    wraplength=180
+                )
+                lbl_desc.pack(side="left", anchor="nw")
+
+                if es_larga:
+                    btn_ver_mas = tk.Button(
+                        frame_desc, 
+                        text="ver más", 
+                        font=("Arial", 7, "bold", "underline"), 
+                        fg="#0284C7", 
+                        bg=COLOR_BLANCO, 
+                        bd=0, 
+                        activebackground=COLOR_BLANCO, 
+                        activeforeground="#0369A1",
+                        cursor="hand2",
+                        command=lambda t=titulo_oferta, d=desc_original: mostrar_descripcion_completa(t, d)
+                    )
+                    btn_ver_mas.pack(side="left", anchor="nw", padx=(2, 0))
+
+                # Manejo de eliminación
+                if hasattr(self, 'es_admin_supremo'):
+                    def eliminar_con_motivo(i=idx, tienda_id=p.get('tienda_id'), titulo=titulo_oferta):
+                        motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
+                        if not motivo:
+                            messagebox.showwarning("Requerido", "Debe ingresar una justificación para eliminar la oferta.")
+                            return
+
+                        if messagebox.askyesno("Confirmar", f"¿Eliminar definitivamente la oferta '{titulo}'?"):
+                            if eliminar_promocion_admin(i, tienda_id, motivo, self.datos_sesion.get("nombre", "Administración")):
+                                registrar_accion_dev(
+                                    self.id_usuario, 
+                                    self.datos_sesion.get("nombre"), 
+                                    "ELIMINAR_OFERTA", 
+                                    f"Eliminó oferta '{titulo}' de la tienda {tienda_id}. Motivo: {motivo}"
+                                )
+                                messagebox.showinfo("Éxito", "La oferta ha sido eliminada y la tienda notificada.")
+                                self.actualizar_tablas()
+                                refrescar_grid()
+
+                    btn_eliminar = tk.Button(
+                        card, 
+                        text="🗑️ Eliminar Oferta", 
+                        bg=COLOR_ROJO_ALERTA, 
+                        fg=COLOR_BLANCO, 
+                        activeforeground=COLOR_BLANCO, 
+                        font=("Arial", 8, "bold"), 
+                        relief="flat", 
+                        command=eliminar_con_motivo, 
+                        cursor="hand2", 
+                        pady=2
+                    )
+                else:
+                    def eliminar_propia(idx_a_borrar=idx, titulo=titulo_oferta):
+                        if messagebox.askyesno("Confirmar", f"¿Deseas eliminar tu oferta '{titulo}'?"):
+                            promos = cargar_promociones()
+                            if 0 <= idx_a_borrar < len(promos):
+                                promos.pop(idx_a_borrar)
+                                guardar_promociones(promos)
+                                messagebox.showinfo("Éxito", "La oferta ha sido eliminada.")
+                                refrescar_grid()
+
+                    btn_eliminar = tk.Button(
+                        card, 
+                        text="🗑️ Eliminar Oferta", 
+                        bg="#DC2626", 
+                        fg=COLOR_BLANCO, 
+                        font=("Arial", 8, "bold"), 
+                        relief="flat", 
+                        command=eliminar_propia, 
+                        cursor="hand2", 
+                        pady=2
+                    )
+
+                btn_eliminar.pack(fill="x", side="bottom")
 
         refrescar_grid()
