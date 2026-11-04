@@ -21,6 +21,10 @@ source venv/bin/activate    # Linux / Mac
 pip install -r requirements.txt
 ```
 
+## Base de datos
+
+La app usa PostgreSQL (Supabase) como base de datos compartida. Copia `.env.example` como `.env` y completa las credenciales (pídeselas a Jair) — ver `CONTRIBUTING.md` para el detalle. Se requiere conexión a internet para correr la app.
+
 ## Ejecutar la aplicación
 
 ```bash

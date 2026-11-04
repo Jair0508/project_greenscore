@@ -749,7 +749,7 @@ class VentanaGestorReciclaje:
                 txt_info = f"🏪 {p.get('tienda_nombre')}\n(ID: {p.get('tienda_id')})\n\n📌 {p.get('titulo')}\n💰 S/ {p.get('precio_soles', 0):.2f} ➔ {pts_oferta} PTS\n\n📝 {p.get('descripcion')}"
                 tk.Label(card, text=txt_info, font=("Arial", 8, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_BLANCO, justify="left", wraplength=210).pack(anchor="w", expand=True)
 
-                def eliminar_con_motivo(i=idx, tienda_id=p.get('tienda_id'), titulo=p.get('titulo')):
+                def eliminar_con_motivo(i=p['id'], tienda_id=p.get('tienda_id'), titulo=p.get('titulo')):
                     motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
                     if not motivo: return
 

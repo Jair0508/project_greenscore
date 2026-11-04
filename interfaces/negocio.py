@@ -707,7 +707,7 @@ class VentanaNegocio:
             return
 
         promos = cargar_promociones()
-        mis_promos = [(i, p) for i, p in enumerate(promos) if str(p.get("tienda_id")) == str(self.id_usuario) and int(p.get("stock", 0)) > 0]
+        mis_promos = [(p["id"], p) for p in promos if str(p.get("tienda_id")) == str(self.id_usuario) and int(p.get("stock", 0)) > 0]
 
         if not mis_promos:
             messagebox.showwarning("Sin Ofertas Disponibles", "Este comercio no tiene ofertas con stock disponible en este momento.")
@@ -822,11 +822,12 @@ class VentanaNegocio:
             guardar_usuarios(usuarios)
 
             promos_actuales = cargar_promociones()
-            for idx_p, cant_descontar in operaciones_stock:
-                if idx_p < len(promos_actuales):
-                    stock_prev = int(promos_actuales[idx_p].get("stock", 0))
-                    nuevo_stock = max(0, stock_prev - cant_descontar)
-                    promos_actuales[idx_p]["stock"] = nuevo_stock
+            promos_por_id = {p["id"]: p for p in promos_actuales}
+            for id_p, cant_descontar in operaciones_stock:
+                p = promos_por_id.get(id_p)
+                if p:
+                    stock_prev = int(p.get("stock", 0))
+                    p["stock"] = max(0, stock_prev - cant_descontar)
             guardar_promociones(promos_actuales)
 
             try:
@@ -1124,7 +1125,7 @@ class VentanaNegocio:
                 w.destroy()
                 
             promos = cargar_promociones()
-            mis_promos = [(i, p) for i, p in enumerate(promos) if str(p.get("tienda_id")) == str(self.id_usuario)]
+            mis_promos = [(p["id"], p) for p in promos if str(p.get("tienda_id")) == str(self.id_usuario)]
 
             if not mis_promos:
                 lbl_vacio = tk.Label(

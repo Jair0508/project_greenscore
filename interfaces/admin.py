@@ -1108,7 +1108,7 @@ class VentanaAdmin:
                     wraplength=210
                 ).pack(anchor="w", expand=True)
 
-                def eliminar_con_motivo(i=idx, tienda_id=p.get('tienda_id'), titulo=p.get('titulo')):
+                def eliminar_con_motivo(i=p['id'], tienda_id=p.get('tienda_id'), titulo=p.get('titulo')):
                     motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
                     if not motivo:
                         messagebox.showwarning("Requerido", "Debe ingresar una justificación para eliminar la oferta.")

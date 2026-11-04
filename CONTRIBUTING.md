@@ -23,6 +23,7 @@ Esta guía resuelve eso. Son cambios de **infraestructura del proyecto**, no de 
 | ✅ `requirements.txt` | Cada quien tenía la versión de Pillow que se le ocurrió instalar | Instala exactamente lo que dice el archivo, no "lo último" |
 | ✅ `.gitignore` | Los `.pyc` de `__pycache__/` se commiteaban y generaban conflictos binarios en cada PR | Esos archivos dejan de aparecer en tu `git status`, es normal |
 | ✅ `readme.md` actualizado | No había forma estándar de levantar el proyecto | Sigue los pasos ahí para tu entorno (venv) |
+| ✅ Migración a PostgreSQL (Supabase) | Cada quien tenía su propia "base de datos" en archivos `.json` locales — causa de casi todos los conflictos de merge que tuvimos | Ahora todos leen/escriben la **misma base de datos compartida en la nube**. Ver sección de abajo. |
 
 ---
 
@@ -76,9 +77,35 @@ Eso saca el archivo del control de versiones **sin borrarlo de tu disco**. A par
 
 ---
 
+## 🗄️ Base de datos (PostgreSQL en Supabase)
+
+**Los `datos/*.json` ya NO son la base de datos.** Se archivaron en `datos/_archivo/` solo como respaldo histórico — el código ya no los lee ni los escribe. Ahora todo pasa por una base de datos PostgreSQL compartida (gratis, en Supabase), a través del mismo `datos/gestor.py` de siempre (mismas funciones, mismos nombres — tus interfaces no cambian en nada).
+
+**Qué significa esto para ti:**
+- ✅ Se acabó el problema de "cada quien con su propio `usuarios.json`" — todos ven los mismos datos en tiempo real.
+- ⚠️ **Ahora necesitas internet para correr la app.** Antes podías trabajar sin conexión, ya no.
+- ⚠️ Necesitas un archivo `.env` local con las credenciales de conexión (NUNCA se sube a GitHub, ya está en `.gitignore`).
+
+**Setup (una sola vez):**
+1. Pídele a Jair las credenciales de la base (host, usuario, contraseña).
+2. Copia `.env.example` como `.env` en la raíz del proyecto:
+   ```bash
+   cp .env.example .env
+   ```
+3. Completa los valores reales en `.env` (el archivo que te quedó de copiar el ejemplo).
+4. Instala las dependencias nuevas (ya están en `requirements.txt`):
+   ```bash
+   pip install -r requirements.txt
+   ```
+5. Corre la app normalmente: `python main.py`
+
+**Si te sale un error de conexión** (`could not translate host name` o similar): probablemente tu red no tiene IPv6. Pídele a Jair la cadena de conexión del **"Session pooler"** de Supabase (no la de "Direct connection") — es compatible con cualquier red.
+
+---
+
 ## 🙈 ¿Tienes archivos locales que NO quieres subir, pero tampoco son para todo el equipo?
 
-Ejemplo real: Sebas tiene cambios locales de prueba en `datos/chat.json` que no necesitan llegar a `main`. Pamela puede tener algo similar mañana.
+Con la base de datos en Postgres ya no debería pasarte esto con `datos/*.json` (ya no existen como "base de datos"), pero el consejo sigue siendo útil para cualquier otro archivo de prueba/config personal que no quieras subir.
 
 **No edites el `.gitignore` compartido para esto** — ese archivo es para reglas que aplican a *todo el equipo* (como `__pycache__/`). Si cada quien agrega ahí sus cosas personales, se vuelve un desorden y además generaría conflictos entre ustedes al mergear el propio `.gitignore`.
 
@@ -89,15 +116,9 @@ Ejemplo real: Sebas tiene cambios locales de prueba en `datos/chat.json` que no 
 notepad .git/info/exclude
 ```
 
-Agrega ahí, por ejemplo:
-```
-datos/chat.json
-datos/usuarios.json
-```
+Agrega ahí la ruta del archivo que quieras ignorar solo tú. Git lo ignorará **solo en tu copia local**, nadie más lo ve, no se pushea, no genera conflictos con el equipo.
 
-Listo — Git ignorará esos archivos **solo en tu copia local**, nadie más lo ve, no se pushea, no genera conflictos con el equipo. Es la forma correcta de decir *"esto es solo mío, no lo quiero en el historial"*.
-
-> 💡 Recuerda: si el archivo **ya está trackeado** (como pasa con los `datos/*.json` actuales), primero necesitas `git rm --cached` para que el ignore (sea `.gitignore` o `.git/info/exclude`) empiece a funcionar.
+> 💡 Recuerda: si el archivo **ya está trackeado**, primero necesitas `git rm --cached` para que el ignore (sea `.gitignore` o `.git/info/exclude`) empiece a funcionar.
 
 ---
 

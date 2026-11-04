@@ -11,3 +11,6 @@ env/
 # Configuración local de editores
 .vscode/
 .idea/
+
+# Credenciales de base de datos (NUNCA se sube)
+.env
