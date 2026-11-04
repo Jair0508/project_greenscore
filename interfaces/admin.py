@@ -112,6 +112,18 @@ class VentanaAdmin:
         tk.Button(btn_box, text="🔑 Renovar Clave", bg="#D97706", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_cambiar_clave, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="✏️ Editar Datos", bg="#0284C7", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_editar_datos, cursor="hand2").pack(side="left", padx=3, pady=2)
 
+        tk.Button(
+            btn_box, 
+            text="🔄 Toggle Reciclaje", 
+            bg="#10B981", 
+            fg=COLOR_BLANCO, 
+            activeforeground=COLOR_BLANCO, 
+            font=("Arial", 9, "bold"), 
+            relief="flat", 
+            command=self.toggle_reciclaje_negocio, 
+            cursor="hand2"
+        ).pack(side="left", padx=3, pady=2)
+        
         # 4. CONTROL DE PESTAÑAS PRINCIPALES CON NAVEGACIÓN Y SCROLLBAR
         frame_nav = tk.Frame(self.root, bg=COLOR_FONDO_APP)
         frame_nav.pack(fill="x", padx=15, pady=(5, 2))
@@ -224,24 +236,37 @@ class VentanaAdmin:
         sub_notebook_usuarios.add(self.tab_usr_negocios, text="🏪 Negocios")
         sub_notebook_usuarios.add(self.tab_usr_devs, text="♻️ Gestores de Reciclaje / Admins")
 
-        cols_usr = ("id", "nombre", "rol", "estado", "puntos", "rango", "justificacion")
-        config_usr = [
+        # Columnas y configuración para Vecinos y Devs/Admins
+        cols_usr_vecino = ("id", "nombre", "rol", "estado", "puntos", "rango", "justificacion")
+        config_usr_vecino = [
             ("id", "DNI / ID", 110),
-            ("nombre", "Nombre / Comercio", 180),
-            ("rol", "Rol", 140),
+            ("nombre", "Nombre / Vecino", 180),
+            ("rol", "Rol", 90),
             ("estado", "Estado / Indicador", 160),
             ("puntos", "Puntos", 80),
             ("rango", "Rango Ecológico", 170),
             ("justificacion", "Justificación Cliente", 200)
         ]
 
-        self.tabla_usr_vecinos = crear_tabla_con_scroll(self.tab_usr_vecinos, cols_usr, config_usr)
-        self.tabla_usr_negocios = crear_tabla_con_scroll(self.tab_usr_negocios, cols_usr, config_usr)
-        self.tabla_usr_devs = crear_tabla_con_scroll(self.tab_usr_devs, cols_usr, config_usr)
+        # Columnas y configuración para Negocios
+        cols_usr_negocio = ("id", "nombre", "rol", "estado", "reciclaje", "puntos", "comision", "justificacion")
+        config_usr_negocio = [
+            ("id", "ID Comercio", 100),
+            ("nombre", "Nombre Comercio", 160),
+            ("rol", "Rol", 80),
+            ("estado", "Estado", 120),
+            ("reciclaje", "Módulo Reciclaje", 140),
+            ("puntos", "Pts Recolectados", 120),
+            ("comision", "Comisión Generada", 150),
+            ("justificacion", "Justificación", 160)
+        ]
 
-        for tbl in [self.tabla_usr_vecinos, self.tabla_usr_negocios, self.tabla_usr_devs]:
-            tbl.bind("<<TreeviewSelect>>", self.verificar_estado_seleccionado)
+        # Creación de tablas
+        self.tabla_usr_vecinos = crear_tabla_con_scroll(self.tab_usr_vecinos, cols_usr_vecino, config_usr_vecino)
+        self.tabla_usr_negocios = crear_tabla_con_scroll(self.tab_usr_negocios, cols_usr_negocio, config_usr_negocio)
+        self.tabla_usr_devs = crear_tabla_con_scroll(self.tab_usr_devs, cols_usr_vecino, config_usr_vecino)
 
+        
         # PROMOCIONES ACTIVAS
         tk.Button(
             tab_promos, 
@@ -273,7 +298,7 @@ class VentanaAdmin:
 
         tk.Label(
             frame_stats_box,
-            text="📈 Resumen Global de Reciclaje (Todas las Puntos y Bodegas)",
+            text="📈 Resumen Global de Reciclaje (Puntos de recepción y Bodegas)",
             font=("Arial", 12, "bold"),
             bg=COLOR_BLANCO,
             fg=COLOR_TEXTO_MAIN
@@ -619,6 +644,32 @@ class VentanaAdmin:
         self.llenar_todos_los_combos()
         self.verificar_mensajes_nuevos_al_iniciar()
 
+    def toggle_reciclaje_negocio(self):
+        """Activa o desactiva la función de punto de recepción de reciclaje para un negocio."""
+        uid = self.pedir_texto_custom("Toggle Reciclaje", "Ingrese ID/DNI del negocio:")
+        if not uid: return
+
+        usuarios = cargar_usuarios()
+        if uid not in usuarios or usuarios[uid].get("rol") != "negocio":
+            messagebox.showerror("Error", "El ID ingresado no pertenece a un negocio registrado.")
+            return
+
+        estado_actual = usuarios[uid].get("reciclaje_activo", True)
+        nuevo_estado = not estado_actual
+        usuarios[uid]["reciclaje_activo"] = nuevo_estado
+        guardar_usuarios(usuarios)
+
+        txt_estado = "HABILITADO" if nuevo_estado else "DESHABILITADO"
+        registrar_accion_dev(
+            self.id_usuario, 
+            self.datos_sesion.get("nombre", "Admin"), 
+            "TOGGLE_RECICLAJE", 
+            f"Cambió punto de recepción a '{txt_estado}' para negocio {uid}"
+        )
+
+        self.actualizar_tablas()
+        messagebox.showinfo("Éxito", f"Se ha {txt_estado.lower()} la recepción de reciclaje para {usuarios[uid].get('nombre', 'el negocio')}.")
+
     def aplicar_estilos_ttk(self):
         style = ttk.Style()
         style.theme_use('default')
@@ -882,18 +933,22 @@ class VentanaAdmin:
                 comision_pts = round(pts_recolectados * 0.10, 1)
                 comision_soles = round(comision_pts * 0.10, 2)
                 
+                rec_activo = datos.get("reciclaje_activo", True)
+                txt_reciclaje = "🟢 HABILITADO" if rec_activo else "🔴 DESHABILITADO"
+
                 tupla_negocio = (
-                    uid,
-                    datos.get("nombre", "-"),
-                    rol.upper(),
-                    estado_txt,
-                    f"{pts_recolectados} PTS",
-                    f"{comision_pts} PTS (S/ {comision_soles:.2f})",
+                    uid, 
+                    datos.get("nombre", "-"), 
+                    rol.upper(), 
+                    estado_txt, 
+                    txt_reciclaje,
+                    f"{pts_recolectados} PTS", 
+                    f"{comision_pts} PTS (S/ {comision_soles:.2f})", 
                     justif_txt
                 )
                 self.tabla_usr_negocios.insert("", "end", values=tupla_negocio, tags=(tag_fila,))
-            elif rol in ["admin", "gestor de reciclaje", "desarrollador"]:
-                self.tabla_usr_devs.insert("", "end", values=tupla_datos, tags=(tag_fila,))
+
+                
 
         for item in self.tabla_promos.get_children(): self.tabla_promos.delete(item)
         for p in cargar_promociones():

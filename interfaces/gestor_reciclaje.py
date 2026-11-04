@@ -94,6 +94,7 @@ class VentanaGestorReciclaje:
 
         tk.Button(btn_box, text="➕ Crear Cuenta", bg=COLOR_PRIMARIO_CELESTE, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_crear_cuenta, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="♻️ Sumar Puntos", bg=COLOR_ACENTO_TURQUESA, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_registrar_reciclaje, cursor="hand2").pack(side="left", padx=3, pady=2)
+        tk.Button(btn_box, text="🔄 Toggle Reciclaje", bg="#10B981", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.toggle_reciclaje_negocio, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="➖ Restar Puntos", bg="#8B5CF6", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_reducir_puntos, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="🔑 Renovar Clave", bg="#D97706", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_cambiar_clave, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="✏️ Editar Datos", bg="#0284C7", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_editar_datos, cursor="hand2").pack(side="left", padx=3, pady=2)
@@ -142,7 +143,7 @@ class VentanaGestorReciclaje:
 
             for col, text, width in configuracion_columnas:
                 tabla.heading(col, text=text)
-                anchor_val = "w" if col in ["fecha", "detalle", "comentario"] else "center" if col in ["puntos", "rol", "estado", "estrellas"] else "w"
+                anchor_val = "w" if col in ["fecha", "detalle", "comentario"] else "center" if col in ["puntos", "rol", "estado", "estrellas", "reciclaje"] else "w"
                 tabla.column(col, width=width, minwidth=80, stretch=True, anchor=anchor_val)
 
             return tabla
@@ -156,10 +157,10 @@ class VentanaGestorReciclaje:
         sub_notebook_usuarios.add(self.tab_usr_vecinos, text="👤 Vecinos")
         sub_notebook_usuarios.add(self.tab_usr_negocios, text="🏪 Negocios")
 
-        cols_usr = ("id", "nombre", "rol", "estado", "puntos", "rango", "justificacion")
-        config_usr = [
+        cols_usr_vecino = ("id", "nombre", "rol", "estado", "puntos", "rango", "justificacion")
+        config_usr_vecino = [
             ("id", "DNI / ID", 110),
-            ("nombre", "Nombre / Comercio", 180),
+            ("nombre", "Nombre / Vecino", 180),
             ("rol", "Rol", 90),
             ("estado", "Estado / Indicador", 160),
             ("puntos", "Puntos", 80),
@@ -167,8 +168,20 @@ class VentanaGestorReciclaje:
             ("justificacion", "Justificación Cliente", 200)
         ]
 
-        self.tabla_usr_vecinos = crear_tabla_con_scroll(self.tab_usr_vecinos, cols_usr, config_usr)
-        self.tabla_usr_negocios = crear_tabla_con_scroll(self.tab_usr_negocios, cols_usr, config_usr)
+        cols_usr_negocio = ("id", "nombre", "rol", "estado", "reciclaje", "puntos", "comision", "justificacion")
+        config_usr_negocio = [
+            ("id", "ID Comercio", 100),
+            ("nombre", "Nombre Comercio", 160),
+            ("rol", "Rol", 80),
+            ("estado", "Estado", 120),
+            ("reciclaje", "Módulo Reciclaje", 140),
+            ("puntos", "Pts Recolectados", 120),
+            ("comision", "Comisión Generada", 150),
+            ("justificacion", "Justificación", 160)
+        ]
+
+        self.tabla_usr_vecinos = crear_tabla_con_scroll(self.tab_usr_vecinos, cols_usr_vecino, config_usr_vecino)
+        self.tabla_usr_negocios = crear_tabla_con_scroll(self.tab_usr_negocios, cols_usr_negocio, config_usr_negocio)
 
         tk.Button(
             tab_promos, 
@@ -194,7 +207,7 @@ class VentanaGestorReciclaje:
         ]
         self.tabla_promos = crear_tabla_con_scroll(tab_promos, cols_pr, config_pr)
 
-        # PESTAÑA: ESTADÍSTICAS GLOBALES CON DATOS UNIFICADOS Y GRÁFICO DONA
+        # PESTAÑA: ESTADÍSTICAS GLOBALES
         frame_stats_box = tk.Frame(tab_stats, bg=COLOR_BLANCO, padx=15, pady=15)
         frame_stats_box.pack(fill="both", expand=True, padx=15, pady=15)
 
@@ -233,7 +246,6 @@ class VentanaGestorReciclaje:
                 ).pack(pady=100)
                 return
 
-            # CONTENEDOR 2 COLUMNAS
             frame_grafico_izq = tk.Frame(frame_grafico_container, bg=COLOR_BLANCO)
             frame_grafico_izq.pack(side="left", fill="both", expand=True, padx=(5, 0))
 
@@ -246,7 +258,6 @@ class VentanaGestorReciclaje:
             )
             frame_resena_der.pack(side="right", fill="both", expand=False, padx=10, pady=10)
 
-            # --- PARTE 1: DONA CON LEYENDA A LA IZQUIERDA Y Z-ORDER ELEVADO ---
             if MATPLOTLIB_DISPONIBLE:
                 import numpy as np
                 fig, ax = plt.subplots(figsize=(5.2, 3.8), dpi=100)
@@ -272,13 +283,11 @@ class VentanaGestorReciclaje:
                     textprops=dict(color="white", weight="bold", fontsize=8)
                 )
 
-                # Anillo interior para la dona
                 centre_circle = plt.Circle((0, 0), 0.45, fc=COLOR_BLANCO, zorder=2)
                 ax.add_patch(centre_circle)
 
                 ax.set_title("Proporción por Material (%)", fontsize=10, fontweight="bold", color=COLOR_TEXTO_MAIN, pad=10)
 
-                # LEYENDA A LA IZQUIERDA FUERA DEL GRÁFICO
                 ax.legend(
                     wedges, 
                     materiales, 
@@ -292,7 +301,6 @@ class VentanaGestorReciclaje:
                     edgecolor="#CBD5E1"
                 )
 
-                # Ajuste de márgenes para la leyenda izquierda
                 plt.subplots_adjust(left=0.42, right=0.98, top=0.88, bottom=0.08)
 
                 canvas_grafico = FigureCanvasTkAgg(fig, master=frame_grafico_izq)
@@ -300,7 +308,6 @@ class VentanaGestorReciclaje:
                 canvas_widget = canvas_grafico.get_tk_widget()
                 canvas_widget.pack(fill="both", expand=True)
 
-                # HOVER: EXPANSIÓN, ZORDER ELEVADO Y RECTÁNGULO DE FONDO QUE CUBRE A LOS DEMÁS NÚMEROS
                 def on_hover(event):
                     if event.inaxes == ax:
                         contiene_alguno = False
@@ -343,7 +350,6 @@ class VentanaGestorReciclaje:
 
                 canvas_grafico.mpl_connect("motion_notify_event", on_hover)
 
-            # --- PARTE 2: RESEÑA DERECHA ---
             tk.Label(
                 frame_resena_der, 
                 text="📋 Resumen Operativo", 
@@ -672,15 +678,37 @@ class VentanaGestorReciclaje:
 
         def cancelar(): win.destroy()
 
-        frame_btn = tk.Frame(container, bg=COLOR_FONDO_APP)
-        frame_btn.pack(pady=10)
-        tk.Button(frame_btn, text="Aceptar", bg=COLOR_PRIMARIO_CELESTE, fg=COLOR_BLANCO, font=("Arial", 9, "bold"), width=10, relief="flat", cursor="hand2", command=confirmar).pack(side="left", padx=5)
-        tk.Button(frame_btn, text="Cancelar", bg=COLOR_GRIS_BOTON, fg=COLOR_BLANCO, font=("Arial", 9, "bold"), width=10, relief="flat", cursor="hand2", command=cancelar).pack(side="left", padx=5)
-
         win.bind("<Return>", lambda e: confirmar())
         win.bind("<Escape>", lambda e: cancelar())
         self.root.wait_window(win)
         return resultado["texto"]
+
+    def toggle_reciclaje_negocio(self):
+        """Activa o desactiva el módulo de recepción de reciclaje y estadísticas para una bodega."""
+        uid = self.pedir_texto_custom("Toggle Reciclaje", "Ingrese ID/DNI del negocio:")
+        if not uid:
+            return
+
+        usuarios = cargar_usuarios()
+        if uid not in usuarios or usuarios[uid].get("rol") != "negocio":
+            messagebox.showerror("Error", "El ID ingresado no pertenece a un negocio registrado.")
+            return
+
+        estado_actual = usuarios[uid].get("reciclaje_activo", True)
+        nuevo_estado = not estado_actual
+        usuarios[uid]["reciclaje_activo"] = nuevo_estado
+        guardar_usuarios(usuarios)
+
+        txt_estado = "HABILITADO" if nuevo_estado else "DESHABILITADO"
+        registrar_accion_dev(
+            self.id_usuario,
+            self.datos_sesion.get("nombre"),
+            "TOGGLE_RECICLAJE",
+            f"Cambió recepción de reciclaje a '{txt_estado}' para negocio {uid}"
+        )
+
+        self.actualizar_tablas()
+        messagebox.showinfo("Éxito", f"Se ha {txt_estado.lower()} el módulo de reciclaje para {usuarios[uid].get('nombre', 'el negocio')}.")
 
     def actualizar_tablas(self):
         for item in self.tabla_usr_vecinos.get_children(): self.tabla_usr_vecinos.delete(item)
@@ -698,16 +726,27 @@ class VentanaGestorReciclaje:
             rango_txt = self.obtener_rango_vecino(puntos) if rol == "vecino" else "N/A (Personal)"
             justif_txt = datos.get("justificacion_cliente", "-") or "-"
 
-            tupla_datos = (uid, datos.get("nombre", "-"), rol.upper(), estado_txt, puntos, rango_txt, justif_txt)
-
             if rol == "vecino":
+                tupla_datos = (uid, datos.get("nombre", "-"), rol.upper(), estado_txt, puntos, rango_txt, justif_txt)
                 self.tabla_usr_vecinos.insert("", "end", values=tupla_datos, tags=(tag_fila,))
             elif rol == "negocio":
                 pts_recolectados = obtener_puntos_recolectados_por_tienda(uid)
                 comision_pts = round(pts_recolectados * 0.10, 1)
                 comision_soles = round(comision_pts * 0.10, 2)
                 
-                tupla_negocio = (uid, datos.get("nombre", "-"), rol.upper(), estado_txt, f"{pts_recolectados} PTS", f"{comision_pts} PTS (S/ {comision_soles:.2f})", justif_txt)
+                rec_activo = datos.get("reciclaje_activo", True)
+                txt_reciclaje = "🟢 HABILITADO" if rec_activo else "🔴 DESHABILITADO"
+
+                tupla_negocio = (
+                    uid, 
+                    datos.get("nombre", "-"), 
+                    rol.upper(), 
+                    estado_txt, 
+                    txt_reciclaje,
+                    f"{pts_recolectados} PTS", 
+                    f"{comision_pts} PTS (S/ {comision_soles:.2f})", 
+                    justif_txt
+                )
                 self.tabla_usr_negocios.insert("", "end", values=tupla_negocio, tags=(tag_fila,))
 
         for item in self.tabla_promos.get_children(): self.tabla_promos.delete(item)
@@ -779,7 +818,7 @@ class VentanaGestorReciclaje:
 
             usuarios[uid] = {
                 "rol": rol, "nombre": nom, "correo": correo or "-", "telefono": tel or "-", "clave": clave, "puntos": 0 if rol == "vecino" else "N/A",
-                "suspendido": False, "motivo_suspension": "", "justificacion_cliente": ""
+                "suspendido": False, "motivo_suspension": "", "justificacion_cliente": "", "reciclaje_activo": True
             }
             guardar_usuarios(usuarios)
             registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "CREAR_CUENTA", f"Creó cuenta {uid} ({rol.upper()})")
@@ -919,7 +958,6 @@ class VentanaGestorReciclaje:
         messagebox.showinfo("Éxito", "Datos actualizados.")
 
     def dialogo_ver_promociones_con_foto(self):
-        """Muestra el panel de promociones con 3 columnas, fondo fijo e ilustración floral visible."""
         win_promos = tk.Toplevel(self.root)
         win_promos.config(bg=COLOR_BLANCO)
         win_promos.title("Panel de Promociones")
@@ -930,14 +968,12 @@ class VentanaGestorReciclaje:
         if hasattr(self.root, 'icon_img'):
             win_promos.iconphoto(False, self.root.icon_img)
 
-        # 1. Canvas principal (donde estará la imagen estática)
         canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
         scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # 2. Carga de la ilustración floral fija en la capa base
         nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
         ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
 
@@ -946,16 +982,12 @@ class VentanaGestorReciclaje:
                 from PIL import Image, ImageTk
                 img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
                 win_promos.bg_img = ImageTk.PhotoImage(img_pil)
-                # La imagen se dibuja fija en las coordenadas (0,0) del Canvas
                 canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
             except Exception as e:
                 print(f"Aviso imagen de fondo: {e}")
 
-        # 3. Frame contenedor de tarjetas sin fondo (transparente sobre la imagen)
         frame_grid = tk.Frame(canvas, bg="")
-        
-        # Inserción del contenedor en el canvas
-        window_id = canvas.create_window((15, 15), window=frame_grid, anchor="nw")
+        canvas.create_window((15, 15), window=frame_grid, anchor="nw")
 
         def _actualizar_scrollregion(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
@@ -963,7 +995,6 @@ class VentanaGestorReciclaje:
         frame_grid.bind("<Configure>", _actualizar_scrollregion)
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        # Modal para el desglose completo de la descripción
         def mostrar_descripcion_completa(titulo, descripcion):
             win_desc = tk.Toplevel(win_promos)
             win_desc.config(bg=COLOR_FONDO_APP)
@@ -1019,7 +1050,6 @@ class VentanaGestorReciclaje:
                 ).pack(pady=50, padx=20)
                 return
 
-            # AHORA 3 COLUMNAS PARA APROVECHAR EL ESPACIO A LA DERECHA
             cols = 3
             LIMITE_CARACTERES = 28
 
@@ -1027,7 +1057,6 @@ class VentanaGestorReciclaje:
                 row = idx // cols
                 col = idx % cols
 
-                # Tarjeta compacta de 210x165 px con bordes limpios
                 card = tk.Frame(
                     frame_grid, 
                     bg=COLOR_BLANCO, 
@@ -1040,7 +1069,6 @@ class VentanaGestorReciclaje:
                     width=210,
                     height=165
                 )
-                # Separación de 10px entre recuadros en todas las direcciones
                 card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                 card.grid_propagate(False)
 

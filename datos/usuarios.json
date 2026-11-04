@@ -10,7 +10,8 @@
         "rol": "negocio",
         "nombre": "Bodega Don Pepe",
         "clave": "123",
-        "telefono": "912345678"
+        "telefono": "912345678",
+        "reciclaje_activo": true
     },
     "71234567": {
         "rol": "vecino",
@@ -35,7 +36,8 @@
         "correo": "lui.smarket@gmail.com",
         "telefono": "945382455",
         "clave": "12345",
-        "puntos": "N/A"
+        "puntos": "N/A",
+        "reciclaje_activo": true
     },
     "68452135": {
         "rol": "vecino",
