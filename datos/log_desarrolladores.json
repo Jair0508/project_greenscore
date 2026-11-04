@@ -285,5 +285,33 @@
         "autor_nombre": "Administrador",
         "accion": "CREAR_CUENTA",
         "objetivo": "Creó cuenta Number1 (NEGOCIO)"
+    },
+    {
+        "fecha": "2026-11-03 22:36:16",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "TOGGLE_RECICLAJE",
+        "objetivo": "Cambió punto de recepción a 'DESHABILITADO' para negocio negocio1"
+    },
+    {
+        "fecha": "2026-11-03 22:36:35",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "TOGGLE_RECICLAJE",
+        "objetivo": "Cambió punto de recepción a 'HABILITADO' para negocio negocio1"
+    },
+    {
+        "fecha": "2026-11-03 22:38:47",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "TOGGLE_RECICLAJE",
+        "objetivo": "Cambió punto de recepción a 'DESHABILITADO' para negocio 75246852"
+    },
+    {
+        "fecha": "2026-11-03 22:39:28",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "TOGGLE_RECICLAJE",
+        "objetivo": "Cambió punto de recepción a 'HABILITADO' para negocio 75246852"
     }
 ]

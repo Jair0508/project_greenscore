@@ -20,5 +20,38 @@
         "puntos": 65.0,
         "stock": 93,
         "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "todinnito",
+        "categoria": "Dulces, Biscochos y Snacks",
+        "descripcion": "todinnito ito ito",
+        "precio_soles": 5.0,
+        "puntos": 50.0,
+        "stock": 1,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Shampoo para calvos",
+        "categoria": "Cuidado Personal y Aseo",
+        "descripcion": "para tener ideas más brillantes en el día",
+        "precio_soles": 15.0,
+        "puntos": 150.0,
+        "stock": 9,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Chela",
+        "categoria": "Licores y Cervezas",
+        "descripcion": "desayuno alemán",
+        "precio_soles": 10.0,
+        "puntos": 100.0,
+        "stock": 10,
+        "foto": ""
     }
 ]
