@@ -397,5 +397,33 @@
         "tipo": "RECICLAJE_RECIBIDO",
         "puntos": 28.0,
         "detalle": "Entrega de 4.0kg de Papel de cuaderno blanco (Limpio) en Tienda_Sebas (+28.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 19:35:07",
+        "dni_cliente": "68452135",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 60.0,
+        "detalle": "Entrega de 10.0kg de Botellas PET (Agua/Gaseosa) en Bodega Luchito (+60.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 19:36:00",
+        "dni_cliente": "68452135",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 150.0,
+        "detalle": "Entrega de 5.0kg de Cables viejos (Cobre/Plástico) en Bodega Luchito (+150.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-03 19:36:12",
+        "dni_cliente": "68452135",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -150,
+        "detalle": "Canje de ofertas: 1x Shampoo para calvos en Bodega Luchito"
+    },
+    {
+        "fecha": "2026-11-03 19:44:25",
+        "dni_cliente": "68452135",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 200.0,
+        "detalle": "Entrega de 8.0kg de Latas de aluminio (Gaseosa/Cerveza) en Bodega Luchito (+200.0 PTS)"
     }
 ]
