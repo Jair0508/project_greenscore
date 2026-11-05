@@ -236,7 +236,7 @@ class VentanaAdmin:
         sub_notebook_usuarios.add(self.tab_usr_negocios, text="🏪 Negocios")
         sub_notebook_usuarios.add(self.tab_usr_devs, text="♻️ Gestores de Reciclaje / Admins")
 
-        # Columnas y configuración para Vecinos y Devs/Admins
+        # Columnas y configuración para Vecinos y Gestores/Admins
         cols_usr_vecino = ("id", "nombre", "rol", "estado", "puntos", "rango", "justificacion")
         config_usr_vecino = [
             ("id", "DNI / ID", 110),
@@ -248,17 +248,18 @@ class VentanaAdmin:
             ("justificacion", "Justificación Cliente", 200)
         ]
 
-        # Columnas y configuración para Negocios
-        cols_usr_negocio = ("id", "nombre", "rol", "estado", "reciclaje", "puntos", "comision", "justificacion")
+        # Columnas y configuración para Negocios (Recolectados, Comisión 10%, Total)
+        cols_usr_negocio = ("id", "nombre", "rol", "estado", "reciclaje", "pts_recolectados", "comision", "total_pts", "justificacion")
         config_usr_negocio = [
-            ("id", "ID Comercio", 100),
-            ("nombre", "Nombre Comercio", 160),
-            ("rol", "Rol", 80),
-            ("estado", "Estado", 120),
-            ("reciclaje", "Módulo Reciclaje", 140),
-            ("puntos", "Pts Recolectados", 120),
-            ("comision", "Comisión Generada", 150),
-            ("justificacion", "Justificación", 160)
+            ("id", "ID Comercio", 90),
+            ("nombre", "Nombre Comercio", 150),
+            ("rol", "Rol", 70),
+            ("estado", "Estado", 100),
+            ("reciclaje", "Módulo Reciclaje", 130),
+            ("pts_recolectados", "Pts Recolectados", 140),
+            ("comision", "Comisión (10%)", 150),
+            ("total_pts", "Total Pts", 130),
+            ("justificacion", "Justificación", 120)
         ]
 
         # Creación de tablas
@@ -889,11 +890,19 @@ class VentanaAdmin:
         return resultado["texto"]
 
     def actualizar_tablas(self):
-        for item in self.tabla_usr_vecinos.get_children(): self.tabla_usr_vecinos.delete(item)
-        for item in self.tabla_usr_negocios.get_children(): self.tabla_usr_negocios.delete(item)
-        for item in self.tabla_usr_devs.get_children(): self.tabla_usr_devs.delete(item)
+        # Limpiar filas existentes antes de recargar
+        for item in self.tabla_usr_vecinos.get_children():
+            self.tabla_usr_vecinos.delete(item)
+        for item in self.tabla_usr_negocios.get_children():
+            self.tabla_usr_negocios.delete(item)
+        for item in self.tabla_usr_devs.get_children():
+            self.tabla_usr_devs.delete(item)
 
+        # 2. Carga de datos
         usuarios = cargar_usuarios()
+        logs_tiendas = cargar_log_tiendas()
+
+        # 3. Llenado de tablas de Usuarios
         for uid, datos in usuarios.items():
             suspendido = datos.get("suspendido", False)
             if suspendido:
@@ -904,53 +913,73 @@ class VentanaAdmin:
                 estado_txt = "🟢 ACTIVO"
                 tag_fila = "activo"
 
-            rol = datos.get("rol", "-")
-            
-            puntos_raw = datos.get("puntos", 0)
-            try:
-                puntos = int(float(puntos_raw)) if rol == "vecino" else "N/A"
-            except (ValueError, TypeError):
-                puntos = 0 if rol == "vecino" else "N/A"
-
-            rango_txt = self.obtener_rango_vecino(puntos) if rol == "vecino" else "N/A (Personal)"
-            justificacion = datos.get("justificacion_cliente", "")
-            justif_txt = justificacion if justificacion else "-"
-
-            tupla_datos = (
-                uid, 
-                datos.get("nombre", "-"), 
-                rol.upper(), 
-                estado_txt, 
-                puntos,
-                rango_txt,
-                justif_txt
-            )
+            # Asegúrate de normalizar la cadena del rol antes de comparar
+            rol = str(datos.get("rol", "")).lower().strip()
 
             if rol == "vecino":
-                self.tabla_usr_vecinos.insert("", "end", values=tupla_datos, tags=(tag_fila,))
-            elif rol == "negocio":
-                pts_recolectados = obtener_puntos_recolectados_por_tienda(uid)
-                comision_pts = round(pts_recolectados * 0.10, 1)
-                comision_soles = round(comision_pts * 0.10, 2)
+                pts = datos.get("puntos", 0)
+                rango_txt = self.obtener_rango_vecino(pts)
+                justif_txt = datos.get("justificacion_cliente", "") or "-"
                 
+                tupla_vecinos = (
+                    uid,
+                    datos.get("nombre", "-"),
+                    "VECINO",
+                    estado_txt,
+                    f"🪙 {pts} PTS",
+                    rango_txt,
+                    justif_txt
+                )
+                self.tabla_usr_vecinos.insert("", "end", values=tupla_vecinos, tags=(tag_fila,))
+
+            elif rol == "negocio":
+                # 1. Obtener puntos recolectados por reciclaje
+                try:
+                    pts_reciclaje = float(obtener_puntos_recolectados_por_tienda(uid))
+                except (ValueError, TypeError):
+                    pts_reciclaje = 0.0
+                
+                # 2. Obtener puntos por ventas / canjes realizados en la tienda
+                pts_ventas = 0.0
+                for log in logs_tiendas:
+                    if str(log.get("tienda_id")) == str(uid):
+                        try:
+                            pts_ventas += float(log.get("puntos_descontados", 0))
+                        except (ValueError, TypeError):
+                            pass
+
+                # 3. Puntos directo desde el JSON del usuario (convertido de forma segura)
+                try:
+                    pts_comercio_json = float(datos.get("puntos", 0))
+                except (ValueError, TypeError):
+                    pts_comercio_json = 0.0
+
+                # 4. Suma total de puntos acumulados por la tienda
+                pts_recolectados = round(pts_reciclaje + pts_ventas + pts_comercio_json, 1)
+
+                # 5. Cálculo de Comisión (10%) y Total Pts
+                comision_10_pts = round(pts_recolectados * 0.10, 1)
+                comision_soles = round(comision_10_pts * 0.10, 2)
+                total_pts = round(pts_recolectados + comision_10_pts, 1)
+
                 rec_activo = datos.get("reciclaje_activo", True)
                 txt_reciclaje = "🟢 HABILITADO" if rec_activo else "🔴 DESHABILITADO"
+                justif_txt = datos.get("justificacion_cliente", "") or "-"
 
                 tupla_negocio = (
-                    uid, 
-                    datos.get("nombre", "-"), 
-                    rol.upper(), 
-                    estado_txt, 
+                    uid,
+                    datos.get("nombre", "-"),
+                    "NEGOCIO",
+                    estado_txt,
                     txt_reciclaje,
-                    f"{pts_recolectados} PTS", 
-                    f"{comision_pts} PTS (S/ {comision_soles:.2f})", 
+                    f"♻️ {pts_recolectados} PTS",
+                    f"💰 {comision_10_pts} PTS (S/ {comision_soles:.2f})",
+                    f"🏆 {total_pts} PTS",
                     justif_txt
                 )
                 self.tabla_usr_negocios.insert("", "end", values=tupla_negocio, tags=(tag_fila,))
 
-                
-
-        for item in self.tabla_promos.get_children(): self.tabla_promos.delete(item)
+        # 4. Llenado de Promociones Activas
         for p in cargar_promociones():
             try:
                 pts_oferta = int(float(p.get('puntos', 0)))
@@ -960,15 +989,22 @@ class VentanaAdmin:
             self.tabla_promos.insert("", "end", values=(
                 p.get("tienda_nombre", "Tienda"), 
                 p.get("titulo", "-"), 
-                f"S/ {p.get('precio_soles', 0):.2f}", 
+                f"S/ {float(p.get('precio_soles', 0)):.2f}", 
                 f"{pts_oferta} PTS", 
                 p.get("descripcion", "-")
             ))
 
-        for item in self.tabla_tnd.get_children(): self.tabla_tnd.delete(item)
-        for log in reversed(cargar_log_tiendas()):
-            self.tabla_tnd.insert("", "end", values=(log.get("fecha"), log.get("tienda_id"), log.get("tienda_nombre"), log.get("dni_cliente"), log.get("puntos_descontados")))
+        # 5. Llenado del Log de Tiendas
+        for log in reversed(logs_tiendas):
+            self.tabla_tnd.insert("", "end", values=(
+                log.get("fecha"), 
+                log.get("tienda_id"), 
+                log.get("tienda_nombre"), 
+                log.get("dni_cliente"), 
+                log.get("puntos_descontados")
+            ))
 
+        # 6. Llenado de Actividad de Clientes
         tablas_cli = [
             self.tabla_cli_todos, 
             self.tabla_cli_abonos, 
@@ -1020,7 +1056,7 @@ class VentanaAdmin:
             for item in self.tabla_dev.get_children(): self.tabla_dev.delete(item)
             for log in reversed(cargar_log_devs()):
                 self.tabla_dev.insert("", "end", values=(log.get("fecha"), log.get("autor_id"), log.get("autor_nombre"), log.get("accion"), log.get("objetivo")))
-
+                
     def dialogo_suspender_cuenta(self):
         uid = self.pedir_texto_custom("Suspender Cuenta", "Ingrese DNI / ID del usuario a suspender:")
         if not uid: return
