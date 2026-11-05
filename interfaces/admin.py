@@ -248,17 +248,17 @@ class VentanaAdmin:
             ("justificacion", "Justificación Cliente", 200)
         ]
 
-        # Columnas y configuración para Negocios (con desglose de ventas y materiales)
-        cols_usr_negocio = ("id", "nombre", "rol", "estado", "reciclaje", "pts_mat", "pts_ventas", "comision", "justificacion")
+        # Columnas y configuración para Negocios (Recolectados, Comisión 10%, Total)
+        cols_usr_negocio = ("id", "nombre", "rol", "estado", "reciclaje", "pts_recolectados", "comision", "total_pts", "justificacion")
         config_usr_negocio = [
             ("id", "ID Comercio", 90),
             ("nombre", "Nombre Comercio", 150),
             ("rol", "Rol", 70),
             ("estado", "Estado", 100),
             ("reciclaje", "Módulo Reciclaje", 130),
-            ("pts_mat", "Pts Reciclaje (Mat.)", 130),
-            ("pts_ventas", "Pts Canjeados (Cliente)", 140),
-            ("comision", "Comisión Ganada", 150),
+            ("pts_recolectados", "Pts Recolectados", 140),
+            ("comision", "Comisión (10%)", 150),
+            ("total_pts", "Total Pts", 130),
             ("justificacion", "Justificación", 120)
         ]
 
@@ -890,12 +890,13 @@ class VentanaAdmin:
         return resultado["texto"]
 
     def actualizar_tablas(self):
-        # 1. Limpieza previa de todas las tablas
-        for item in self.tabla_usr_vecinos.get_children(): self.tabla_usr_vecinos.delete(item)
-        for item in self.tabla_usr_negocios.get_children(): self.tabla_usr_negocios.delete(item)
-        for item in self.tabla_usr_devs.get_children(): self.tabla_usr_devs.delete(item)
-        for item in self.tabla_promos.get_children(): self.tabla_promos.delete(item)
-        for item in self.tabla_tnd.get_children(): self.tabla_tnd.delete(item)
+        # Limpiar filas existentes antes de recargar
+        for item in self.tabla_usr_vecinos.get_children():
+            self.tabla_usr_vecinos.delete(item)
+        for item in self.tabla_usr_negocios.get_children():
+            self.tabla_usr_negocios.delete(item)
+        for item in self.tabla_usr_devs.get_children():
+            self.tabla_usr_devs.delete(item)
 
         # 2. Carga de datos
         usuarios = cargar_usuarios()
@@ -912,46 +913,54 @@ class VentanaAdmin:
                 estado_txt = "🟢 ACTIVO"
                 tag_fila = "activo"
 
-            rol = datos.get("rol", "-")
+            # Asegúrate de normalizar la cadena del rol antes de comparar
+            rol = str(datos.get("rol", "")).lower().strip()
 
             if rol == "vecino":
-                puntos_raw = datos.get("puntos", 0)
-                try:
-                    puntos = int(float(puntos_raw))
-                except (ValueError, TypeError):
-                    puntos = 0
-
-                rango_txt = self.obtener_rango_vecino(puntos)
+                pts = datos.get("puntos", 0)
+                rango_txt = self.obtener_rango_vecino(pts)
                 justif_txt = datos.get("justificacion_cliente", "") or "-"
-
-                tupla_datos = (
-                    uid, 
-                    datos.get("nombre", "-"), 
-                    rol.upper(), 
-                    estado_txt, 
-                    puntos,
+                
+                tupla_vecinos = (
+                    uid,
+                    datos.get("nombre", "-"),
+                    "VECINO",
+                    estado_txt,
+                    f"🪙 {pts} PTS",
                     rango_txt,
                     justif_txt
                 )
-                self.tabla_usr_vecinos.insert("", "end", values=tupla_datos, tags=(tag_fila,))
+                self.tabla_usr_vecinos.insert("", "end", values=tupla_vecinos, tags=(tag_fila,))
 
             elif rol == "negocio":
-                # Reciclaje entregado en la bodega
-                pts_reciclaje = obtener_puntos_recolectados_por_tienda(uid)
-
-                # Puntos descontados a clientes por compras/canjes
-                pts_canjes_ventas = 0
+                # 1. Obtener puntos recolectados por reciclaje
+                try:
+                    pts_reciclaje = float(obtener_puntos_recolectados_por_tienda(uid))
+                except (ValueError, TypeError):
+                    pts_reciclaje = 0.0
+                
+                # 2. Obtener puntos por ventas / canjes realizados en la tienda
+                pts_ventas = 0.0
                 for log in logs_tiendas:
                     if str(log.get("tienda_id")) == str(uid):
                         try:
-                            pts_canjes_ventas += int(float(log.get("puntos_descontados", 0)))
+                            pts_ventas += float(log.get("puntos_descontados", 0))
                         except (ValueError, TypeError):
                             pass
 
-                comision_reciclaje_pts = pts_reciclaje * 0.10
-                comision_ventas_pts = pts_canjes_ventas * 0.10
-                comision_total_pts = round(comision_reciclaje_pts + comision_ventas_pts, 1)
-                comision_soles = round(comision_total_pts * 0.10, 2)
+                # 3. Puntos directo desde el JSON del usuario (convertido de forma segura)
+                try:
+                    pts_comercio_json = float(datos.get("puntos", 0))
+                except (ValueError, TypeError):
+                    pts_comercio_json = 0.0
+
+                # 4. Suma total de puntos acumulados por la tienda
+                pts_recolectados = round(pts_reciclaje + pts_ventas + pts_comercio_json, 1)
+
+                # 5. Cálculo de Comisión (10%) y Total Pts
+                comision_10_pts = round(pts_recolectados * 0.10, 1)
+                comision_soles = round(comision_10_pts * 0.10, 2)
+                total_pts = round(pts_recolectados + comision_10_pts, 1)
 
                 rec_activo = datos.get("reciclaje_activo", True)
                 txt_reciclaje = "🟢 HABILITADO" if rec_activo else "🔴 DESHABILITADO"
@@ -960,27 +969,15 @@ class VentanaAdmin:
                 tupla_negocio = (
                     uid,
                     datos.get("nombre", "-"),
-                    rol.upper(),
+                    "NEGOCIO",
                     estado_txt,
                     txt_reciclaje,
-                    f"♻️ {pts_reciclaje} PTS",
-                    f"🛒 {pts_canjes_ventas} PTS",
-                    f"{comision_total_pts} PTS (S/ {comision_soles:.2f})",
+                    f"♻️ {pts_recolectados} PTS",
+                    f"💰 {comision_10_pts} PTS (S/ {comision_soles:.2f})",
+                    f"🏆 {total_pts} PTS",
                     justif_txt
                 )
                 self.tabla_usr_negocios.insert("", "end", values=tupla_negocio, tags=(tag_fila,))
-
-            elif rol in ["admin", "gestor de reciclaje", "desarrollador"]:
-                tupla_dev = (
-                    uid, 
-                    datos.get("nombre", "-"), 
-                    rol.upper(), 
-                    estado_txt, 
-                    "N/A",
-                    "N/A (Personal)",
-                    datos.get("justificacion_cliente", "") or "-"
-                )
-                self.tabla_usr_devs.insert("", "end", values=tupla_dev, tags=(tag_fila,))
 
         # 4. Llenado de Promociones Activas
         for p in cargar_promociones():
