@@ -425,5 +425,208 @@
         "tipo": "RECICLAJE_RECIBIDO",
         "puntos": 200.0,
         "detalle": "Entrega de 8.0kg de Latas de aluminio (Gaseosa/Cerveza) en Bodega Luchito (+200.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-05 22:26:23",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 600,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (100 kg)"
+    },
+    {
+        "fecha": "2026-11-05 22:26:47",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 420,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (70 kg)"
+    },
+    {
+        "fecha": "2026-11-05 23:09:31",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 21.0,
+        "detalle": "Entrega de 3.0kg de Papel de cuaderno blanco (Limpio) en Tienda_Sebas2 (+21.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-06 01:18:36",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 6.0,
+        "detalle": "Entrega de 1.0kg de Botellas PET (Agua/Gaseosa) en Tienda_Sebas (+6.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-06 01:20:10",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -195,
+        "detalle": "Canje de ofertas: 3x Vitamina (Cristal) en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 01:29:20",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 195,
+        "detalle": "Entrega de 40.0kg de Latas de aluminio (Gaseosa/Cerveza) en Tienda_Sebas (+195 PTS)"
+    },
+    {
+        "fecha": "2026-11-06 01:29:42",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 0,
+        "detalle": "Entrega de 2.0kg de Latas de aluminio (Gaseosa/Cerveza) en Tienda_Sebas (+0 PTS)"
+    },
+    {
+        "fecha": "2026-11-06 01:32:01",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 12,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (2 kg)"
+    },
+    {
+        "fecha": "2026-11-06 01:33:24",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 12,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (2 kg)"
+    },
+    {
+        "fecha": "2026-11-06 01:33:40",
+        "dni_cliente": "952089997",
+        "tipo": "REDUCCION_ADMIN",
+        "puntos": -12,
+        "detalle": "Ajuste manual de administración"
+    },
+    {
+        "fecha": "2026-11-06 01:33:49",
+        "dni_cliente": "952089997",
+        "tipo": "REDUCCION_ADMIN",
+        "puntos": -12,
+        "detalle": "Ajuste manual de administración"
+    },
+    {
+        "fecha": "2026-11-06 01:34:01",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 12,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (2 kg)"
+    },
+    {
+        "fecha": "2026-11-06 01:43:19",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 0,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (2 kg)"
+    },
+    {
+        "fecha": "2026-11-06 01:47:56",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -30,
+        "detalle": "Canje de ofertas: 1x waza en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 01:52:30",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 30,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (40 kg)"
+    },
+    {
+        "fecha": "2026-11-06 01:52:43",
+        "dni_cliente": "952089997",
+        "tipo": "REDUCCION_ADMIN",
+        "puntos": -30,
+        "detalle": "Ajuste manual de administración"
+    },
+    {
+        "fecha": "2026-11-06 01:54:28",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 30,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (4000000 kg)"
+    },
+    {
+        "fecha": "2026-11-06 01:55:02",
+        "dni_cliente": "952089997",
+        "tipo": "REDUCCION_ADMIN",
+        "puntos": -30,
+        "detalle": "Ajuste manual de administración"
+    },
+    {
+        "fecha": "2026-11-06 01:56:56",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 30.0,
+        "detalle": "Entrega de 50.0kg de Botellas PET (Agua/Gaseosa) en Tienda_Sebas (+30.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-06 01:57:45",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 0.0,
+        "detalle": "Entrega de 50.0kg de Botellas PET (Agua/Gaseosa) en Tienda_Sebas (+0.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-06 02:04:50",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -160,
+        "detalle": "Canje de ofertas: 4x Jabon liquido en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 02:05:28",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Tienda_Sebas: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: de huevos"
+    },
+    {
+        "fecha": "2026-11-06 02:41:43",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -10,
+        "detalle": "Canje de ofertas: 1x jabon en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 02:49:01",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -50,
+        "detalle": "Canje de ofertas: 2x jabon2, 1x jabon3 en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 02:49:26",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Tienda_Sebas: Calificación: ⭐⭐⭐ (3/5 - Bueno) | Reseña: wazaaaaaaaaaa"
+    },
+    {
+        "fecha": "2026-11-06 02:52:36",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -10,
+        "detalle": "Canje de ofertas: 1x wazon en Tienda_Sebas2"
+    },
+    {
+        "fecha": "2026-11-06 02:52:52",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Tienda_Sebas2: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: wao"
+    },
+    {
+        "fecha": "2026-11-06 03:00:37",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -10,
+        "detalle": "Canje de ofertas: 1x wazon en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 03:02:00",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Tienda_Sebas: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: mal"
     }
 ]

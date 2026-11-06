@@ -562,9 +562,12 @@ class VentanaVecino:
         scrollbar.pack(side="right", fill="y")
         canvas.pack(side="left", fill="both", expand=True)
 
-        promos = cargar_promociones()
+        todas_promos = cargar_promociones()
+        # FILTRO CLAVE: Oculta automáticamente las que tengan stock 0 o menor en el catálogo del vecino
+        promos = [p for p in todas_promos if int(p.get("stock", 0)) > 0]
+
         if not promos:
-            tk.Label(scroll_frame, text="🛍️ No hay ofertas disponibles en este momento.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=40, padx=20)
+            tk.Label(scroll_frame, text="🛍️ No hay ofertas con stock disponible en este momento.", font=("Arial", 11, "italic"), bg="white", fg="#757575").pack(pady=40, padx=20)
             return
 
         lbl_aviso_cat = tk.Label(
