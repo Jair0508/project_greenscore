@@ -512,42 +512,51 @@ class VentanaVecino:
         for widget in self.scrollable_frame_promos.winfo_children():
             widget.destroy()
 
-        # 2. Cargar directamente promociones.json de forma segura
+        # 2. Cargar promociones de forma segura
         promociones = []
         try:
-            promociones = cargar_promociones()
-        except Exception as e:
-            print(f"Error cargando promociones: {e}")
-            promociones = []
+            from datos.gestor import cargar_promociones as gestor_cargar
+            promociones = gestor_cargar()
+        except Exception:
+            try:
+                import json, os
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                ruta_json = os.path.join(base_dir, "datos", "promociones.json")
+                if os.path.exists(ruta_json):
+                    with open(ruta_json, "r", encoding="utf-8") as f:
+                        promociones = json.load(f)
+            except Exception as e:
+                print(f"Error cargando promociones: {e}")
+                promociones = []
 
         if not promociones:
             lbl_vacio = tk.Label(
                 self.scrollable_frame_promos, 
                 text="No hay ofertas registradas actualmente en el sistema.", 
                 font=("Arial", 10, "italic"), 
-                fg="gray", 
-                pady=20,
-                bg="white"
+                fg="#666666", 
+                bg="white",
+                pady=25
             )
             lbl_vacio.pack()
             return
 
-        # 3. Agrupar dinámicamente según la categoría REAL guardada en la bodega
+        # 3. Agrupar promociones por categoría
         categorias = {}
         for p in promociones:
-            cat = str(p.get("categoria", "")).strip().upper()
+            cat = str(p.get("categoria", "OTRAS OFERTAS")).strip().upper()
             if not cat:
                 cat = "OTRAS OFERTAS"
-                
             if cat not in categorias:
                 categorias[cat] = []
             categorias[cat].append(p)
 
-        # 4. Renderizar cada apartado de clasificación y su cuadrícula (Grid de 2 columnas)
+        # 4. Renderizar cuadrícula compacta alineada de izquierda a derecha
         for cat_nombre, lista_promos in categorias.items():
             if not lista_promos:
                 continue
 
+            # Encabezado de Categoría (Alineado a la izquierda)
             lbl_cat = tk.Label(
                 self.scrollable_frame_promos, 
                 text=f"📁 {cat_nombre}", 
@@ -556,30 +565,38 @@ class VentanaVecino:
                 fg="#1B5E20", 
                 anchor="w", 
                 padx=10, 
-                pady=5
+                pady=6
             )
-            lbl_cat.pack(fill="x", pady=(12, 4), padx=5)
+            lbl_cat.pack(fill="x", pady=(12, 6), padx=10)
 
+            # Contenedor Grid ordenado a la izquierda (Sin pesos flotantes)
             frame_grid = tk.Frame(self.scrollable_frame_promos, bg="white")
-            frame_grid.pack(fill="x", padx=5, pady=2)
-            frame_grid.columnconfigure(0, weight=1)
-            frame_grid.columnconfigure(1, weight=1)
+            frame_grid.pack(fill="x", padx=10, pady=2)
 
             for idx, p in enumerate(lista_promos):
-                row = idx // 2
-                col = idx % 2
+                row = idx // 3
+                col = idx % 3
 
+                # Contenedor de celda alineado a la izquierda ("w") con distancia fija (15px)
+                cell_container = tk.Frame(frame_grid, bg="white")
+                cell_container.grid(row=row, column=col, padx=(0, 15), pady=8, sticky="w")
+
+                # TARJETA CON TAMAÑO UNIFORME (240px Ancho x 240px Alto)
                 card = tk.Frame(
-                    frame_grid, 
-                    bg="#FFFDE7", 
-                    bd=1, 
+                    cell_container, 
+                    bg="white", 
+                    bd=2, 
                     relief="solid", 
-                    highlightbackground="#FFE082", 
-                    highlightthickness=1
+                    highlightbackground="#2E7D32", 
+                    highlightthickness=1,
+                    width=240,
+                    height=240
                 )
-                card.grid(row=row, column=col, sticky="nsew", padx=5, pady=5)
+                card.pack(anchor="w")
+                card.pack_propagate(False)
 
-                tienda_nom = p.get("tienda_nombre", p.get("tienda", "Tienda"))
+                tienda_nom = p.get("tienda_nombre", p.get("tienda", "Bodega"))
+                tienda_id = p.get("tienda_id", p.get("id_tienda", "-"))
                 stock = p.get("stock", 0)
                 titulo = p.get("titulo", p.get("nombre", "Promoción"))
                 desc = p.get("descripcion", "")
@@ -594,40 +611,71 @@ class VentanaVecino:
                 except (ValueError, TypeError):
                     costo_p = 0
 
-                tk.Label(
+                # 1. Cabecera con datos de la tienda
+                lbl_tienda = tk.Label(
                     card, 
-                    text=f"🏪 {tienda_nom} | 📦 Stock disponible: {stock}", 
+                    text=f"🏪 {tienda_nom}\n(ID: {tienda_id}) | 📦 Stock: {stock}", 
                     font=("Arial", 8, "bold"), 
-                    fg="#D84315", 
-                    bg="#FFFDE7"
-                ).pack(anchor="w", padx=8, pady=(6, 2))
+                    fg="#2E7D32", 
+                    bg="white", 
+                    anchor="w",
+                    justify="left"
+                )
+                lbl_tienda.pack(fill="x", padx=10, pady=(8, 4))
 
-                tk.Label(
+                # 2. Nombre del Producto (El texto más grande: Arial 11 Bold)
+                lbl_titulo = tk.Label(
                     card, 
                     text=f"📌 {titulo}", 
-                    font=("Arial", 10, "bold"), 
+                    font=("Arial", 11, "bold"), 
                     fg="#000000", 
-                    bg="#FFFDE7"
-                ).pack(anchor="w", padx=8)
+                    bg="white",
+                    anchor="w",
+                    justify="left",
+                    wraplength=215
+                )
+                lbl_titulo.pack(fill="x", padx=10, pady=(2, 4))
 
+                # 3. Precio e Intercambio de Puntos
+                lbl_precios = tk.Label(
+                    card, 
+                    text=f"💰 S/ {precio_s:.2f} ➔ {costo_p} PTS", 
+                    font=("Arial", 9, "bold"), 
+                    fg="#1565C0", 
+                    bg="white",
+                    anchor="w",
+                    justify="left"
+                )
+                lbl_precios.pack(fill="x", padx=10, pady=(0, 4))
+
+                # 4. Descripción del Producto
                 if desc:
-                    tk.Label(
+                    lbl_desc = tk.Label(
                         card, 
                         text=f"📝 {desc}", 
                         font=("Arial", 8), 
-                        fg="#555555", 
-                        bg="#FFFDE7"
-                    ).pack(anchor="w", padx=8)
+                        fg="#444444", 
+                        bg="white", 
+                        anchor="w",
+                        justify="left",
+                        wraplength=215
+                    )
+                    lbl_desc.pack(fill="x", padx=10, pady=(0, 6))
 
-                tk.Label(
+                # 5. Botón Informativo Verde
+                btn_canje = tk.Button(
                     card, 
-                    text=f"Precio sugerido: S/ {precio_s:.2f} ➔ Costo requerido: {costo_p} PTS", 
-                    font=("Arial", 9, "bold"), 
-                    fg="#2E7D32", 
-                    bg="#FFFDE7"
-                ).pack(anchor="w", padx=8, pady=(4, 6))
+                    text="🛒 Canje Presencial en Bodega", 
+                    bg="#2E7D32", 
+                    fg="white", 
+                    disabledforeground="white", 
+                    font=("Arial", 8, "bold"), 
+                    relief="flat",
+                    state="disabled"
+                )
+                btn_canje.pack(fill="x", side="bottom", padx=4, pady=4)
 
-        # 5. Actualizar el scrollbar
+        # 5. Actualizar el Scrollbar del Canvas
         self.scrollable_frame_promos.update_idletasks()
         if hasattr(self, "canvas_promos"):
             self.canvas_promos.config(scrollregion=self.canvas_promos.bbox("all"))
