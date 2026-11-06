@@ -53,5 +53,27 @@
         "puntos": 100.0,
         "stock": 10,
         "foto": ""
+    },
+    {
+        "tienda_id": "Number2",
+        "tienda_nombre": "Tienda_Sebas2",
+        "titulo": "Pinga",
+        "categoria": "Bebidas y Gaseosas",
+        "descripcion": "Provecho",
+        "precio_soles": 100.0,
+        "puntos": 1000.0,
+        "stock": 2,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number2",
+        "tienda_nombre": "Tienda_Sebas2",
+        "titulo": "Coca",
+        "categoria": "Cuidado Personal y Aseo",
+        "descripcion": "Blanca como la nieve",
+        "precio_soles": 100.0,
+        "puntos": 1000.0,
+        "stock": 2,
+        "foto": ""
     }
 ]

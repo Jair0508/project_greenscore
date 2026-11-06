@@ -425,5 +425,26 @@
         "tipo": "RECICLAJE_RECIBIDO",
         "puntos": 200.0,
         "detalle": "Entrega de 8.0kg de Latas de aluminio (Gaseosa/Cerveza) en Bodega Luchito (+200.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-05 22:26:23",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 600,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (100 kg)"
+    },
+    {
+        "fecha": "2026-11-05 22:26:47",
+        "dni_cliente": "952089997",
+        "tipo": "ABONO_RECICLAJE",
+        "puntos": 420,
+        "detalle": "Reciclaje de Botellas PET (Agua/Gaseosa) (70 kg)"
+    },
+    {
+        "fecha": "2026-11-05 23:09:31",
+        "dni_cliente": "952089997",
+        "tipo": "RECICLAJE_RECIBIDO",
+        "puntos": 21.0,
+        "detalle": "Entrega de 3.0kg de Papel de cuaderno blanco (Limpio) en Tienda_Sebas2 (+21.0 PTS)"
     }
 ]

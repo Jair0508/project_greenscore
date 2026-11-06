@@ -126,5 +126,13 @@
         "material": "Latas de aluminio (Gaseosa/Cerveza)",
         "peso_kg": 8.0,
         "puntos": 200
+    },
+    {
+        "fecha": "2026-11-05 23:09:31",
+        "tienda_id": "Number2",
+        "dni_cliente": "952089997",
+        "material": "Papel de cuaderno blanco (Limpio)",
+        "peso_kg": 3.0,
+        "puntos": 21
     }
 ]
