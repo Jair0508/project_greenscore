@@ -208,5 +208,40 @@
         "tienda_nombre": "Tienda_Sebas",
         "dni_cliente": "952089997",
         "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-11-06 02:04:50",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 160
+    },
+    {
+        "fecha": "2026-11-06 02:41:43",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 10
+    },
+    {
+        "fecha": "2026-11-06 02:49:01",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 50
+    },
+    {
+        "fecha": "2026-11-06 02:52:36",
+        "tienda_id": "Number2",
+        "tienda_nombre": "Tienda_Sebas2",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 10
+    },
+    {
+        "fecha": "2026-11-06 03:00:37",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 10
     }
 ]

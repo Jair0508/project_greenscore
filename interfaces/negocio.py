@@ -539,7 +539,7 @@ class VentanaNegocio:
             # 2. Estado de Cuenta
             self.frame_info = tk.LabelFrame(
                 frame_central, 
-                text=" 2. Estado de Cuenta del Vecino (Máx. 2000 PTS) ", 
+                text=" 2. Estado de Cuenta del Vecino ", 
                 font=("Arial", 11, "bold"), 
                 padx=15, 
                 pady=10, 
@@ -843,6 +843,8 @@ class VentanaNegocio:
 
             tk.Label(row_frame, text="Cant:", font=("Arial", 9), bg=COLOR_BLANCO).pack(side="left", padx=(5, 2))
             spin_cant = tk.Spinbox(row_frame, from_=1, to=stock_max, width=4, font=("Arial", 9))
+            spin_cant.delete(0, tk.END)
+            spin_cant.insert(0, "1")
             spin_cant.pack(side="right", padx=5)
 
             items_canje.append((idx_promo, var_chk, spin_cant, costo, titulo, stock_max))
@@ -887,12 +889,18 @@ class VentanaNegocio:
             usuarios[self.vecino_actual]["puntos"] -= puntos_totales
             guardar_usuarios(usuarios)
 
+            # Actualizar stock o eliminar si llega a 0
             promos_actuales = cargar_promociones()
-            for idx_p, cant_descontar in operaciones_stock:
+            operaciones_ordenadas = sorted(operaciones_stock, key=lambda x: x[0], reverse=True)
+            
+            for idx_p, cant_descontar in operaciones_ordenadas:
                 if idx_p < len(promos_actuales):
                     stock_prev = int(promos_actuales[idx_p].get("stock", 0))
-                    nuevo_stock = max(0, stock_prev - cant_descontar)
-                    promos_actuales[idx_p]["stock"] = nuevo_stock
+                    nuevo_stock = stock_prev - cant_descontar
+                    if nuevo_stock <= 0:
+                        promos_actuales.pop(idx_p)
+                    else:
+                        promos_actuales[idx_p]["stock"] = nuevo_stock
             guardar_promociones(promos_actuales)
 
             try:
@@ -906,7 +914,7 @@ class VentanaNegocio:
             except Exception as e:
                 print(f"Aviso log: {e}")
 
-            messagebox.showinfo("Éxito", f"¡Canje completado!\nSe han descontado {puntos_totales} PTS y actualizado el stock de productos.")
+            messagebox.showinfo("Éxito", f"¡Canje completado!\nSe han descontado {puntos_totales} PTS y actualizado el inventario.")
             win_cobro.destroy()
             self.consultar_vecino()
             self.actualizar_historial_tienda()
@@ -1241,13 +1249,13 @@ class VentanaNegocio:
             todas_promos = cargar_promociones()
             promos_propias = [
                 (idx, p) for idx, p in enumerate(todas_promos) 
-                if str(p.get("tienda_id")) == str(self.id_usuario)
+                if str(p.get("tienda_id")) == str(self.id_usuario) and int(p.get("stock", 0)) > 0
             ]
 
             if not promos_propias:
                 tk.Label(
                     frame_grid, 
-                    text="No tienes ofertas publicadas en este momento.", 
+                    text="No tienes ofertas con stock disponible en este momento.", 
                     font=("Arial", 11, "italic"), 
                     fg="#64748B", 
                     bg=COLOR_BLANCO

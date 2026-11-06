@@ -565,5 +565,68 @@
         "tipo": "RECICLAJE_RECIBIDO",
         "puntos": 0.0,
         "detalle": "Entrega de 50.0kg de Botellas PET (Agua/Gaseosa) en Tienda_Sebas (+0.0 PTS)"
+    },
+    {
+        "fecha": "2026-11-06 02:04:50",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -160,
+        "detalle": "Canje de ofertas: 4x Jabon liquido en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 02:05:28",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Tienda_Sebas: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: de huevos"
+    },
+    {
+        "fecha": "2026-11-06 02:41:43",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -10,
+        "detalle": "Canje de ofertas: 1x jabon en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 02:49:01",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -50,
+        "detalle": "Canje de ofertas: 2x jabon2, 1x jabon3 en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 02:49:26",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Tienda_Sebas: Calificación: ⭐⭐⭐ (3/5 - Bueno) | Reseña: wazaaaaaaaaaa"
+    },
+    {
+        "fecha": "2026-11-06 02:52:36",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -10,
+        "detalle": "Canje de ofertas: 1x wazon en Tienda_Sebas2"
+    },
+    {
+        "fecha": "2026-11-06 02:52:52",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Tienda_Sebas2: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: wao"
+    },
+    {
+        "fecha": "2026-11-06 03:00:37",
+        "dni_cliente": "952089997",
+        "tipo": "CANJE_TIENDA",
+        "puntos": -10,
+        "detalle": "Canje de ofertas: 1x wazon en Tienda_Sebas"
+    },
+    {
+        "fecha": "2026-11-06 03:02:00",
+        "dni_cliente": "952089997",
+        "tipo": "RESEÑA_TIENDA",
+        "puntos": 0,
+        "detalle": "Reseña para Tienda_Sebas: Calificación: ⭐⭐⭐⭐⭐ (5/5 - Excelente) | Reseña: mal"
     }
 ]
