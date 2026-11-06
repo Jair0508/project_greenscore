@@ -194,5 +194,19 @@
         "tienda_nombre": "Bodega Luchito",
         "dni_cliente": "68452135",
         "puntos_descontados": 150
+    },
+    {
+        "fecha": "2026-11-06 01:20:10",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 195
+    },
+    {
+        "fecha": "2026-11-06 01:47:56",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
     }
 ]

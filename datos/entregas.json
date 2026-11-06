@@ -134,5 +134,45 @@
         "material": "Papel de cuaderno blanco (Limpio)",
         "peso_kg": 3.0,
         "puntos": 21
+    },
+    {
+        "fecha": "2026-11-06 01:18:36",
+        "tienda_id": "Number1",
+        "dni_cliente": "952089997",
+        "material": "Botellas PET (Agua/Gaseosa)",
+        "peso_kg": 1.0,
+        "puntos": 6
+    },
+    {
+        "fecha": "2026-11-06 01:29:20",
+        "tienda_id": "Number1",
+        "dni_cliente": "952089997",
+        "material": "Latas de aluminio (Gaseosa/Cerveza)",
+        "peso_kg": 40.0,
+        "puntos": 195
+    },
+    {
+        "fecha": "2026-11-06 01:29:42",
+        "tienda_id": "Number1",
+        "dni_cliente": "952089997",
+        "material": "Latas de aluminio (Gaseosa/Cerveza)",
+        "peso_kg": 2.0,
+        "puntos": 0
+    },
+    {
+        "fecha": "2026-11-06 01:56:56",
+        "tienda_id": "Number1",
+        "dni_cliente": "952089997",
+        "material": "Botellas PET (Agua/Gaseosa)",
+        "peso_kg": 50.0,
+        "puntos": 30
+    },
+    {
+        "fecha": "2026-11-06 01:57:45",
+        "tienda_id": "Number1",
+        "dni_cliente": "952089997",
+        "material": "Botellas PET (Agua/Gaseosa)",
+        "peso_kg": 50.0,
+        "puntos": 0
     }
 ]

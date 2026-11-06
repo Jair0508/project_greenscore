@@ -18,7 +18,7 @@
         "descripcion": "Salud",
         "precio_soles": 6.5,
         "puntos": 65.0,
-        "stock": 93,
+        "stock": 90,
         "foto": ""
     },
     {
@@ -74,6 +74,17 @@
         "precio_soles": 100.0,
         "puntos": 1000.0,
         "stock": 2,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "waza",
+        "categoria": "Abarrotes y Despensa",
+        "descripcion": "waza",
+        "precio_soles": 3.0,
+        "puntos": 30.0,
+        "stock": 9,
         "foto": ""
     }
 ]

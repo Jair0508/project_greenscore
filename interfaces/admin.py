@@ -1258,10 +1258,24 @@ class VentanaAdmin:
                 peso = int(raw_input_kg)
                 mat = cb_mat.get()
                 puntos_calculados = Material.calcular_puntos(mat, float(peso))
-                puntos = int(round(puntos_calculados))
-                puntos_actuales_user = int(float(usuarios[dni].get("puntos", 0)))
+                puntos_a_abonar_bruto = int(round(puntos_calculados))
                 
-                usuarios[dni]["puntos"] = puntos_actuales_user + puntos
+                try:
+                    puntos_actuales_user = int(float(usuarios[dni].get("puntos", 0)))
+                except (ValueError, TypeError):
+                    puntos_actuales_user = 0
+
+                # BLINDAJE ESTRICTO DE TOPE MÁXIMO DE 2,000 PUNTOS (ADMINISTRACIÓN)
+                nuevo_total_tentativo = puntos_actuales_user + puntos_a_abonar_bruto
+                if nuevo_total_tentativo > 2000:
+                    puntos = max(0, 2000 - puntos_actuales_user)
+                    messagebox.showwarning("Tope Máximo", f"El vecino alcanzaría más de 2,000 puntos. Se ajustará al tope máximo permitido (se abonarán solo {puntos} PTS).", parent=win_modal)
+                    nuevo_saldo = 2000
+                else:
+                    puntos = puntos_a_abonar_bruto
+                    nuevo_saldo = nuevo_total_tentativo
+                
+                usuarios[dni]["puntos"] = nuevo_saldo
                 guardar_usuarios(usuarios)
                 
                 registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "SUMAR_PUNTOS", f"Abonó {puntos} pts a {dni} por {mat}")

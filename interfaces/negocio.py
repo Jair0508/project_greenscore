@@ -204,6 +204,13 @@ class VentanaNegocio:
                         peso_val = float(self.ent_peso.get().strip())
                         if peso_val > 0:
                             pts_calc = Material.calcular_puntos(mat, peso_val)
+                            # Validar visualmente en vivo si excede el tope de 2000
+                            dni_val = self.ent_dni_rec.get().strip()
+                            usrs = cargar_usuarios()
+                            if dni_val in usrs and usrs[dni_val].get("rol") == "vecino":
+                                saldo_actual = float(usrs[dni_val].get("puntos", 0))
+                                if saldo_actual + pts_calc > 2000:
+                                    pts_calc = max(0.0, 2000.0 - saldo_actual)
                             self.lbl_calculo_pts.config(text=f"Puntos a abonar: {pts_calc} PTS")
                         else:
                             self.lbl_calculo_pts.config(text="Puntos a abonar: 0 PTS")
@@ -236,17 +243,24 @@ class VentanaNegocio:
                         messagebox.showerror("Error", "El límite máximo por una sola entrega es de 50 kg.")
                         return
 
-                    puntos_ganados = Material.calcular_puntos(mat, peso)
+                    puntos_calculados = Material.calcular_puntos(mat, peso)
                     nombre_vecino = usrs[dni].get("nombre", "Vecino")
+                    try:
+                        saldo_actual = float(usrs[dni].get("puntos", 0))
+                    except (ValueError, TypeError):
+                        saldo_actual = 0.0
+
+                    # BLINDAJE ESTRICTO DE TOPE DE 2000 PUNTOS (EVITA PUNTOS FANTASMAS)
+                    nuevo_total_tentativo = saldo_actual + puntos_calculados
+                    if nuevo_total_tentativo > 2000:
+                        puntos_ganados = max(0.0, 2000.0 - saldo_actual)
+                        messagebox.showwarning("Tope Máximo", f"El vecino alcanzaría más de 2,000 puntos. Se ajustará al tope máximo permitido (se abonarán solo {puntos_ganados} PTS).")
+                        nuevo_saldo = 2000.0
+                    else:
+                        puntos_ganados = puntos_calculados
+                        nuevo_saldo = nuevo_total_tentativo
 
                     if messagebox.askyesno("Confirmar Abono", f"¿Abonar {puntos_ganados} puntos a {nombre_vecino} por {peso} kg de {mat}?"):
-                        saldo_actual = usrs[dni].get("puntos", 0)
-                        nuevo_saldo = saldo_actual + puntos_ganados
-                        
-                        if nuevo_saldo > 2000:
-                            messagebox.showwarning("Tope Máximo", "El vecino alcanzaría más de 2,000 puntos. Se ajustará al tope máximo permitido.")
-                            nuevo_saldo = 2000
-
                         usrs[dni]["puntos"] = nuevo_saldo
                         guardar_usuarios(usrs)
 
@@ -1241,7 +1255,7 @@ class VentanaNegocio:
                 return
 
             cols = 3
-            LIMITE_CARACTERES = 28
+            LIMITE_CARACTERES = 25
 
             for i, (idx_global, p) in enumerate(promos_propias):
                 row, col = i // cols, i % cols
@@ -1256,20 +1270,23 @@ class VentanaNegocio:
                     padx=8, 
                     pady=8, 
                     width=210, 
-                    height=165
+                    height=185
                 )
                 card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
                 card.grid_propagate(False)
 
                 pts_oferta = int(float(p.get('puntos', 0)))
                 titulo_oferta = p.get('titulo', 'Oferta')
+                categoria_oferta = p.get('categoria', 'General')
+                stock_oferta = p.get('stock', 0)
+                precio_soles = float(p.get('precio_soles', 0))
                 desc_original = str(p.get('descripcion', '-'))
 
                 txt_cabecera = (
-                    f"🏪 {p.get('tienda_nombre')}\n"
-                    f"(ID: {p.get('tienda_id')})\n\n"
+                    f"🏪 {p.get('tienda_nombre')} | Stock: {stock_oferta}\n"
                     f"📌 {titulo_oferta}\n"
-                    f"💰 S/ {float(p.get('precio_soles', 0)):.2f} ➔ {pts_oferta} PTS\n\n"
+                    f"📂 {categoria_oferta}\n"
+                    f"💲 S/ {precio_soles:.2f} ➔ {pts_oferta} PTS\n"
                     f"📝 "
                 )
 
@@ -1288,7 +1305,7 @@ class VentanaNegocio:
                 desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
 
                 frame_desc = tk.Frame(card, bg=COLOR_BLANCO)
-                frame_desc.pack(anchor="w", fill="x")
+                frame_desc.pack(anchor="w", fill="x", pady=(2, 0))
 
                 lbl_desc = tk.Label(
                     frame_desc, 
@@ -1298,7 +1315,7 @@ class VentanaNegocio:
                     bg=COLOR_BLANCO, 
                     justify="left", 
                     anchor="nw",
-                    wraplength=180
+                    wraplength=170
                 )
                 lbl_desc.pack(side="left", anchor="nw")
 
@@ -1337,6 +1354,6 @@ class VentanaNegocio:
                     cursor="hand2", 
                     pady=2
                 )
-                btn_eliminar.pack(fill="x", side="bottom")
+                btn_eliminar.pack(fill="x", side="bottom", pady=(5, 0))
 
         refrescar_grid()
