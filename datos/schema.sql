@@ -13,7 +13,8 @@ CREATE TABLE usuarios (
     motivo_suspension      TEXT NOT NULL DEFAULT '',
     justificacion_cliente  TEXT NOT NULL DEFAULT '',
     pregunta_secreta       VARCHAR,
-    respuesta_secreta      VARCHAR
+    respuesta_secreta      VARCHAR,
+    reciclaje_activo       BOOLEAN NOT NULL DEFAULT TRUE  -- solo aplica a rol 'negocio', activa/desactiva punto de entrega
 );
 
 CREATE TABLE log_clientes (
