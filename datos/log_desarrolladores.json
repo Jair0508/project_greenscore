@@ -313,5 +313,96 @@
         "autor_nombre": "Administrador",
         "accion": "TOGGLE_RECICLAJE",
         "objetivo": "Cambió punto de recepción a 'HABILITADO' para negocio 75246852"
+    },
+    {
+        "fecha": "2026-11-05 22:18:26",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta Number2 (NEGOCIO)"
+    },
+    {
+        "fecha": "2026-11-05 22:26:23",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 600 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-11-05 22:26:47",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 420 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-11-06 01:32:01",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 12 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-11-06 01:33:24",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 12 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-11-06 01:33:40",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "RESTAR_PUNTOS",
+        "objetivo": "Restó 12 pts a 952089997"
+    },
+    {
+        "fecha": "2026-11-06 01:33:49",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "RESTAR_PUNTOS",
+        "objetivo": "Restó 12 pts a 952089997"
+    },
+    {
+        "fecha": "2026-11-06 01:34:01",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 12 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-11-06 01:43:19",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 0 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-11-06 01:52:30",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 30 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-11-06 01:52:42",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "RESTAR_PUNTOS",
+        "objetivo": "Restó 30 pts a 952089997"
+    },
+    {
+        "fecha": "2026-11-06 01:54:28",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "SUMAR_PUNTOS",
+        "objetivo": "Abonó 30 pts a 952089997 por Botellas PET (Agua/Gaseosa)"
+    },
+    {
+        "fecha": "2026-11-06 01:55:02",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "RESTAR_PUNTOS",
+        "objetivo": "Restó 30 pts a 952089997"
     }
 ]
