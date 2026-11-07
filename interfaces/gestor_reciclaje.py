@@ -34,9 +34,12 @@ COLOR_GRIS_BOTON       = "#64748B"
 class VentanaGestorReciclaje:
     def __init__(self, root, id_usuario, cerrar_sesion_cb):
         self.root = root
+        for widget in self.root.winfo_children():
+            widget.destroy()
+
         self.id_usuario = id_usuario
         self.cerrar_sesion_cb = cerrar_sesion_cb
-        
+
         usuarios = cargar_usuarios()
         self.datos_sesion = usuarios.get(id_usuario, {})
 

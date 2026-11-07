@@ -908,21 +908,21 @@ class VentanaAdmin:
         # 3. Llenado de tablas de Usuarios
         for uid, datos in usuarios.items():
             suspendido = datos.get("suspendido", False)
+            rol = str(datos.get("rol", "")).lower().strip()
+
             if suspendido:
                 motivo = datos.get("motivo_suspension", "Anómalo")
-                estado_txt = f"🔴 SUSPENDIDO ({motivo})"
+                estado_txt = f"● SUSPENDIDO ({motivo})"
                 tag_fila = "suspendido"
             else:
-                estado_txt = "🟢 ACTIVO"
+                estado_txt = "● ACTIVO"
                 tag_fila = "activo"
 
-            # Asegúrate de normalizar la cadena del rol antes de comparar
-            rol = str(datos.get("rol", "")).lower().strip()
+            justif_txt = datos.get("justificacion_cliente", "-") or "-"
 
             if rol == "vecino":
                 pts = datos.get("puntos", 0)
-                rango_txt = self.obtener_rango_vecino(pts)
-                justif_txt = datos.get("justificacion_cliente", "") or "-"
+                rango_txt = self.obtener_rango_vecino(pts) if hasattr(self, 'obtener_rango_vecino') else "Estándar"
                 
                 tupla_vecinos = (
                     uid,
@@ -962,12 +962,14 @@ class VentanaAdmin:
 
                 # 5. Cálculo de Comisión (10%) y Total Pts
                 comision_10_pts = round(pts_recolectados * 0.10, 1)
-                comision_soles = round(comision_10_pts * 0.10, 2)
                 total_pts = round(pts_recolectados + comision_10_pts, 1)
+                
+                # Convertir el Total Pts a Soles (multiplicando por 0.10 o tu factor de conversión)
+                total_soles = round(total_pts * 0.10, 2)
 
                 rec_activo = datos.get("reciclaje_activo", True)
-                txt_reciclaje = "🟢 HABILITADO" if rec_activo else "🔴 DESHABILITADO"
-                justif_txt = datos.get("justificacion_cliente", "") or "-"
+                txt_reciclaje = "● HABILITADO" if rec_activo else "● DESHABILITADO"
+                justif_txt = datos.get("justificacion_cliente", "-") or "-"
 
                 tupla_negocio = (
                     uid,
@@ -975,13 +977,28 @@ class VentanaAdmin:
                     "NEGOCIO",
                     estado_txt,
                     txt_reciclaje,
-                    f"♻️ {pts_recolectados} PTS",
-                    f"💰 {comision_10_pts} PTS (S/ {comision_soles:.2f})",
-                    f"🏆 {total_pts} PTS",
+                    f"{pts_recolectados} PTS",
+                    f"{comision_10_pts} PTS", 
+                    f"{total_pts} PTS - (S/ {total_soles:.2f})",  # Total Pts con conversión a Soles
                     justif_txt
                 )
+
                 self.tabla_usr_negocios.insert("", "end", values=tupla_negocio, tags=(tag_fila,))
 
+            # TABLA 3: GESTORES Y ADMINISTRADORES
+            elif any(r in rol for r in ["gestor", "admin", "dev", "desarrollador"]):
+                tupla_staff = (
+                    uid,
+                    datos.get("nombre", "-"),
+                    str(datos.get("rol", "-")).upper(),
+                    estado_txt,  # <-- Agregada la coma aquí
+                    "N/A",
+                    "Personal Staff",
+                    justif_txt
+                )
+                self.tabla_usr_devs.insert("", "end", values=tupla_staff, tags=(tag_fila,))
+
+                
         # 4. Llenado de Promociones Activas
         for p in cargar_promociones():
             try:
@@ -1147,9 +1164,7 @@ class VentanaAdmin:
 
         tk.Label(win_modal, text="Seleccione Tipo de Cuenta:", font=("Arial", 10, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(pady=5)
         
-        roles_disponibles = ["vecino", "negocio"]
-        if self.es_admin_supremo: 
-            roles_disponibles.append("gestor de reciclaje")
+        roles_disponibles = ["vecino", "negocio","gestor de reciclaje"]
 
         cb_rol = ttk.Combobox(win_modal, values=roles_disponibles, state="readonly")
         cb_rol.pack(pady=5)
@@ -1171,29 +1186,56 @@ class VentanaAdmin:
         ent_clave = tk.Entry(win_modal, show="*", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO_AZUL); ent_clave.pack(pady=2, ipady=2)
 
         def guardar():
-            uid = ent_uid.get().strip(); nom = ent_nom.get().strip(); rol = cb_rol.get()
-            correo = ent_correo.get().strip(); tel = ent_tel.get().strip(); clave = ent_clave.get().strip()
+            uid = ent_uid.get().strip()
+            nom = ent_nom.get().strip()
+            rol_raw = cb_rol.get().strip()
+            correo = ent_correo.get().strip()
+            tel = ent_tel.get().strip()
+            clave = ent_clave.get().strip()
 
             if not uid or not nom or not clave:
-                messagebox.showerror("Error", "Complete los campos obligatorios.")
+                messagebox.showerror("Error", "Complete los campos obligatorios.", parent=win_modal)
                 return
 
             usuarios = cargar_usuarios()
             if uid in usuarios:
-                messagebox.showerror("Error", "El ID/DNI ya existe.")
+                messagebox.showerror("Error", "El ID/DNI ya existe.", parent=win_modal)
                 return
 
+            # Normalizar el rol para guardar la clave correcta en usuarios.json
+            rol_lower = rol_raw.lower()
+            if "gestor" in rol_lower:
+                rol_final = "gestor_reciclaje"
+            elif "admin" in rol_lower:
+                rol_final = "admin"
+            elif "negocio" in rol_lower or "tienda" in rol_lower:
+                rol_final = "negocio"
+            else:
+                rol_final = "vecino"
+
             usuarios[uid] = {
-                "rol": rol, "nombre": nom, "correo": correo or "-", "telefono": tel or "-", "clave": clave, "puntos": 0 if rol == "vecino" else "N/A",
-                "suspendido": False, "motivo_suspension": "", "justificacion_cliente": ""
+                "rol": rol_final,
+                "nombre": nom,
+                "correo": correo or "-",
+                "telefono": tel or "-",
+                "clave": clave,
+                "puntos": 0,
+                "suspendido": False,
+                "motivo_suspension": "",
+                "justificacion_cliente": ""
             }
-            guardar_usuarios(usuarios)
-            registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "CREAR_CUENTA", f"Creó cuenta {uid} ({rol.upper()})")
             
+            guardar_usuarios(usuarios)
+            
+            if hasattr(self, 'id_usuario'):
+                registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre", "Admin"), "CREAR_CUENTA", f"Creó cuenta {uid} ({rol_final.upper()})")
+
             self.actualizar_tablas()
-            self.llenar_todos_los_combos()
+            if hasattr(self, 'llenar_todos_los_combos'):
+                self.llenar_todos_los_combos()
+                
             win_modal.destroy()
-            messagebox.showinfo("Éxito", f"Cuenta de tipo '{rol.upper()}' creada.")
+            messagebox.showinfo("Éxito", f"Cuenta de tipo '{rol_final.upper()}' creada correctamente.")
 
         tk.Button(win_modal, text="Guardar Cuenta", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), command=guardar, relief="flat", cursor="hand2", pady=5).pack(pady=15)
 
