@@ -898,6 +898,9 @@ class VentanaAdmin:
         for item in self.tabla_usr_devs.get_children():
             self.tabla_usr_devs.delete(item)
 
+        # Alineación a la izquierda para la columna Puntos (columna 5)
+        self.tabla_usr_vecinos.column("#5", anchor="w")
+
         # 2. Carga de datos
         usuarios = cargar_usuarios()
         logs_tiendas = cargar_log_tiendas()
@@ -926,7 +929,7 @@ class VentanaAdmin:
                     datos.get("nombre", "-"),
                     "VECINO",
                     estado_txt,
-                    f"🪙 {pts} PTS",
+                    f"{pts} PTS",
                     rango_txt,
                     justif_txt
                 )
