@@ -1416,7 +1416,6 @@ class VentanaAdmin:
     def dialogo_ver_promociones_con_foto(self):
         """Muestra el panel de promociones con 3 columnas, fondo fijo e ilustración floral visible."""
         win_promos = tk.Toplevel(self.root)
-        win_promos.config(bg=COLOR_BLANCO)
         win_promos.title("Panel de Promociones")
         win_promos.geometry("720x540")
         win_promos.resizable(False, False)
@@ -1425,14 +1424,7 @@ class VentanaAdmin:
         if hasattr(self.root, 'icon_img'):
             win_promos.iconphoto(False, self.root.icon_img)
 
-        # 1. Canvas principal (donde estará la imagen estática)
-        canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
-        scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        # 2. Carga de la ilustración floral fija en la capa base
+        # 1. Label con la imagen estática de fondo
         nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
         ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
 
@@ -1441,22 +1433,41 @@ class VentanaAdmin:
                 from PIL import Image, ImageTk
                 img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
                 win_promos.bg_img = ImageTk.PhotoImage(img_pil)
-                # La imagen se dibuja fija en las coordenadas (0,0) del Canvas
-                canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+                
+                # Imagen fija pegada a la ventana con place
+                lbl_bg = tk.Label(win_promos, image=win_promos.bg_img, bd=0)
+                lbl_bg.place(x=0, y=0, relwidth=1, relheight=1)
             except Exception as e:
                 print(f"Aviso imagen de fondo: {e}")
 
-        # 3. Frame contenedor de tarjetas sin fondo (transparente sobre la imagen)
-        frame_grid = tk.Frame(canvas, bg="")
-        
-        # Inserción del contenedor en el canvas
+        # 1. Canvas con fondo blanco puro (o sin borde)
+        canvas = tk.Canvas(win_promos, bg="#FFFFFF", highlightthickness=0, bd=0)
+        scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Dibujar imagen de fondo fija dentro del Canvas
+        bg_canvas_id = None
+        if hasattr(win_promos, 'bg_img'):
+            bg_canvas_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+
+        # 2. Contenedor de tarjetas (frame_grid) con bg="#FFFFFF" en lugar de plomo
+        frame_grid = tk.Frame(canvas, bg="#FFFFFF")
         window_id = canvas.create_window((15, 15), window=frame_grid, anchor="nw")
 
         def _actualizar_scrollregion(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
 
         frame_grid.bind("<Configure>", _actualizar_scrollregion)
-        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Mantiene la imagen fija al hacer Scroll
+        def _al_hacer_scroll(*args):
+            if bg_canvas_id:
+                y_pos = canvas.canvasy(0)
+                canvas.coords(bg_canvas_id, 0, y_pos)
+
+        canvas.configure(yscrollcommand=lambda first, last: (scrollbar.set(first, last), _al_hacer_scroll()))
 
         # Modal para el desglose completo de la descripción
         def mostrar_descripcion_completa(titulo, descripcion):
