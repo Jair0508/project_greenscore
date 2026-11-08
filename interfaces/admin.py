@@ -107,8 +107,6 @@ class VentanaAdmin:
         self.btn_suspender.pack(side="left", padx=3, pady=2)
 
         tk.Button(btn_box, text="✅ Levantar Suspensión", bg="#059669", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_levantar_suspension, cursor="hand2").pack(side="left", padx=3, pady=2)
-        tk.Button(btn_box, text="♻️ Sumar Puntos", bg=COLOR_ACENTO_CIAN, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_registrar_reciclaje, cursor="hand2").pack(side="left", padx=3, pady=2)
-        tk.Button(btn_box, text="➖ Restar Puntos", bg="#9333EA", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_reducir_puntos, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="🔑 Renovar Clave", bg="#D97706", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_cambiar_clave, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="✏️ Editar Datos", bg="#0284C7", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_editar_datos, cursor="hand2").pack(side="left", padx=3, pady=2)
 
@@ -1261,115 +1259,6 @@ class VentanaAdmin:
             self.actualizar_tablas()
             self.llenar_todos_los_combos()
             messagebox.showinfo("Éxito", "Cuenta eliminada.")
-
-    def dialogo_registrar_reciclaje(self):
-        dni = self.pedir_texto_custom("Sumar Puntos", "Ingrese DNI del vecino:")
-        if not dni: return
-        
-        usuarios = cargar_usuarios()
-        if dni not in usuarios or usuarios[dni]["rol"] != "vecino":
-            messagebox.showerror("Error", "DNI no corresponde a un vecino.")
-            return
-
-        if usuarios[dni].get("suspendido", False):
-            messagebox.showwarning(
-                "Cuenta Suspendida", 
-                f"No se pueden sumar puntos. La cuenta de {usuarios[dni]['nombre']} se encuentra SUSPENDIDA."
-            )
-            return
-
-        win_modal = tk.Toplevel(self.root)
-        win_modal.config(bg=COLOR_FONDO_APP)
-        win_modal.title("Sumar Puntos")
-        win_modal.geometry("320x230")
-        win_modal.resizable(False, False)
-        win_modal.grab_set()
-
-        if hasattr(self.root, 'icon_img'):
-            win_modal.iconphoto(False, self.root.icon_img)
-
-        tk.Label(win_modal, text=f"Vecino: {usuarios[dni]['nombre']}", font=("Arial", 10, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(pady=5)
-        cb_mat = ttk.Combobox(win_modal, values=list(Material.TASAS.keys()), state="readonly"); cb_mat.pack(pady=5); cb_mat.current(0)
-        tk.Label(win_modal, text="Peso en KG:", fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack()
-        ent_kg = tk.Entry(win_modal, bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO_AZUL); ent_kg.pack(pady=5, ipady=2)
-
-        def procesar():
-            raw_input_kg = ent_kg.get().strip()
-            if not raw_input_kg.isdigit():
-                messagebox.showerror("Error", "Solamente números enteros", parent=win_modal)
-                return
-
-            try:
-                peso = int(raw_input_kg)
-                mat = cb_mat.get()
-                puntos_calculados = Material.calcular_puntos(mat, float(peso))
-                puntos_a_abonar_bruto = int(round(puntos_calculados))
-                
-                try:
-                    puntos_actuales_user = int(float(usuarios[dni].get("puntos", 0)))
-                except (ValueError, TypeError):
-                    puntos_actuales_user = 0
-
-                # BLINDAJE ESTRICTO DE TOPE MÁXIMO DE 2,000 PUNTOS (ADMINISTRACIÓN)
-                nuevo_total_tentativo = puntos_actuales_user + puntos_a_abonar_bruto
-                if nuevo_total_tentativo > 2000:
-                    puntos = max(0, 2000 - puntos_actuales_user)
-                    messagebox.showwarning("Tope Máximo", f"El vecino alcanzaría más de 2,000 puntos. Se ajustará al tope máximo permitido (se abonarán solo {puntos} PTS).", parent=win_modal)
-                    nuevo_saldo = 2000
-                else:
-                    puntos = puntos_a_abonar_bruto
-                    nuevo_saldo = nuevo_total_tentativo
-                
-                usuarios[dni]["puntos"] = nuevo_saldo
-                guardar_usuarios(usuarios)
-                
-                registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "SUMAR_PUNTOS", f"Abonó {puntos} pts a {dni} por {mat}")
-                registrar_accion_cliente(dni, "ABONO_RECICLAJE", puntos, f"Reciclaje de {mat} ({peso} kg)")
-                
-                self.actualizar_tablas()
-                win_modal.destroy()
-                messagebox.showinfo("Éxito", f"Se sumaron {puntos} puntos.")
-            except ValueError:
-                messagebox.showerror("Error", "Solamente números enteros", parent=win_modal)
-
-        tk.Button(win_modal, text="Sumar Puntos", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), command=procesar, relief="flat", cursor="hand2", pady=5).pack(pady=10)
-
-    def dialogo_reducir_puntos(self):
-        dni = self.pedir_texto_custom("Restar Puntos", "Ingrese DNI del vecino:")
-        if not dni: return
-        usuarios = cargar_usuarios()
-        if dni not in usuarios or usuarios[dni]["rol"] != "vecino":
-            messagebox.showerror("Error", "Vecino no encontrado.")
-            return
-
-        if usuarios[dni].get("suspendido", False):
-            messagebox.showwarning(
-                "Cuenta Suspendida", 
-                f"No se pueden restar puntos. La cuenta de {usuarios[dni]['nombre']} se encuentra SUSPENDIDA."
-            )
-            return
-            
-        puntos_actuales_user = int(float(usuarios[dni].get("puntos", 0)))
-        pts_str = self.pedir_texto_custom("Restar Puntos", f"Puntos actuales: {puntos_actuales_user}\nCantidad a restar:")
-        
-        if pts_str:
-            if not pts_str.isdigit():
-                messagebox.showerror("Error", "Solamente números enteros")
-                return
-
-            try:
-                pts = int(pts_str)
-                if pts > 0 and puntos_actuales_user >= pts:
-                    usuarios[dni]["puntos"] = puntos_actuales_user - pts
-                    guardar_usuarios(usuarios)
-                    registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "RESTAR_PUNTOS", f"Restó {pts} pts a {dni}")
-                    registrar_accion_cliente(dni, "REDUCCION_ADMIN", -pts, "Ajuste manual de administración")
-                    self.actualizar_tablas()
-                    messagebox.showinfo("Éxito", f"Se restaron {pts} puntos.")
-                else:
-                    messagebox.showerror("Error", "Puntos insuficientes o cantidad inválida.")
-            except ValueError:
-                messagebox.showerror("Error", "Solamente números enteros")
 
     def dialogo_cambiar_clave(self):
         uid = self.pedir_texto_custom("Renovar Clave", "Ingrese DNI/ID de la cuenta:")
