@@ -961,205 +961,279 @@ class VentanaGestorReciclaje:
         messagebox.showinfo("Éxito", "Datos actualizados.")
 
     def dialogo_ver_promociones_con_foto(self):
-        win_promos = tk.Toplevel(self.root)
-        win_promos.config(bg=COLOR_BLANCO)
-        win_promos.title("Panel de Promociones")
-        win_promos.geometry("720x540")
-        win_promos.resizable(False, False)
-        win_promos.grab_set()
-
-        if hasattr(self.root, 'icon_img'):
-            win_promos.iconphoto(False, self.root.icon_img)
-
-        canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
-        scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
-        ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
-
-        if ruta_encontrada:
-            try:
-                from PIL import Image, ImageTk
-                img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
-                win_promos.bg_img = ImageTk.PhotoImage(img_pil)
-                canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
-            except Exception as e:
-                print(f"Aviso imagen de fondo: {e}")
-
-        frame_grid = tk.Frame(canvas, bg="")
-        canvas.create_window((15, 15), window=frame_grid, anchor="nw")
-
-        def _actualizar_scrollregion(event):
-            canvas.configure(scrollregion=canvas.bbox("all"))
-
-        frame_grid.bind("<Configure>", _actualizar_scrollregion)
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        def mostrar_descripcion_completa(titulo, descripcion):
-            win_desc = tk.Toplevel(win_promos)
-            win_desc.config(bg=COLOR_FONDO_APP)
-            win_desc.title(f"Detalle: {titulo}")
-            win_desc.geometry("380x220")
-            win_desc.resizable(False, False)
-            win_desc.grab_set()
-
+            """Muestra el panel de promociones con 3 columnas, fondo fijo e ilustración floral visible."""
+            win_promos = tk.Toplevel(self.root)
+            win_promos.title("Panel de Promociones")
+            win_promos.geometry("720x540")
+            win_promos.resizable(False, False)
+            win_promos.grab_set()
+    
             if hasattr(self.root, 'icon_img'):
-                win_desc.iconphoto(False, self.root.icon_img)
-
-            tk.Label(
-                win_desc, 
-                text=f"📌 {titulo}", 
-                font=("Arial", 11, "bold"), 
-                fg=COLOR_TEXTO_MAIN, 
-                bg=COLOR_FONDO_APP
-            ).pack(anchor="w", padx=15, pady=(15, 5))
-
-            frame_txt = tk.Frame(win_desc, bg=COLOR_BLANCO, bd=1, relief="solid")
-            frame_txt.pack(fill="both", expand=True, padx=15, pady=5)
-
-            txt_box = tk.Text(frame_txt, font=("Arial", 9), wrap="word", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat")
-            txt_box.pack(fill="both", expand=True, padx=5, pady=5)
-            txt_box.insert("1.0", descripcion)
-            txt_box.config(state="disabled")
-
-            tk.Button(
-                win_desc, 
-                text="Cerrar", 
-                bg=COLOR_PRIMARIO_CELESTE, 
-                fg=COLOR_BLANCO, 
-                font=("Arial", 9, "bold"), 
-                command=win_desc.destroy, 
-                relief="flat", 
-                padx=15, 
-                pady=3,
-                cursor="hand2"
-            ).pack(pady=10)
-
-        def refrescar_grid():
-            for w in frame_grid.winfo_children():
-                w.destroy()
-
-            promos = cargar_promociones()
-            if not promos:
+                win_promos.iconphoto(False, self.root.icon_img)
+    
+            # 1. Label con la imagen estática de fondo
+            nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
+            ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
+    
+            if ruta_encontrada:
+                try:
+                    from PIL import Image, ImageTk
+                    img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
+                    win_promos.bg_img = ImageTk.PhotoImage(img_pil)
+                    
+                    # Imagen fija pegada a la ventana con place
+                    lbl_bg = tk.Label(win_promos, image=win_promos.bg_img, bd=0)
+                    lbl_bg.place(x=0, y=0, relwidth=1, relheight=1)
+                except Exception as e:
+                    print(f"Aviso imagen de fondo: {e}")
+    
+            # 1. Canvas con fondo blanco puro (o sin borde)
+            canvas = tk.Canvas(win_promos, bg="#FFFFFF", highlightthickness=0, bd=0)
+            scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
+    
+            canvas.pack(side="left", fill="both", expand=True)
+            scrollbar.pack(side="right", fill="y")
+    
+            # Dibujar imagen de fondo fija dentro del Canvas
+            bg_canvas_id = None
+            if hasattr(win_promos, 'bg_img'):
+                bg_canvas_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+    
+            # 2. Contenedor de tarjetas (frame_grid) con bg="#FFFFFF" en lugar de plomo
+            frame_grid = tk.Frame(canvas, bg="#FFFFFF")
+            window_id = canvas.create_window((15, 15), window=frame_grid, anchor="nw")
+    
+            def _actualizar_scrollregion(event):
+                canvas.configure(scrollregion=canvas.bbox("all"))
+    
+            frame_grid.bind("<Configure>", _actualizar_scrollregion)
+    
+            # Mantiene la imagen fija al hacer Scroll
+            def _al_hacer_scroll(*args):
+                if bg_canvas_id:
+                    y_pos = canvas.canvasy(0)
+                    canvas.coords(bg_canvas_id, 0, y_pos)
+    
+            canvas.configure(yscrollcommand=lambda first, last: (scrollbar.set(first, last), _al_hacer_scroll()))
+    
+            # Modal para el desglose completo de la descripción
+            def mostrar_descripcion_completa(titulo, descripcion):
+                win_desc = tk.Toplevel(win_promos)
+                win_desc.config(bg=COLOR_FONDO_APP)
+                win_desc.title(f"Detalle: {titulo}")
+                win_desc.geometry("380x220")
+                win_desc.resizable(False, False)
+                win_desc.grab_set()
+    
+                if hasattr(self.root, 'icon_img'):
+                    win_desc.iconphoto(False, self.root.icon_img)
+    
                 tk.Label(
-                    frame_grid, 
-                    text="No hay promociones registradas actualmente.", 
-                    font=("Arial", 11, "italic"), 
-                    fg=COLOR_GRIS_BOTON,
-                    bg=COLOR_BLANCO
-                ).pack(pady=50, padx=20)
-                return
-
-            cols = 3
-            LIMITE_CARACTERES = 28
-
-            for idx, p in enumerate(promos):
-                row = idx // cols
-                col = idx % cols
-
-                card = tk.Frame(
-                    frame_grid, 
-                    bg=COLOR_BLANCO, 
-                    bd=1, 
-                    relief="solid", 
-                    highlightbackground=COLOR_SECUNDARIO_CELESTE, 
-                    highlightthickness=1,
-                    padx=8, 
-                    pady=8,
-                    width=210,
-                    height=165
-                )
-                card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
-                card.grid_propagate(False)
-
-                pts_oferta = int(float(p.get('puntos', 0)))
-                titulo_oferta = p.get('titulo', 'Oferta')
-                desc_original = str(p.get('descripcion', '-'))
-
-                txt_cabecera = (
-                    f"🏪 {p.get('tienda_nombre')}\n(ID: {p.get('tienda_id')})\n\n"
-                    f"📌 {titulo_oferta}\n"
-                    f"💰 S/ {float(p.get('precio_soles', 0)):.2f} ➔ {pts_oferta} PTS\n\n"
-                    f"📝 "
-                )
-
-                lbl_cabecera = tk.Label(
-                    card, 
-                    text=txt_cabecera, 
-                    font=("Arial", 8, "bold"), 
+                    win_desc, 
+                    text=f"📌 {titulo}", 
+                    font=("Arial", 11, "bold"), 
                     fg=COLOR_TEXTO_MAIN, 
-                    bg=COLOR_BLANCO, 
-                    justify="left",
-                    anchor="nw"
-                )
-                lbl_cabecera.pack(anchor="w", fill="x")
-
-                es_larga = len(desc_original) > LIMITE_CARACTERES
-                desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
-
-                frame_desc = tk.Frame(card, bg=COLOR_BLANCO)
-                frame_desc.pack(anchor="w", fill="x")
-
-                lbl_desc = tk.Label(
-                    frame_desc, 
-                    text=desc_mostrar, 
-                    font=("Arial", 8), 
-                    fg=COLOR_TEXTO_MAIN, 
-                    bg=COLOR_BLANCO, 
-                    justify="left", 
-                    anchor="nw",
-                    wraplength=180
-                )
-                lbl_desc.pack(side="left", anchor="nw")
-
-                if es_larga:
-                    btn_ver_mas = tk.Button(
-                        frame_desc, 
-                        text="ver más", 
-                        font=("Arial", 7, "bold", "underline"), 
-                        fg="#0284C7", 
-                        bg=COLOR_BLANCO, 
-                        bd=0, 
-                        activebackground=COLOR_BLANCO, 
-                        activeforeground="#0369A1",
-                        cursor="hand2",
-                        command=lambda t=titulo_oferta, d=desc_original: mostrar_descripcion_completa(t, d)
-                    )
-                    btn_ver_mas.pack(side="left", anchor="nw", padx=(2, 0))
-
-                def eliminar_con_motivo(i=idx, tienda_id=p.get('tienda_id'), titulo=titulo_oferta):
-                    motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
-                    if not motivo:
-                        messagebox.showwarning("Requerido", "Debe ingresar una justificación para eliminar la oferta.")
-                        return
-
-                    if messagebox.askyesno("Confirmar", f"¿Eliminar definitivamente la oferta '{titulo}'?"):
-                        if eliminar_promocion_admin(i, tienda_id, motivo, self.datos_sesion.get("nombre", "Gestor")):
-                            registrar_accion_dev(
-                                self.id_usuario, 
-                                self.datos_sesion.get("nombre"), 
-                                "ELIMINAR_OFERTA", 
-                                f"Eliminó oferta '{titulo}' de la tienda {tienda_id}. Motivo: {motivo}"
-                            )
-                            messagebox.showinfo("Éxito", "La oferta ha sido eliminada.")
-                            self.actualizar_tablas()
-                            refrescar_grid()
-
-                btn_eliminar = tk.Button(
-                    card, 
-                    text="🗑️ Eliminar Oferta", 
-                    bg="#DC2626", 
+                    bg=COLOR_FONDO_APP
+                ).pack(anchor="w", padx=15, pady=(15, 5))
+    
+                frame_txt = tk.Frame(win_desc, bg=COLOR_BLANCO, bd=1, relief="solid")
+                frame_txt.pack(fill="both", expand=True, padx=15, pady=5)
+    
+                txt_box = tk.Text(frame_txt, font=("Arial", 9), wrap="word", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN, relief="flat")
+                txt_box.pack(fill="both", expand=True, padx=5, pady=5)
+                txt_box.insert("1.0", descripcion)
+                txt_box.config(state="disabled")
+    
+                btn_color = "#0284C7"
+                tk.Button(
+                    win_desc, 
+                    text="Cerrar", 
+                    bg=btn_color, 
                     fg=COLOR_BLANCO, 
-                    activeforeground=COLOR_BLANCO, 
-                    font=("Arial", 8, "bold"), 
+                    font=("Arial", 9, "bold"), 
+                    command=win_desc.destroy, 
                     relief="flat", 
-                    command=eliminar_con_motivo, 
-                    cursor="hand2", 
-                    pady=2
-                )
-                btn_eliminar.pack(fill="x", side="bottom")
-
-        refrescar_grid()
+                    padx=15, 
+                    pady=3,
+                    cursor="hand2"
+                ).pack(pady=10)
+    
+            def refrescar_grid():
+                for w in frame_grid.winfo_children():
+                    w.destroy()
+    
+                promos = cargar_promociones()
+                if not promos:
+                    tk.Label(
+                        frame_grid, 
+                        text="No hay promociones registradas actualmente.", 
+                        font=("Arial", 11, "italic"), 
+                        fg=COLOR_GRIS_BOTON,
+                        bg=COLOR_BLANCO
+                    ).pack(pady=50, padx=20)
+                    return
+    
+                # 1. Agrupar promociones por ID/Nombre de Tienda
+                tiendas_dict = {}
+                for idx, p in enumerate(promos):
+                    t_nombre = p.get("tienda_nombre", "Comercio")
+                    t_id = p.get("tienda_id", "Sin ID")
+                    clave_tienda = (t_nombre, t_id)
+                    
+                    if clave_tienda not in tiendas_dict:
+                        tiendas_dict[clave_tienda] = []
+                    
+                    # Guardamos el índice global (idx) para que el botón "Eliminar" funcione correctamente
+                    tiendas_dict[clave_tienda].append((idx, p))
+    
+                cols = 3
+                LIMITE_CARACTERES = 28
+    
+                # 2. Renderizar cada bloque de tienda con su título separador
+                for (tienda_nom, tienda_id), lista_promos in tiendas_dict.items():
+                    # Frame contenedor de la sección de la tienda
+                    frame_seccion_tienda = tk.Frame(frame_grid, bg=COLOR_BLANCO, pady=10)
+                    frame_seccion_tienda.pack(fill="x", expand=True)
+    
+                    # Encabezado separador por nombre de tienda
+                    lbl_separador = tk.Label(
+                        frame_seccion_tienda, 
+                        text=f"🏪 {tienda_nom} (ID: {tienda_id})", 
+                        font=("Arial", 11, "bold"), 
+                        fg="#0F172A",          
+                        bg="#E0F2FE",          
+                        anchor="w", 
+                        padx=12, 
+                        pady=6,
+                        bd=0,                  # Quita el marco/borde negro
+                        relief="flat"          # Estilo plano sin bordes marcados
+                    )
+                    lbl_separador.pack(fill="x", pady=(0, 10))
+    
+                    # Frame grid interno para alojar las tarjetas de esta tienda
+                    frame_tarjetas = tk.Frame(frame_seccion_tienda, bg=COLOR_BLANCO)
+                    frame_tarjetas.pack(fill="x", expand=True)
+    
+                    for local_idx, (idx_global, p) in enumerate(lista_promos):
+                        row = local_idx // cols
+                        col = local_idx % cols
+    
+                        # 1. Rectángulo Vertical (Ancho: 180px, Alto: 220px)
+                        card = tk.Frame(
+                            frame_tarjetas, 
+                            bg=COLOR_BLANCO, 
+                            bd=1, 
+                            relief="solid", 
+                            highlightbackground="#CBD5E1", 
+                            highlightthickness=1,
+                            padx=10, 
+                            pady=10,
+                            width=170,
+                            height=210
+                        )
+                        card.grid(row=row, column=col, padx=8, pady=10, sticky="w")
+                        card.grid_propagate(False)
+                        card.pack_propagate(False)
+    
+                        pts_oferta = int(float(p.get('puntos', 0)))
+                        titulo_oferta = p.get('titulo', 'Oferta')
+                        desc_original = str(p.get('descripcion', '-'))
+    
+                        # 2. Nombre del Producto destacado (tamaño 10 entero)
+                        lbl_titulo = tk.Label(
+                            card, 
+                            text=f"📌 {titulo_oferta}", 
+                            font=("Arial", 10, "bold"), 
+                            fg=COLOR_TEXTO_MAIN, 
+                            bg=COLOR_BLANCO, 
+                            justify="left",
+                            anchor="nw",
+                            wraplength=155
+                        )
+                        lbl_titulo.pack(anchor="w", fill="x", pady=(0, 4))
+    
+                        # 3. Precio y Puntos (tamaño 8 entero)
+                        lbl_precio = tk.Label(
+                            card, 
+                            text=f"💰 S/ {float(p.get('precio_soles', 0)):.2f} ➔ {pts_oferta} PTS", 
+                            font=("Arial", 8, "bold"), 
+                            fg="#0284C7", 
+                            bg=COLOR_BLANCO, 
+                            justify="left",
+                            anchor="nw"
+                        )
+                        lbl_precio.pack(anchor="w", fill="x", pady=(0, 6))
+    
+                        # Línea separadora
+                        tk.Frame(card, height=1, bg="#E2E8F0").pack(fill="x", pady=(0, 6))
+    
+                        # 4. Descripción del producto (tamaño 8 entero)
+                        LIMITE_CARACTERES = 35
+                        es_larga = len(desc_original) > LIMITE_CARACTERES
+                        desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
+    
+                        frame_desc = tk.Frame(card, bg=COLOR_BLANCO, height=48, width=160)
+                        frame_desc.pack(anchor="w", fill="x")
+                        frame_desc.pack_propagate(False)
+    
+                        lbl_desc = tk.Label(
+                            frame_desc, 
+                            text=f"📝 {desc_mostrar}", 
+                            font=("Arial", 8), 
+                            fg="#475569", 
+                            bg=COLOR_BLANCO, 
+                            justify="left", 
+                            anchor="nw",
+                            wraplength=150
+                        )
+                        lbl_desc.pack(side="left", anchor="nw")
+    
+                        if es_larga:
+                            btn_ver_mas = tk.Button(
+                                frame_desc, 
+                                text="ver más", 
+                                font=("Arial", 7, "bold", "underline"), 
+                                fg="#0284C7", 
+                                bg=COLOR_BLANCO, 
+                                bd=0, 
+                                activebackground=COLOR_BLANCO, 
+                                activeforeground="#0369A1",
+                                cursor="hand2",
+                                command=lambda t=titulo_oferta, d=desc_original: mostrar_descripcion_completa(t, d)
+                            )
+                            btn_ver_mas.pack(side="left", anchor="nw", padx=(2, 0))
+    
+                        def eliminar_con_motivo(i=idx_global, tienda_id=p.get('tienda_id'), titulo=titulo_oferta):
+                            motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
+                            if not motivo:
+                                messagebox.showwarning("Requerido", "Debe ingresar una justificación para eliminar la oferta.")
+                                return
+    
+                            if messagebox.askyesno("Confirmar", f"¿Eliminar definitivamente la oferta '{titulo}'?"):
+                                if eliminar_promocion_admin(i, tienda_id, motivo, self.datos_sesion.get("nombre", "Gestor")):
+                                    registrar_accion_dev(
+                                        self.id_usuario, 
+                                        self.datos_sesion.get("nombre"), 
+                                        "ELIMINAR_OFERTA", 
+                                        f"Eliminó oferta '{titulo}' de la tienda {tienda_id}. Motivo: {motivo}"
+                                    )
+                                    messagebox.showinfo("Éxito", "La oferta ha sido eliminada.")
+                                    self.actualizar_tablas()
+                                    refrescar_grid()
+    
+                        # 5. Botón eliminar (tamaño 8 entero)
+                        btn_eliminar = tk.Button(
+                            card, 
+                            text="🗑️ Eliminar Oferta", 
+                            bg="#DC2626", 
+                            fg=COLOR_BLANCO, 
+                            activeforeground=COLOR_BLANCO, 
+                            font=("Arial", 8, "bold"), 
+                            relief="flat", 
+                            command=eliminar_con_motivo, 
+                            cursor="hand2", 
+                            pady=3
+                        )
+                        btn_eliminar.pack(fill="x", side="bottom")
+    
+            refrescar_grid()
