@@ -86,5 +86,82 @@
         "puntos": 30.0,
         "stock": 9,
         "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "tamales",
+        "categoria": "Abarrotes y Despensa",
+        "descripcion": "tamalito tamalon, con harta carne como pal Seba",
+        "precio_soles": 2.0,
+        "puntos": 20.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "pinguinos",
+        "categoria": "Dulces, Biscochos y Snacks",
+        "descripcion": "chocolate",
+        "precio_soles": 3.0,
+        "puntos": 30.0,
+        "stock": 5,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "sarten",
+        "categoria": "Utensilios de Cocina / Hogar",
+        "descripcion": "educador de maridos",
+        "precio_soles": 20.0,
+        "puntos": 200.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "papas lays",
+        "categoria": "Dulces, Biscochos y Snacks",
+        "descripcion": "picantes y sin picante",
+        "precio_soles": 2.0,
+        "puntos": 20.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Chocolates privilegio",
+        "categoria": "Dulces, Biscochos y Snacks",
+        "descripcion": "rellenos con manjar",
+        "precio_soles": 1.0,
+        "puntos": 10.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "lejia",
+        "categoria": "Limpieza del Hogar",
+        "descripcion": "para lavar",
+        "precio_soles": 5.0,
+        "puntos": 50.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "pisco",
+        "categoria": "Licores y Cervezas",
+        "descripcion": "pa celebrar",
+        "precio_soles": 2.0,
+        "puntos": 20.0,
+        "stock": 10,
+        "foto": ""
     }
 ]

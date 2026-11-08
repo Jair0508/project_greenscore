@@ -1165,8 +1165,8 @@ class VentanaNegocio:
             self.lbl_total_resenas.config(text="📊 Total de Opiniones Recibidas: 0 reseñas")
 
     def dialogo_mis_ofertas(self):
+        """Muestra el panel de promociones con fondo floral estático y tarjetas rectangulares."""
         win_promos = tk.Toplevel(self.root)
-        win_promos.config(bg=COLOR_BLANCO)
         win_promos.title("Panel de Promociones")
         win_promos.geometry("720x540")
         win_promos.resizable(False, False)
@@ -1175,12 +1175,7 @@ class VentanaNegocio:
         if hasattr(self.root, 'icon_img'):
             win_promos.iconphoto(False, self.root.icon_img)
 
-        canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
-        scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
+        # 1. Cargar la imagen de fondo estática
         nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
         ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
 
@@ -1189,18 +1184,40 @@ class VentanaNegocio:
                 from PIL import Image, ImageTk
                 img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
                 win_promos.bg_img = ImageTk.PhotoImage(img_pil)
-                canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+                lbl_bg = tk.Label(win_promos, image=win_promos.bg_img, bd=0)
+                lbl_bg.place(x=0, y=0, relwidth=1, relheight=1)
             except Exception as e:
                 print(f"Aviso imagen de fondo: {e}")
 
-        frame_grid = tk.Frame(canvas, bg="")
-        canvas.create_window((15, 15), window=frame_grid, anchor="nw")
+        # 2. Canvas y Scrollbar
+        canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
+        scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # Dibujar la imagen sobre el Canvas para congelar las coordenadas al desplazar scroll
+        bg_canvas_id = None
+        if hasattr(win_promos, 'bg_img'):
+            bg_canvas_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
+
+        # 3. Contenedor principal para las ofertas
+        frame_grid = tk.Frame(canvas, bg=COLOR_BLANCO)
+        window_id = canvas.create_window((15, 15), window=frame_grid, anchor="nw")
 
         def _actualizar_scrollregion(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
 
         frame_grid.bind("<Configure>", _actualizar_scrollregion)
-        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Reposiciona dinámicamente el fondo para que no se mueva con el scroll
+        def _al_hacer_scroll(*args):
+            scrollbar.set(*args)
+            if bg_canvas_id:
+                y_pos = canvas.canvasy(0)
+                canvas.coords(bg_canvas_id, 0, y_pos)
+
+        canvas.configure(yscrollcommand=_al_hacer_scroll)
 
         def mostrar_descripcion_completa(titulo, descripcion):
             win_desc = tk.Toplevel(win_promos)
@@ -1263,11 +1280,12 @@ class VentanaNegocio:
                 return
 
             cols = 3
-            LIMITE_CARACTERES = 25
+            LIMITE_CARACTERES = 35
 
             for i, (idx_global, p) in enumerate(promos_propias):
                 row, col = i // cols, i % cols
                 
+                # Rectángulo Vertical compacto (180x220px)
                 card = tk.Frame(
                     frame_grid, 
                     bg=COLOR_BLANCO, 
@@ -1275,13 +1293,14 @@ class VentanaNegocio:
                     relief="solid", 
                     highlightbackground=COLOR_SECUNDARIO, 
                     highlightthickness=1, 
-                    padx=8, 
-                    pady=8, 
-                    width=210, 
-                    height=185
+                    padx=10, 
+                    pady=10, 
+                    width=180, 
+                    height=220
                 )
-                card.grid(row=row, column=col, padx=10, pady=10, sticky="nsew")
+                card.grid(row=row, column=col, padx=8, pady=10, sticky="nw")
                 card.grid_propagate(False)
+                card.pack_propagate(False)
 
                 pts_oferta = int(float(p.get('puntos', 0)))
                 titulo_oferta = p.get('titulo', 'Oferta')
@@ -1290,40 +1309,56 @@ class VentanaNegocio:
                 precio_soles = float(p.get('precio_soles', 0))
                 desc_original = str(p.get('descripcion', '-'))
 
-                txt_cabecera = (
-                    f"🏪 {p.get('tienda_nombre')} | Stock: {stock_oferta}\n"
-                    f"📌 {titulo_oferta}\n"
-                    f"📂 {categoria_oferta}\n"
-                    f"💲 S/ {precio_soles:.2f} ➔ {pts_oferta} PTS\n"
-                    f"📝 "
-                )
-
-                lbl_cabecera = tk.Label(
+                # Nombre del Producto destacado
+                lbl_titulo = tk.Label(
                     card, 
-                    text=txt_cabecera, 
-                    font=("Arial", 8, "bold"), 
-                    fg=COLOR_TEXTO_MAIN, 
-                    bg=COLOR_BLANCO, 
-                    justify="left", 
-                    anchor="nw"
-                )
-                lbl_cabecera.pack(anchor="w", fill="x")
-
-                es_larga = len(desc_original) > LIMITE_CARACTERES
-                desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
-
-                frame_desc = tk.Frame(card, bg=COLOR_BLANCO)
-                frame_desc.pack(anchor="w", fill="x", pady=(2, 0))
-
-                lbl_desc = tk.Label(
-                    frame_desc, 
-                    text=desc_mostrar, 
-                    font=("Arial", 8), 
+                    text=f"📌 {titulo_oferta}", 
+                    font=("Arial", 10, "bold"), 
                     fg=COLOR_TEXTO_MAIN, 
                     bg=COLOR_BLANCO, 
                     justify="left", 
                     anchor="nw",
-                    wraplength=170
+                    wraplength=155
+                )
+                lbl_titulo.pack(anchor="w", fill="x", pady=(0, 2))
+
+                # Información del negocio y stock
+                txt_detalles = (
+                    f"🏪 {p.get('tienda_nombre', 'Mi Tienda')} | Stock: {stock_oferta}\n"
+                    f"📂 {categoria_oferta}\n"
+                    f"💰 S/ {precio_soles:.2f} ➔ {pts_oferta} PTS"
+                )
+                lbl_detalles = tk.Label(
+                    card, 
+                    text=txt_detalles, 
+                    font=("Arial", 8, "bold"), 
+                    fg="#0284C7", 
+                    bg=COLOR_BLANCO, 
+                    justify="left", 
+                    anchor="nw"
+                )
+                lbl_detalles.pack(anchor="w", fill="x", pady=(0, 4))
+
+                # Separador horizontal sutil
+                tk.Frame(card, height=1, bg="#E2E8F0").pack(fill="x", pady=(0, 4))
+
+                # Descripción del producto
+                es_larga = len(desc_original) > LIMITE_CARACTERES
+                desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
+
+                frame_desc = tk.Frame(card, bg=COLOR_BLANCO, height=42, width=160)
+                frame_desc.pack(anchor="w", fill="x")
+                frame_desc.pack_propagate(False)
+
+                lbl_desc = tk.Label(
+                    frame_desc, 
+                    text=f"📝 {desc_mostrar}", 
+                    font=("Arial", 8), 
+                    fg="#475569", 
+                    bg=COLOR_BLANCO, 
+                    justify="left", 
+                    anchor="nw",
+                    wraplength=150
                 )
                 lbl_desc.pack(side="left", anchor="nw")
 
@@ -1362,6 +1397,7 @@ class VentanaNegocio:
                     cursor="hand2", 
                     pady=2
                 )
-                btn_eliminar.pack(fill="x", side="bottom", pady=(5, 0))
+                btn_eliminar.pack(fill="x", side="bottom")
 
+        
         refrescar_grid()
