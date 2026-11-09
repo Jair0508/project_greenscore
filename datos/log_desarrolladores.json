@@ -404,5 +404,26 @@
         "autor_nombre": "Administrador",
         "accion": "RESTAR_PUNTOS",
         "objetivo": "Restó 30 pts a 952089997"
+    },
+    {
+        "fecha": "2026-11-07 16:07:56",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta 0885 (GESTOR_RECICLAJE)"
+    },
+    {
+        "fecha": "2026-11-07 16:27:26",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "ELIMINAR_CUENTA",
+        "objetivo": "Eliminó la cuenta 5577 (Gallardo el Gallo)"
+    },
+    {
+        "fecha": "2026-11-07 16:28:04",
+        "autor_id": "admin1",
+        "autor_nombre": "Administrador",
+        "accion": "CREAR_CUENTA",
+        "objetivo": "Creó cuenta 55775577 (GESTOR_RECICLAJE)"
     }
 ]

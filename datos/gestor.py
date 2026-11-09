@@ -3,6 +3,7 @@ import os
 from datetime import datetime
 
 RUTA_USUARIOS = os.path.join("datos", "usuarios.json")
+RUTA_GESTORES = os.path.join("datos", "gestor.json")
 RUTA_LOG_DEVS = os.path.join("datos", "log_desarrolladores.json")
 RUTA_LOG_TIENDAS = os.path.join("datos", "log_tiendas.json")
 RUTA_LOG_CLIENTES = os.path.join("datos", "log_clientes.json")
@@ -11,6 +12,7 @@ RUTA_CHAT = os.path.join("datos", "chat.json")
 RUTA_ENTREGAS = os.path.join("datos", "entregas.json")
 
 
+# --- CARGA Y GUARDADO DE USUARIOS Y GESTORES ---
 
 def cargar_usuarios():
     if not os.path.exists(RUTA_USUARIOS):
@@ -22,6 +24,24 @@ def guardar_usuarios(datos):
     with open(RUTA_USUARIOS, "w", encoding="utf-8") as f:
         json.dump(datos, f, indent=4, ensure_ascii=False)
 
+def cargar_gestores():
+    """Carga la lista o diccionario de gestores de reciclaje desde datos/gestor.json."""
+    if not os.path.exists(RUTA_GESTORES):
+        return {}
+    try:
+        with open(RUTA_GESTORES, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+def guardar_gestores(datos):
+    """Guarda la información de gestores en datos/gestor.json."""
+    with open(RUTA_GESTORES, "w", encoding="utf-8") as f:
+        json.dump(datos, f, indent=4, ensure_ascii=False)
+
+
+# --- LOGS AUXILIARES ---
+
 def _cargar_log(ruta):
     if not os.path.exists(ruta):
         return []
@@ -31,6 +51,7 @@ def _cargar_log(ruta):
 def _guardar_log(ruta, lista_log):
     with open(ruta, "w", encoding="utf-8") as f:
         json.dump(lista_log, f, indent=4, ensure_ascii=False)
+
 
 # --- FUNCIONES DE REGISTRO / AUDITORÍA ---
 
@@ -81,9 +102,8 @@ def cargar_log_clientes():
     return _cargar_log(RUTA_LOG_CLIENTES)
 
 
+# --- PROMOCIONES ---
 
-
-#PROMOCIONES
 def cargar_promociones():
     if not os.path.exists(RUTA_PROMOCIONES):
         return []
@@ -115,7 +135,7 @@ def eliminar_promocion_admin(indice_promo, id_tienda, motivo, autor_admin):
         promo_eliminada = promos.pop(indice_promo)
         guardar_promociones(promos)
         
-        # Envia mensaje de notificación automática
+        # Envía mensaje de notificación automática
         guardar_mensaje_chat(
             dni_cliente=str(id_tienda),
             autor_nombre=autor_admin,
@@ -126,7 +146,8 @@ def eliminar_promocion_admin(indice_promo, id_tienda, motivo, autor_admin):
     return False
 
 
-#CHAT USUARIO A DESARROLLADORES
+# --- CHAT USUARIO A DESARROLLADORES ---
+
 def cargar_mensajes_chat():
     if not os.path.exists(RUTA_CHAT):
         return []
@@ -137,7 +158,6 @@ def cargar_mensajes_chat():
         return []
 
 def guardar_mensaje_chat(dni_cliente, autor_nombre, rol_autor, mensaje):
-    from datetime import datetime
     mensajes = cargar_mensajes_chat()
     nuevo_msg = {
         "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -145,7 +165,7 @@ def guardar_mensaje_chat(dni_cliente, autor_nombre, rol_autor, mensaje):
         "autor": autor_nombre,
         "rol": rol_autor,
         "mensaje": mensaje,
-        "leido": False  # <--- NUEVO: Inicializa el mensaje como no leído
+        "leido": False
     }
     mensajes.append(nuevo_msg)
     with open(RUTA_CHAT, "w", encoding="utf-8") as f:
@@ -160,11 +180,9 @@ def marcar_chat_como_leido(dni_cliente, rol_lector):
     
     for m in mensajes:
         if m.get("dni_cliente") == dni_cliente:
-            # Si lee el admin/dev, marcamos como leídos los mensajes enviados por el vecino
             if rol_lector in ["admin", "desarrollador"] and m.get("rol") == "vecino" and not m.get("leido", True):
                 m["leido"] = True
                 modificado = True
-            # Si lee el vecino, marcamos como leídos los mensajes enviados por el admin/dev
             elif rol_lector == "vecino" and m.get("rol") in ["admin", "desarrollador"] and not m.get("leido", True):
                 m["leido"] = True
                 modificado = True
@@ -177,15 +195,21 @@ def marcar_chat_como_leido(dni_cliente, rol_lector):
             pass
 
 def obtener_puntos_recolectados_por_tienda(id_tienda):
-    """Calcula el total de puntos extraidos/canjeados por una tienda especifica."""
+    """Calcula el total de puntos extraídos/canjeados por una tienda específica."""
     log_tiendas = cargar_log_tiendas()
-    total_pts = 0
+    total_pts = 0.0
     for reg in log_tiendas:
-        if str(reg.get("id_tienda", "")) == str(id_tienda):
-            total_pts += float(reg.get("puntos", 0))
+        tid = str(reg.get("tienda_id", reg.get("id_tienda", "")))
+        if tid == str(id_tienda):
+            try:
+                pts = float(reg.get("puntos_descontados", reg.get("puntos", 0)))
+                total_pts += pts
+            except (ValueError, TypeError):
+                pass
     return round(total_pts, 1)
 
-# --- FUNCIONES DE REGISTRO DE ENTREGAS DE RECICLAJE ---
+
+# --- REGISTRO DE ENTREGAS DE RECICLAJE ---
 
 def registrar_entrega_reciclaje(tienda_id, dni_cliente, material, peso_kg, puntos):
     """Registra una entrega física de reciclaje en datos/entregas.json."""
@@ -222,3 +246,51 @@ def cargar_entregas_reciclaje():
         except Exception:
             return []
     return []
+
+
+# --- CÁLCULO DE CO2 ---
+
+CO2_POR_KG = {
+    "Botellas PET (Agua/Gaseosas)": 1.53,
+    "Tapas plásticas (PP/HDPE)": 1.40,
+    "Cartón corrugado (Cajas)": 3.12,
+    "Papel de cuaderno blanco": 2.85,
+    "Cuadernos usados / Impresos": 2.85,
+    "Papel periódico": 2.70,
+    "Revistas (Papel couche/brillante)": 2.70,
+    "Latas de aluminio (Gaseosas/Cerveza)": 9.11,
+    "Latas de conservas (Hojalata/Fierro)": 1.81,
+    "Cables viejos (Cobre/Plástico)": 4.50,
+    "Componentes informáticos": 5.20
+}
+
+def calcular_co2_evitado_vecino(id_usuario):
+    """
+    Calcula dinámicamente el total de CO2 evitado sumando las entregas registradas
+    del vecino según los factores WARM de la EPA.
+    """
+    entregas = cargar_entregas_reciclaje()
+    co2_total = 0.0
+
+    for entrega in entregas:
+        usr_id = str(entrega.get("id_usuario", entrega.get("dni_cliente", "")))
+        if usr_id == str(id_usuario):
+            material_reg = str(entrega.get("material", "")).strip()
+            
+            try:
+                peso_kg = float(entrega.get("peso_kg", entrega.get("peso", 0.0)))
+            except (ValueError, TypeError):
+                peso_kg = 0.0
+
+            factor = CO2_POR_KG.get(material_reg, None)
+            if factor is None:
+                for mat_clave, f_val in CO2_POR_KG.items():
+                    if mat_clave.lower() in material_reg.lower() or material_reg.lower() in mat_clave.lower():
+                        factor = f_val
+                        break
+                if factor is None:
+                    factor = 1.5
+
+            co2_total += peso_kg * factor
+
+    return round(co2_total, 2)

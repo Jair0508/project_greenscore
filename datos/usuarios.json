@@ -65,17 +65,6 @@
         "pregunta_secreta": "cumpleaños",
         "respuesta_secreta": "3107"
     },
-    "5577": {
-        "rol": "gestor de reciclaje",
-        "nombre": "Gallardo el Gallo",
-        "correo": "-",
-        "telefono": "-",
-        "clave": "1234",
-        "puntos": "N/A",
-        "suspendido": false,
-        "motivo_suspension": "",
-        "justificacion_cliente": ""
-    },
     "Number1": {
         "rol": "negocio",
         "nombre": "Tienda_Sebas",
@@ -94,6 +83,28 @@
         "telefono": "123456789",
         "clave": "waza2",
         "puntos": "N/A",
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
+    },
+    "0885": {
+        "rol": "gestor_reciclaje",
+        "nombre": "Benito",
+        "correo": "-",
+        "telefono": "-",
+        "clave": "1234",
+        "puntos": 0,
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
+    },
+    "55775577": {
+        "rol": "gestor_reciclaje",
+        "nombre": "Gallardo",
+        "correo": "-",
+        "telefono": "-",
+        "clave": "1234",
+        "puntos": 0,
         "suspendido": false,
         "motivo_suspension": "",
         "justificacion_cliente": ""
