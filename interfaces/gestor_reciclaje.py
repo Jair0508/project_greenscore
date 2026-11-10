@@ -1128,8 +1128,8 @@ class VentanaGestorReciclaje:
                             highlightthickness=1,
                             padx=10, 
                             pady=10,
-                            width=170,
-                            height=210
+                            width=180,
+                            height=220
                         )
                         card.grid(row=row, column=col, padx=8, pady=10, sticky="w")
                         card.grid_propagate(False)
