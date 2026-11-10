@@ -187,5 +187,61 @@
         "tienda_nombre": "Tienda_Sebas",
         "dni_cliente": "952089997",
         "puntos_descontados": 40
+    },
+    {
+        "fecha": "2026-11-03 19:36:12",
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "dni_cliente": "68452135",
+        "puntos_descontados": 150
+    },
+    {
+        "fecha": "2026-11-06 01:20:10",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 195
+    },
+    {
+        "fecha": "2026-11-06 01:47:56",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 30
+    },
+    {
+        "fecha": "2026-11-06 02:04:50",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 160
+    },
+    {
+        "fecha": "2026-11-06 02:41:43",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 10
+    },
+    {
+        "fecha": "2026-11-06 02:49:01",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 50
+    },
+    {
+        "fecha": "2026-11-06 02:52:36",
+        "tienda_id": "Number2",
+        "tienda_nombre": "Tienda_Sebas2",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 10
+    },
+    {
+        "fecha": "2026-11-06 03:00:37",
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "dni_cliente": "952089997",
+        "puntos_descontados": 10
     }
 ]

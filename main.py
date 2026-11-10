@@ -281,17 +281,19 @@ class AppPrincipal:
         usuarios = cargar_usuarios()
         
         if usuario in usuarios and usuarios[usuario]["clave"] == clave:
-            rol = usuarios[usuario]["rol"]
+            rol = str(usuarios[usuario].get("rol", "")).lower().strip()
             self.limpiar_pantalla()
 
             if rol in ["admin", "desarrollador"]:
                 VentanaAdmin(self.root, usuario, self.mostrar_login)
-            elif rol in ["gestor", "gestor de reciclaje"]:
+            elif rol in ["gestor", "gestor_reciclaje", "gestor de reciclaje"]:
                 VentanaGestorReciclaje(self.root, usuario, self.mostrar_login)
             elif rol == "negocio":
                 VentanaNegocio(self.root, usuario, self.mostrar_login)
             elif rol == "vecino":
                 VentanaVecino(self.root, usuario, self.mostrar_login)
+            else:
+                messagebox.showerror("Error de Autenticación", "Rol no reconocido.")
         else:
             messagebox.showerror("Error de Autenticación", "Usuario o contraseña incorrectos.")
 

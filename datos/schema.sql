@@ -3,7 +3,7 @@
 
 CREATE TABLE usuarios (
     id                     VARCHAR PRIMARY KEY,      -- DNI o id alfanumérico (ej. "admin1"); incluye ceros a la izquierda
-    rol                    VARCHAR NOT NULL,         -- 'admin' | 'desarrollador' | 'gestor de reciclaje' | 'negocio' | 'vecino'
+    rol                    VARCHAR NOT NULL,         -- 'admin' | 'desarrollador' | 'negocio' | 'vecino' | gestor de reciclaje: el codigo usa 3 variantes de texto ("gestor", "gestor_reciclaje", "gestor de reciclaje") segun el flujo -- sin restriccion a nivel de columna
     nombre                 VARCHAR NOT NULL,
     correo                 VARCHAR,
     clave                  VARCHAR NOT NULL,         -- texto plano por ahora

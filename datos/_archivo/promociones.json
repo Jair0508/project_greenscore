@@ -7,7 +7,7 @@
         "descripcion": "jabon para jabonear",
         "precio_soles": 4.0,
         "puntos": 40.0,
-        "stock": 4,
+        "stock": 0,
         "foto": ""
     },
     {
@@ -18,7 +18,150 @@
         "descripcion": "Salud",
         "precio_soles": 6.5,
         "puntos": 65.0,
-        "stock": 93,
+        "stock": 90,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "todinnito",
+        "categoria": "Dulces, Biscochos y Snacks",
+        "descripcion": "todinnito ito ito",
+        "precio_soles": 5.0,
+        "puntos": 50.0,
+        "stock": 1,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Shampoo para calvos",
+        "categoria": "Cuidado Personal y Aseo",
+        "descripcion": "para tener ideas más brillantes en el día",
+        "precio_soles": 15.0,
+        "puntos": 150.0,
+        "stock": 9,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Chela",
+        "categoria": "Licores y Cervezas",
+        "descripcion": "desayuno alemán",
+        "precio_soles": 10.0,
+        "puntos": 100.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number2",
+        "tienda_nombre": "Tienda_Sebas2",
+        "titulo": "Pinga",
+        "categoria": "Bebidas y Gaseosas",
+        "descripcion": "Provecho",
+        "precio_soles": 100.0,
+        "puntos": 1000.0,
+        "stock": 2,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number2",
+        "tienda_nombre": "Tienda_Sebas2",
+        "titulo": "Coca",
+        "categoria": "Cuidado Personal y Aseo",
+        "descripcion": "Blanca como la nieve",
+        "precio_soles": 100.0,
+        "puntos": 1000.0,
+        "stock": 2,
+        "foto": ""
+    },
+    {
+        "tienda_id": "Number1",
+        "tienda_nombre": "Tienda_Sebas",
+        "titulo": "waza",
+        "categoria": "Abarrotes y Despensa",
+        "descripcion": "waza",
+        "precio_soles": 3.0,
+        "puntos": 30.0,
+        "stock": 9,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "tamales",
+        "categoria": "Abarrotes y Despensa",
+        "descripcion": "tamalito tamalon, con harta carne como pal Seba",
+        "precio_soles": 2.0,
+        "puntos": 20.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "pinguinos",
+        "categoria": "Dulces, Biscochos y Snacks",
+        "descripcion": "chocolate",
+        "precio_soles": 3.0,
+        "puntos": 30.0,
+        "stock": 5,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "sarten",
+        "categoria": "Utensilios de Cocina / Hogar",
+        "descripcion": "educador de maridos",
+        "precio_soles": 20.0,
+        "puntos": 200.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "papas lays",
+        "categoria": "Dulces, Biscochos y Snacks",
+        "descripcion": "picantes y sin picante",
+        "precio_soles": 2.0,
+        "puntos": 20.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "Chocolates privilegio",
+        "categoria": "Dulces, Biscochos y Snacks",
+        "descripcion": "rellenos con manjar",
+        "precio_soles": 1.0,
+        "puntos": 10.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "lejia",
+        "categoria": "Limpieza del Hogar",
+        "descripcion": "para lavar",
+        "precio_soles": 5.0,
+        "puntos": 50.0,
+        "stock": 10,
+        "foto": ""
+    },
+    {
+        "tienda_id": "75246852",
+        "tienda_nombre": "Bodega Luchito",
+        "titulo": "pisco",
+        "categoria": "Licores y Cervezas",
+        "descripcion": "pa celebrar",
+        "precio_soles": 2.0,
+        "puntos": 20.0,
+        "stock": 10,
         "foto": ""
     }
 ]

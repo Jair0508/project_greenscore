@@ -10,7 +10,8 @@
         "rol": "negocio",
         "nombre": "Bodega Don Pepe",
         "clave": "123",
-        "telefono": "912345678"
+        "telefono": "912345678",
+        "reciclaje_activo": true
     },
     "71234567": {
         "rol": "vecino",
@@ -35,7 +36,8 @@
         "correo": "lui.smarket@gmail.com",
         "telefono": "945382455",
         "clave": "12345",
-        "puntos": "N/A"
+        "puntos": "N/A",
+        "reciclaje_activo": true
     },
     "68452135": {
         "rol": "vecino",
@@ -43,7 +45,7 @@
         "correo": "mario.12@gmail.com",
         "telefono": "946525476",
         "clave": "123456",
-        "puntos": 71.0,
+        "puntos": 331.0,
         "suspendido": false,
         "motivo_suspension": "",
         "justificacion_cliente": "",
@@ -56,23 +58,12 @@
         "correo": "sebas67@gmail.com",
         "telefono": "952999999",
         "clave": "pro67",
-        "puntos": 1330.0,
+        "puntos": 1760.0,
         "suspendido": false,
         "motivo_suspension": "",
         "justificacion_cliente": "",
         "pregunta_secreta": "cumpleaños",
         "respuesta_secreta": "3107"
-    },
-    "5577": {
-        "rol": "gestor de reciclaje",
-        "nombre": "Gallardo el Gallo",
-        "correo": "-",
-        "telefono": "-",
-        "clave": "1234",
-        "puntos": "N/A",
-        "suspendido": false,
-        "motivo_suspension": "",
-        "justificacion_cliente": ""
     },
     "Number1": {
         "rol": "negocio",
@@ -81,6 +72,39 @@
         "telefono": "952089997",
         "clave": "waza",
         "puntos": "N/A",
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
+    },
+    "Number2": {
+        "rol": "negocio",
+        "nombre": "Tienda_Sebas2",
+        "correo": "waza67@.com",
+        "telefono": "123456789",
+        "clave": "waza2",
+        "puntos": "N/A",
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
+    },
+    "0885": {
+        "rol": "gestor_reciclaje",
+        "nombre": "Benito",
+        "correo": "-",
+        "telefono": "-",
+        "clave": "1234",
+        "puntos": 0,
+        "suspendido": false,
+        "motivo_suspension": "",
+        "justificacion_cliente": ""
+    },
+    "55775577": {
+        "rol": "gestor_reciclaje",
+        "nombre": "Gallardo",
+        "correo": "-",
+        "telefono": "-",
+        "clave": "1234",
+        "puntos": 0,
         "suspendido": false,
         "motivo_suspension": "",
         "justificacion_cliente": ""

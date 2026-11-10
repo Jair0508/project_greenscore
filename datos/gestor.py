@@ -7,6 +7,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+class UsuarioConHistorialError(Exception):
+    """Se lanza al intentar eliminar un usuario que tiene filas asociadas
+    en otras tablas (logs, chat, promociones, entregas)."""
+    pass
+
+
 def _conectar():
     return psycopg2.connect(
         host=os.environ["DB_HOST"],
@@ -20,6 +26,18 @@ def _conectar():
 def _filas_a_dicts(cur):
     columnas = [desc[0] for desc in cur.description]
     return [dict(zip(columnas, fila)) for fila in cur.fetchall()]
+
+
+def _a_numero_o_none(valor):
+    """Normaliza campos numéricos que en el JSON viejo podían ser 'N/A' o texto suelto."""
+    if valor is None:
+        return None
+    if isinstance(valor, (int, float)):
+        return valor
+    try:
+        return float(valor)
+    except (TypeError, ValueError):
+        return None
 
 
 # --- USUARIOS ---
@@ -38,7 +56,12 @@ def cargar_usuarios():
 def guardar_usuarios(datos):
     """Reemplaza el estado completo de usuarios: upsert de todos los presentes
     en 'datos' y elimina los que ya no estan (igual que el guardado por
-    sobre-escritura total que se hacia antes con el .json)."""
+    sobre-escritura total que se hacia antes con el .json).
+
+    Lanza UsuarioConHistorialError si se intenta eliminar un usuario que
+    todavia tiene filas asociadas en otras tablas (logs, chat, promociones,
+    entregas) — Postgres lo bloquea por llave foranea en vez de dejar
+    registros huerfanos sueltos como hacia el JSON."""
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -76,7 +99,7 @@ def guardar_usuarios(datos):
                     u.get("correo"),
                     u.get("clave"),
                     u.get("telefono"),
-                    u.get("puntos"),
+                    _a_numero_o_none(u.get("puntos")),
                     u.get("suspendido", False),
                     u.get("motivo_suspension", ""),
                     u.get("justificacion_cliente", ""),
@@ -85,6 +108,13 @@ def guardar_usuarios(datos):
                 ),
             )
         conn.commit()
+    except psycopg2.errors.ForeignKeyViolation as e:
+        conn.rollback()
+        detalle = (e.diag.message_detail or "").strip()
+        raise UsuarioConHistorialError(
+            "No se puede eliminar: el usuario tiene historial de actividad registrado "
+            "(compras, chats, promociones o entregas).\n" + detalle
+        )
     finally:
         conn.close()
 
@@ -171,12 +201,21 @@ def cargar_promociones():
 
 
 def guardar_promociones(lista_promos):
-    """Upsert de cada promo: si trae 'id' se actualiza esa fila, si no, se
-    inserta una nueva (igual que antes se hacia append() + sobre-escritura
-    completa del .json)."""
+    """Reemplaza el estado completo de promociones: upsert de cada item
+    presente (si trae 'id' se actualiza esa fila, si no, se inserta una
+    nueva) y elimina las que ya no estan en la lista — igual semantica de
+    sobre-escritura total que 'guardar_usuarios', necesaria porque
+    negocio.py depende de que una promo agotada o borrada desaparezca de
+    verdad de la tabla, no solo de la lista en memoria."""
     conn = _conectar()
     try:
         cur = conn.cursor()
+        ids_actuales = [p["id"] for p in lista_promos if p.get("id") is not None]
+        if ids_actuales:
+            cur.execute("DELETE FROM promociones WHERE id != ALL(%s)", (ids_actuales,))
+        else:
+            cur.execute("DELETE FROM promociones")
+
         for p in lista_promos:
             if p.get("id") is not None:
                 cur.execute(
@@ -277,7 +316,7 @@ def marcar_chat_como_leido(dni_cliente, rol_lector):
     conn = _conectar()
     try:
         cur = conn.cursor()
-        if rol_lector in ["admin", "desarrollador", "gestor de reciclaje"]:
+        if rol_lector in ["admin", "desarrollador", "gestor de reciclaje", "gestor"]:
             cur.execute(
                 """
                 UPDATE chat SET leido = TRUE
@@ -289,7 +328,7 @@ def marcar_chat_como_leido(dni_cliente, rol_lector):
             cur.execute(
                 """
                 UPDATE chat SET leido = TRUE
-                WHERE dni_cliente = %s AND rol IN ('admin', 'desarrollador', 'gestor de reciclaje') AND leido = FALSE
+                WHERE dni_cliente = %s AND rol IN ('admin', 'desarrollador', 'gestor de reciclaje', 'gestor') AND leido = FALSE
                 """,
                 (dni_cliente,),
             )
@@ -335,3 +374,52 @@ def registrar_entrega_reciclaje(tienda_id, dni_cliente, material, peso_kg, punto
 def cargar_entregas_reciclaje():
     """Carga todas las entregas de reciclaje registradas."""
     return _cargar_tabla("entregas")
+
+
+# --- CÁLCULO DE CO2 ---
+
+CO2_POR_KG = {
+    "Botellas PET (Agua/Gaseosas)": 1.53,
+    "Tapas plásticas (PP/HDPE)": 1.40,
+    "Cartón corrugado (Cajas)": 3.12,
+    "Papel de cuaderno blanco": 2.85,
+    "Cuadernos usados / Impresos": 2.85,
+    "Papel periódico": 2.70,
+    "Revistas (Papel couche/brillante)": 2.70,
+    "Latas de aluminio (Gaseosas/Cerveza)": 9.11,
+    "Latas de conservas (Hojalata/Fierro)": 1.81,
+    "Cables viejos (Cobre/Plástico)": 4.50,
+    "Componentes informáticos": 5.20
+}
+
+
+def calcular_co2_evitado_vecino(id_usuario):
+    """
+    Calcula dinámicamente el total de CO2 evitado sumando las entregas registradas
+    del vecino según los factores WARM de la EPA.
+    """
+    entregas = cargar_entregas_reciclaje()
+    co2_total = 0.0
+
+    for entrega in entregas:
+        usr_id = str(entrega.get("id_usuario", entrega.get("dni_cliente", "")))
+        if usr_id == str(id_usuario):
+            material_reg = str(entrega.get("material", "")).strip()
+
+            try:
+                peso_kg = float(entrega.get("peso_kg", entrega.get("peso", 0.0)))
+            except (ValueError, TypeError):
+                peso_kg = 0.0
+
+            factor = CO2_POR_KG.get(material_reg, None)
+            if factor is None:
+                for mat_clave, f_val in CO2_POR_KG.items():
+                    if mat_clave.lower() in material_reg.lower() or material_reg.lower() in mat_clave.lower():
+                        factor = f_val
+                        break
+                if factor is None:
+                    factor = 1.5
+
+            co2_total += peso_kg * factor
+
+    return round(co2_total, 2)
