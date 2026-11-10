@@ -1203,7 +1203,7 @@ class VentanaGestorReciclaje:
                             )
                             btn_ver_mas.pack(side="left", anchor="nw", padx=(2, 0))
     
-                        def eliminar_con_motivo(i=idx_global, tienda_id=p.get('tienda_id'), titulo=titulo_oferta):
+                        def eliminar_con_motivo(i=p.get('id'), tienda_id=p.get('tienda_id'), titulo=titulo_oferta):
                             motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
                             if not motivo:
                                 messagebox.showwarning("Requerido", "Debe ingresar una justificación para eliminar la oferta.")

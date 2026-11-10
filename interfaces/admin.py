@@ -2,10 +2,11 @@ import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
 import os
 from datos.gestor import (
-    cargar_usuarios, guardar_usuarios, registrar_accion_dev, 
+    cargar_usuarios, guardar_usuarios, registrar_accion_dev,
     cargar_log_devs, cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente,
-    cargar_promociones, guardar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido, 
-    obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin, cargar_entregas_reciclaje
+    cargar_promociones, guardar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido,
+    obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin, cargar_entregas_reciclaje,
+    UsuarioConHistorialError
 )
 from logica.modelos import Material
 
@@ -1254,7 +1255,11 @@ class VentanaAdmin:
         if messagebox.askyesno("Confirmar", f"¿Eliminar permanentemente la cuenta de {usuarios[uid]['nombre']}?"):
             nom_removido = usuarios[uid]['nombre']
             del usuarios[uid]
-            guardar_usuarios(usuarios)
+            try:
+                guardar_usuarios(usuarios)
+            except UsuarioConHistorialError as e:
+                messagebox.showerror("No se puede eliminar", str(e))
+                return
             registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "ELIMINAR_CUENTA", f"Eliminó la cuenta {uid} ({nom_removido})")
             self.actualizar_tablas()
             self.llenar_todos_los_combos()
@@ -1545,7 +1550,7 @@ class VentanaAdmin:
                         )
                         btn_ver_mas.pack(side="left", anchor="nw", padx=(2, 0))
 
-                    def eliminar_con_motivo(i=idx_global, tienda_id=p.get('tienda_id'), titulo=titulo_oferta):
+                    def eliminar_con_motivo(i=p.get('id'), tienda_id=p.get('tienda_id'), titulo=titulo_oferta):
                         motivo = self.pedir_texto_custom("Eliminar Oferta", f"Motivo de eliminación para '{titulo}':")
                         if not motivo:
                             messagebox.showwarning("Requerido", "Debe ingresar una justificación para eliminar la oferta.")

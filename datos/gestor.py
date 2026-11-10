@@ -1,251 +1,379 @@
-import json
 import os
 from datetime import datetime
 
-RUTA_USUARIOS = os.path.join("datos", "usuarios.json")
-RUTA_GESTORES = os.path.join("datos", "gestor.json")
-RUTA_LOG_DEVS = os.path.join("datos", "log_desarrolladores.json")
-RUTA_LOG_TIENDAS = os.path.join("datos", "log_tiendas.json")
-RUTA_LOG_CLIENTES = os.path.join("datos", "log_clientes.json")
-RUTA_PROMOCIONES = os.path.join("datos", "promociones.json")
-RUTA_CHAT = os.path.join("datos", "chat.json")
-RUTA_ENTREGAS = os.path.join("datos", "entregas.json")
+import psycopg2
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-# --- CARGA Y GUARDADO DE USUARIOS Y GESTORES ---
+class UsuarioConHistorialError(Exception):
+    """Se lanza al intentar eliminar un usuario que tiene filas asociadas
+    en otras tablas (logs, chat, promociones, entregas)."""
+    pass
+
+
+def _conectar():
+    return psycopg2.connect(
+        host=os.environ["DB_HOST"],
+        port=os.environ["DB_PORT"],
+        dbname=os.environ["DB_NAME"],
+        user=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"],
+    )
+
+
+def _filas_a_dicts(cur):
+    columnas = [desc[0] for desc in cur.description]
+    return [dict(zip(columnas, fila)) for fila in cur.fetchall()]
+
+
+def _a_numero_o_none(valor):
+    """Normaliza campos numéricos que en el JSON viejo podían ser 'N/A' o texto suelto."""
+    if valor is None:
+        return None
+    if isinstance(valor, (int, float)):
+        return valor
+    try:
+        return float(valor)
+    except (TypeError, ValueError):
+        return None
+
+
+# --- USUARIOS ---
 
 def cargar_usuarios():
-    if not os.path.exists(RUTA_USUARIOS):
-        return {}
-    with open(RUTA_USUARIOS, "r", encoding="utf-8") as f:
-        return json.load(f)
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM usuarios")
+        filas = _filas_a_dicts(cur)
+        return {f["id"]: {k: v for k, v in f.items() if k != "id"} for f in filas}
+    finally:
+        conn.close()
+
 
 def guardar_usuarios(datos):
-    with open(RUTA_USUARIOS, "w", encoding="utf-8") as f:
-        json.dump(datos, f, indent=4, ensure_ascii=False)
+    """Reemplaza el estado completo de usuarios: upsert de todos los presentes
+    en 'datos' y elimina los que ya no estan (igual que el guardado por
+    sobre-escritura total que se hacia antes con el .json).
 
-def cargar_gestores():
-    """Carga la lista o diccionario de gestores de reciclaje desde datos/gestor.json."""
-    if not os.path.exists(RUTA_GESTORES):
-        return {}
+    Lanza UsuarioConHistorialError si se intenta eliminar un usuario que
+    todavia tiene filas asociadas en otras tablas (logs, chat, promociones,
+    entregas) — Postgres lo bloquea por llave foranea en vez de dejar
+    registros huerfanos sueltos como hacia el JSON."""
+    conn = _conectar()
     try:
-        with open(RUTA_GESTORES, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return {}
+        cur = conn.cursor()
+        ids_actuales = list(datos.keys())
+        if ids_actuales:
+            cur.execute("DELETE FROM usuarios WHERE id != ALL(%s)", (ids_actuales,))
+        else:
+            cur.execute("DELETE FROM usuarios")
 
-def guardar_gestores(datos):
-    """Guarda la información de gestores en datos/gestor.json."""
-    with open(RUTA_GESTORES, "w", encoding="utf-8") as f:
-        json.dump(datos, f, indent=4, ensure_ascii=False)
-
-
-# --- LOGS AUXILIARES ---
-
-def _cargar_log(ruta):
-    if not os.path.exists(ruta):
-        return []
-    with open(ruta, "r", encoding="utf-8") as f:
-        return json.load(f)
-
-def _guardar_log(ruta, lista_log):
-    with open(ruta, "w", encoding="utf-8") as f:
-        json.dump(lista_log, f, indent=4, ensure_ascii=False)
+        for uid, u in datos.items():
+            cur.execute(
+                """
+                INSERT INTO usuarios
+                    (id, rol, nombre, correo, clave, telefono, puntos,
+                     suspendido, motivo_suspension, justificacion_cliente,
+                     pregunta_secreta, respuesta_secreta)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (id) DO UPDATE SET
+                    rol = EXCLUDED.rol,
+                    nombre = EXCLUDED.nombre,
+                    correo = EXCLUDED.correo,
+                    clave = EXCLUDED.clave,
+                    telefono = EXCLUDED.telefono,
+                    puntos = EXCLUDED.puntos,
+                    suspendido = EXCLUDED.suspendido,
+                    motivo_suspension = EXCLUDED.motivo_suspension,
+                    justificacion_cliente = EXCLUDED.justificacion_cliente,
+                    pregunta_secreta = EXCLUDED.pregunta_secreta,
+                    respuesta_secreta = EXCLUDED.respuesta_secreta
+                """,
+                (
+                    uid,
+                    u.get("rol"),
+                    u.get("nombre"),
+                    u.get("correo"),
+                    u.get("clave"),
+                    u.get("telefono"),
+                    _a_numero_o_none(u.get("puntos")),
+                    u.get("suspendido", False),
+                    u.get("motivo_suspension", ""),
+                    u.get("justificacion_cliente", ""),
+                    u.get("pregunta_secreta"),
+                    u.get("respuesta_secreta"),
+                ),
+            )
+        conn.commit()
+    except psycopg2.errors.ForeignKeyViolation as e:
+        conn.rollback()
+        detalle = (e.diag.message_detail or "").strip()
+        raise UsuarioConHistorialError(
+            "No se puede eliminar: el usuario tiene historial de actividad registrado "
+            "(compras, chats, promociones o entregas).\n" + detalle
+        )
+    finally:
+        conn.close()
 
 
 # --- FUNCIONES DE REGISTRO / AUDITORÍA ---
 
 def registrar_accion_dev(id_dev, nombre_dev, accion, objetivo):
     """Guarda acciones realizadas por administradores"""
-    logs = _cargar_log(RUTA_LOG_DEVS)
-    logs.append({
-        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "autor_id": id_dev,
-        "autor_nombre": nombre_dev,
-        "accion": accion,
-        "objetivo": objetivo
-    })
-    _guardar_log(RUTA_LOG_DEVS, logs)
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO log_desarrolladores (fecha, autor_id, autor_nombre, accion, objetivo)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (datetime.now(), id_dev, nombre_dev, accion, objetivo),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 def registrar_accion_tienda(id_tienda, nombre_tienda, dni_cliente, puntos_canjeados):
     """Guarda canjes procesados por tiendas"""
-    logs = _cargar_log(RUTA_LOG_TIENDAS)
-    logs.append({
-        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "tienda_id": id_tienda,
-        "tienda_nombre": nombre_tienda,
-        "dni_cliente": dni_cliente,
-        "puntos_descontados": puntos_canjeados
-    })
-    _guardar_log(RUTA_LOG_TIENDAS, logs)
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO log_tiendas (fecha, tienda_id, tienda_nombre, dni_cliente, puntos_descontados)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (datetime.now(), id_tienda, nombre_tienda, dni_cliente, puntos_canjeados),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 def registrar_accion_cliente(dni_cliente, tipo_operacion, puntos, detalle):
     """Guarda actividad de clientes/vecinos (Abonos por reciclaje, compras, etc)"""
-    logs = _cargar_log(RUTA_LOG_CLIENTES)
-    logs.append({
-        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "dni_cliente": dni_cliente,
-        "tipo": tipo_operacion,
-        "puntos": puntos,
-        "detalle": detalle
-    })
-    _guardar_log(RUTA_LOG_CLIENTES, logs)
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO log_clientes (fecha, dni_cliente, tipo, puntos, detalle)
+            VALUES (%s, %s, %s, %s, %s)
+            """,
+            (datetime.now(), dni_cliente, tipo_operacion, puntos, detalle),
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
-# Carga de Logs para la Interfaz
+
+def _cargar_tabla(nombre_tabla, orden="fecha"):
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute(f"SELECT * FROM {nombre_tabla} ORDER BY {orden}")
+        return _filas_a_dicts(cur)
+    finally:
+        conn.close()
+
+
 def cargar_log_devs():
-    return _cargar_log(RUTA_LOG_DEVS)
+    return _cargar_tabla("log_desarrolladores")
+
 
 def cargar_log_tiendas():
-    return _cargar_log(RUTA_LOG_TIENDAS)
+    return _cargar_tabla("log_tiendas")
+
 
 def cargar_log_clientes():
-    return _cargar_log(RUTA_LOG_CLIENTES)
+    return _cargar_tabla("log_clientes")
 
 
 # --- PROMOCIONES ---
 
 def cargar_promociones():
-    if not os.path.exists(RUTA_PROMOCIONES):
-        return []
-    try:
-        with open(RUTA_PROMOCIONES, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return _cargar_tabla("promociones", orden="id")
+
 
 def guardar_promociones(lista_promos):
-    with open(RUTA_PROMOCIONES, "w", encoding="utf-8") as f:
-        json.dump(lista_promos, f, ensure_ascii=False, indent=4)
+    """Reemplaza el estado completo de promociones: upsert de cada item
+    presente (si trae 'id' se actualiza esa fila, si no, se inserta una
+    nueva) y elimina las que ya no estan en la lista — igual semantica de
+    sobre-escritura total que 'guardar_usuarios', necesaria porque
+    negocio.py depende de que una promo agotada o borrada desaparezca de
+    verdad de la tabla, no solo de la lista en memoria."""
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        ids_actuales = [p["id"] for p in lista_promos if p.get("id") is not None]
+        if ids_actuales:
+            cur.execute("DELETE FROM promociones WHERE id != ALL(%s)", (ids_actuales,))
+        else:
+            cur.execute("DELETE FROM promociones")
 
-def eliminar_promocion(indice_promo, id_tienda, nombre_tienda):
+        for p in lista_promos:
+            if p.get("id") is not None:
+                cur.execute(
+                    """
+                    UPDATE promociones SET
+                        tienda_id = %s, tienda_nombre = %s, titulo = %s, categoria = %s,
+                        descripcion = %s, precio_soles = %s, puntos = %s, foto = %s, stock = %s
+                    WHERE id = %s
+                    """,
+                    (
+                        p.get("tienda_id"), p.get("tienda_nombre"), p.get("titulo"), p.get("categoria"),
+                        p.get("descripcion"), p.get("precio_soles"), p.get("puntos"), p.get("foto"),
+                        p.get("stock"), p["id"],
+                    ),
+                )
+            else:
+                cur.execute(
+                    """
+                    INSERT INTO promociones
+                        (tienda_id, tienda_nombre, titulo, categoria, descripcion, precio_soles, puntos, foto, stock)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        p.get("tienda_id"), p.get("tienda_nombre"), p.get("titulo"), p.get("categoria"),
+                        p.get("descripcion"), p.get("precio_soles"), p.get("puntos"), p.get("foto"),
+                        p.get("stock"),
+                    ),
+                )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def eliminar_promocion(id_promo, id_tienda, nombre_tienda):
     """Elimina una promoción perteneciendo al comercio especificado."""
-    promos = cargar_promociones()
-    if 0 <= indice_promo < len(promos):
-        promo = promos[indice_promo]
-        if str(promo.get("tienda_id")) == str(id_tienda):
-            promos.pop(indice_promo)
-            guardar_promociones(promos)
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT tienda_id FROM promociones WHERE id = %s", (id_promo,))
+        fila = cur.fetchone()
+        if fila and str(fila[0]) == str(id_tienda):
+            cur.execute("DELETE FROM promociones WHERE id = %s", (id_promo,))
+            conn.commit()
             return True
-    return False
+        return False
+    finally:
+        conn.close()
 
-def eliminar_promocion_admin(indice_promo, id_tienda, motivo, autor_admin):
+
+def eliminar_promocion_admin(id_promo, id_tienda, motivo, autor_admin):
     """Elimina una promoción desde el panel de administración y notifica a la tienda."""
-    promos = cargar_promociones()
-    if 0 <= indice_promo < len(promos):
-        promo_eliminada = promos.pop(indice_promo)
-        guardar_promociones(promos)
-        
-        # Envía mensaje de notificación automática
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT titulo FROM promociones WHERE id = %s", (id_promo,))
+        fila = cur.fetchone()
+        if not fila:
+            return False
+        titulo = fila[0]
+        cur.execute("DELETE FROM promociones WHERE id = %s", (id_promo,))
+        conn.commit()
+
         guardar_mensaje_chat(
             dni_cliente=str(id_tienda),
             autor_nombre=autor_admin,
             rol_autor="admin",
-            mensaje=f"🚨 AVISO DE SISTEMA: Su oferta '{promo_eliminada.get('titulo')}' ha sido ELIMINADA por administración.\nMotivo: {motivo}"
+            mensaje=f"🚨 AVISO DE SISTEMA: Su oferta '{titulo}' ha sido ELIMINADA por administración.\nMotivo: {motivo}"
         )
         return True
-    return False
+    finally:
+        conn.close()
 
 
-# --- CHAT USUARIO A DESARROLLADORES ---
+# --- CHAT USUARIO A DESARROLLADORES/ADMINS ---
 
 def cargar_mensajes_chat():
-    if not os.path.exists(RUTA_CHAT):
-        return []
-    try:
-        with open(RUTA_CHAT, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return []
+    return _cargar_tabla("chat")
+
 
 def guardar_mensaje_chat(dni_cliente, autor_nombre, rol_autor, mensaje):
-    mensajes = cargar_mensajes_chat()
-    nuevo_msg = {
-        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "dni_cliente": dni_cliente,
-        "autor": autor_nombre,
-        "rol": rol_autor,
-        "mensaje": mensaje,
-        "leido": False
-    }
-    mensajes.append(nuevo_msg)
-    with open(RUTA_CHAT, "w", encoding="utf-8") as f:
-        json.dump(mensajes, f, ensure_ascii=False, indent=4)
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO chat (fecha, dni_cliente, autor, rol, mensaje, leido)
+            VALUES (%s, %s, %s, %s, %s, FALSE)
+            """,
+            (datetime.now(), dni_cliente, autor_nombre, rol_autor, mensaje),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 def marcar_chat_como_leido(dni_cliente, rol_lector):
     """Marca como leídos los mensajes pendientes según quién los esté leyendo."""
-    if not os.path.exists(RUTA_CHAT):
-        return
-    mensajes = cargar_mensajes_chat()
-    modificado = False
-    
-    for m in mensajes:
-        if m.get("dni_cliente") == dni_cliente:
-            if rol_lector in ["admin", "desarrollador"] and m.get("rol") == "vecino" and not m.get("leido", True):
-                m["leido"] = True
-                modificado = True
-            elif rol_lector == "vecino" and m.get("rol") in ["admin", "desarrollador"] and not m.get("leido", True):
-                m["leido"] = True
-                modificado = True
-                
-    if modificado:
-        try:
-            with open(RUTA_CHAT, "w", encoding="utf-8") as f:
-                json.dump(mensajes, f, indent=4, ensure_ascii=False)
-        except Exception:
-            pass
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        if rol_lector in ["admin", "desarrollador", "gestor de reciclaje", "gestor"]:
+            cur.execute(
+                """
+                UPDATE chat SET leido = TRUE
+                WHERE dni_cliente = %s AND rol = 'vecino' AND leido = FALSE
+                """,
+                (dni_cliente,),
+            )
+        elif rol_lector == "vecino":
+            cur.execute(
+                """
+                UPDATE chat SET leido = TRUE
+                WHERE dni_cliente = %s AND rol IN ('admin', 'desarrollador', 'gestor de reciclaje', 'gestor') AND leido = FALSE
+                """,
+                (dni_cliente,),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 def obtener_puntos_recolectados_por_tienda(id_tienda):
-    """Calcula el total de puntos extraídos/canjeados por una tienda específica."""
-    log_tiendas = cargar_log_tiendas()
-    total_pts = 0.0
-    for reg in log_tiendas:
-        tid = str(reg.get("tienda_id", reg.get("id_tienda", "")))
-        if tid == str(id_tienda):
-            try:
-                pts = float(reg.get("puntos_descontados", reg.get("puntos", 0)))
-                total_pts += pts
-            except (ValueError, TypeError):
-                pass
-    return round(total_pts, 1)
+    """Calcula el total de puntos extraidos/canjeados por una tienda especifica."""
+    conn = _conectar()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COALESCE(SUM(puntos_descontados), 0) FROM log_tiendas WHERE tienda_id = %s",
+            (str(id_tienda),),
+        )
+        total = cur.fetchone()[0]
+        return round(float(total), 1)
+    finally:
+        conn.close()
 
 
-# --- REGISTRO DE ENTREGAS DE RECICLAJE ---
+# --- FUNCIONES DE REGISTRO DE ENTREGAS DE RECICLAJE ---
 
 def registrar_entrega_reciclaje(tienda_id, dni_cliente, material, peso_kg, puntos):
-    """Registra una entrega física de reciclaje en datos/entregas.json."""
-    entregas = []
-    if os.path.exists(RUTA_ENTREGAS):
-        try:
-            with open(RUTA_ENTREGAS, "r", encoding="utf-8") as f:
-                entregas = json.load(f)
-        except Exception:
-            entregas = []
-
-    nueva_entrega = {
-        "fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "tienda_id": str(tienda_id),
-        "dni_cliente": str(dni_cliente),
-        "material": str(material),
-        "peso_kg": float(peso_kg),
-        "puntos": int(puntos)
-    }
-    
-    entregas.append(nueva_entrega)
+    """Registra una entrega física de reciclaje en la tabla entregas."""
+    conn = _conectar()
     try:
-        with open(RUTA_ENTREGAS, "w", encoding="utf-8") as f:
-            json.dump(entregas, f, indent=4, ensure_ascii=False)
-    except Exception as e:
-        print(f"Error al guardar entrega: {e}")
+        cur = conn.cursor()
+        cur.execute(
+            """
+            INSERT INTO entregas (fecha, tienda_id, dni_cliente, material, peso_kg, puntos)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """,
+            (datetime.now(), str(tienda_id), str(dni_cliente), str(material), float(peso_kg), int(puntos)),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
 
 def cargar_entregas_reciclaje():
-    """Carga todas las entregas de reciclaje registradas desde datos/entregas.json."""
-    if os.path.exists(RUTA_ENTREGAS):
-        try:
-            with open(RUTA_ENTREGAS, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
+    """Carga todas las entregas de reciclaje registradas."""
+    return _cargar_tabla("entregas")
 
 
 # --- CÁLCULO DE CO2 ---
@@ -264,6 +392,7 @@ CO2_POR_KG = {
     "Componentes informáticos": 5.20
 }
 
+
 def calcular_co2_evitado_vecino(id_usuario):
     """
     Calcula dinámicamente el total de CO2 evitado sumando las entregas registradas
@@ -276,7 +405,7 @@ def calcular_co2_evitado_vecino(id_usuario):
         usr_id = str(entrega.get("id_usuario", entrega.get("dni_cliente", "")))
         if usr_id == str(id_usuario):
             material_reg = str(entrega.get("material", "")).strip()
-            
+
             try:
                 peso_kg = float(entrega.get("peso_kg", entrega.get("peso", 0.0)))
             except (ValueError, TypeError):
