@@ -82,24 +82,61 @@ Eso saca el archivo del control de versiones **sin borrarlo de tu disco**. A par
 **Los `datos/*.json` ya NO son la base de datos.** Se archivaron en `datos/_archivo/` solo como respaldo histórico — el código ya no los lee ni los escribe. Ahora todo pasa por una base de datos PostgreSQL compartida (gratis, en Supabase), a través del mismo `datos/gestor.py` de siempre (mismas funciones, mismos nombres — tus interfaces no cambian en nada).
 
 **Qué significa esto para ti:**
-- ✅ Se acabó el problema de "cada quien con su propio `usuarios.json`" — todos ven los mismos datos en tiempo real.
+- ✅ Se acabó el problema de "cada quien con su propio `usuarios.json`" — todos ven los mismos datos en tiempo real, sin copiar archivos ni resolver conflictos de merge en ellos.
 - ⚠️ **Ahora necesitas internet para correr la app.** Antes podías trabajar sin conexión, ya no.
 - ⚠️ Necesitas un archivo `.env` local con las credenciales de conexión (NUNCA se sube a GitHub, ya está en `.gitignore`).
+- ⚠️ Si intentas eliminar una cuenta que ya tiene actividad registrada (compras, chats, reciclajes, promos), la app te va a avisar con un mensaje en vez de dejarte borrarla — es nuevo, antes el JSON lo permitía sin avisar y dejaba datos huérfanos sueltos.
 
-**Setup (una sola vez):**
-1. Pídele a Jair las credenciales de la base (host, usuario, contraseña).
+### 📍 Dónde va cada archivo, y por qué ahí
+
+| Archivo | Ubicación | Por qué ahí |
+|---|---|---|
+| `.env` (el tuyo, con tus credenciales reales) | **Raíz del proyecto**, al mismo nivel que `main.py` y `requirements.txt` | La librería `python-dotenv` (`load_dotenv()` en `datos/gestor.py`) busca el archivo `.env` en la carpeta donde se ejecuta Python — si lo pones en otro lado, simplemente no lo va a encontrar y la conexión falla. |
+| `.env.example` (plantilla, sin datos reales) | Raíz del proyecto, **sí se sube a GitHub** | Es solo el "molde" con los nombres de variable que hacen falta, para que cualquiera sepa qué pedir sin exponer la contraseña real. |
+
+Tu `.env` final debe tener exactamente estas 5 líneas, con los valores reales que te pase Jair:
+```
+DB_HOST=aws-0-us-east-1.pooler.supabase.com
+DB_PORT=5432
+DB_NAME=postgres
+DB_USER=postgres.rwwesfnxlmantwnygvtt
+DB_PASSWORD=la-contraseña-real
+```
+
+### 🔧 Setup (una sola vez, por persona)
+
+1. Pídele a Jair las credenciales de la base (host, usuario, contraseña) — **por mensaje privado, no en el grupo**.
 2. Copia `.env.example` como `.env` en la raíz del proyecto:
    ```bash
+   # Git Bash / Mac / Linux
    cp .env.example .env
    ```
-3. Completa los valores reales en `.env` (el archivo que te quedó de copiar el ejemplo).
-4. Instala las dependencias nuevas (ya están en `requirements.txt`):
+   ```powershell
+   # PowerShell / CMD de Windows
+   copy .env.example .env
+   ```
+3. Abre el `.env` que se creó y reemplaza cada valor por el real que te pasó Jair.
+4. Instala las dependencias nuevas (ya están declaradas en `requirements.txt`, solo falta instalarlas en tu entorno):
    ```bash
    pip install -r requirements.txt
    ```
-5. Corre la app normalmente: `python main.py`
+5. Corre la app exactamente igual que siempre: `python main.py` — no cambia el comando, solo lo que pasa por detrás.
+
+### ✅ Cómo confirmar que tu conexión funciona antes de abrir la app
+
+Corre esto — si imprime `Conexión OK`, ya puedes usar la app con total normalidad:
+```bash
+python -c "import os; from dotenv import load_dotenv; import psycopg2; load_dotenv(); psycopg2.connect(host=os.environ['DB_HOST'], port=os.environ['DB_PORT'], dbname=os.environ['DB_NAME'], user=os.environ['DB_USER'], password=os.environ['DB_PASSWORD'], connect_timeout=10); print('Conexión OK')"
+```
 
 **Si te sale un error de conexión** (`could not translate host name` o similar): probablemente tu red no tiene IPv6. Pídele a Jair la cadena de conexión del **"Session pooler"** de Supabase (no la de "Direct connection") — es compatible con cualquier red.
+
+### 💡 Recomendaciones importantes
+
+- **Nunca pegues tu `.env` ni la contraseña en el chat del grupo ni en un commit/PR** — es la credencial de toda la base compartida, pídela/pásala siempre en privado.
+- **No edites manualmente los datos desde el SQL Editor de Supabase "por las dudas"** sin avisar al equipo — a diferencia del JSON, ahora un cambio ahí lo ven todos al instante.
+- Si after un `git pull` la app deja de conectar, lo primero a revisar es que tu `.env` siga teniendo los 5 campos completos (un `git pull` nunca lo toca, pero por si acaso).
+- Si vas a estar sin internet (viaje, etc.) avísale al equipo — la app no va a poder abrir sesión sin conexión mientras dure la migración vigente.
 
 ---
 
