@@ -46,7 +46,7 @@ class VentanaVecino:
         # --- 2. CONFIGURACIÓN NORMAL DE LA VENTANA ---
         self.root.config(bg=COLOR_FONDO_VECINO)
         self.root.title("EcoPuntos - Mi Cuenta Vecinal")
-        self.root.geometry("950x680")
+        self.root.geometry("1020x740")
         self.root.resizable(False, False)
 
         self.aplicar_icono()
@@ -393,7 +393,26 @@ class VentanaVecino:
         self.verificar_mensajes_nuevos_vecino()
 
         # Botón Cerrar Sesión
-        tk.Button(self.root, text="🚪 Cerrar Sesión", bg="#757575", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self.cerrar_sesion_cb, cursor="hand2", pady=4).pack(pady=8)
+        COLOR_FONDO_VERDE = "#E8F5E9"  # Ajusta al hexadecimal exacto de tu fondo verde
+        footer_frame = tk.Frame(self.root, bg=COLOR_FONDO_VERDE)
+        footer_frame.pack(side="bottom", fill="x", pady=10)
+
+        # 2. Botón estandarizado centrado exactamente como en Admin
+        self.btn_cerrar_sesion = tk.Button(
+            footer_frame, 
+            text="🚪 Cerrar Sesión", 
+            bg="#5C6B73",                   
+            fg="white", 
+            font=("Arial", 10, "bold"), 
+            relief="flat", 
+            cursor="hand2",
+            padx=20,
+            pady=6,
+            command=self.cerrar_sesion_cb
+        )
+        # 3. Alineación centrada 
+        self.btn_cerrar_sesion.pack(anchor="center")
+
 
     def mostrar_terminos_vecino(self):
         win_tyc = tk.Toplevel(self.root)
