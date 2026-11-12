@@ -8,7 +8,7 @@ from datos.gestor import (
     obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin, cargar_entregas_reciclaje,
     UsuarioConHistorialError
 )
-from logica.modelos import Material
+
 
 # Importación de matplotlib para renderizar el gráfico estadístico global
 try:
