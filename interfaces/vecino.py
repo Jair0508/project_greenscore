@@ -460,45 +460,7 @@ class VentanaVecino:
         txt_box.config(state="disabled")
 
         tk.Button(win_tyc, text="Entendido 👍", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), command=win_tyc.destroy, padx=20, pady=8, cursor="hand2").pack(pady=12)
-
-    def mostrar_guia_condiciones(self):
-        ventana_guia = tk.Toplevel(self.root)
-        ventana_guia.title("📋 Condiciones para Entregar tus Materiales - EcoPuntos")
-        ventana_guia.geometry("580x520")
-        ventana_guia.resizable(False, False)
-        ventana_guia.grab_set()
-
-        frame_head = tk.Frame(ventana_guia, bg="#2E7D32", pady=12)
-        frame_head.pack(fill="x")
-        tk.Label(frame_head, text="🌱 Requisitos para Validar tus Puntos", font=("Arial", 13, "bold"), fg="white", bg="#2E7D32").pack()
-        tk.Label(frame_head, text="Asegúrate de cumplir con estos estándares para evitar rechazos en el centro de acopio.", font=("Arial", 9), fg="#E8F5E9", bg="#2E7D32").pack()
-
-        canvas = tk.Canvas(ventana_guia, bg="#F5F5F5", highlightthickness=0)
-        scrollbar = ttk.Scrollbar(ventana_guia, orient="vertical", command=canvas.yview)
-        scroll_frame = tk.Frame(canvas, bg="#F5F5F5", padx=15, pady=10)
-
-        scroll_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-        canvas.create_window((0, 0), window=scroll_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        materiales_info = [
-            {"titulo": "🧴 PLÁSTICO (PET / PEAD - Botellas y Envases)", "color": "#1E88E5", "puntos": ["✔️ Limpios y 100% secos.", "✔️ Aplastados o compactados.", "✔️ Sin tapas ni etiquetas pesadas."]},
-            {"titulo": "📦 CARTÓN Y PAPEL", "color": "#F57C00", "puntos": ["✔️ Completamente secos.", "✔️ Desarmados y plegados.", "✔️ Sin cintas ni broches."]},
-            {"titulo": "🍾 VIDRIO", "color": "#388E3C", "puntos": ["✔️ Enjuagados y sin tapas.", "✔️ Botellas ENTERAS.", "⚠️ NO vidrios rotos."]},
-            {"titulo": "🥫 METAL Y LATAS", "color": "#7B1FA2", "puntos": ["✔️ Sin restos de comida.", "✔️ Latas aplastadas.", "✔️ Libres de tóxicos."]}
-        ]
-
-        for mat in materiales_info:
-            card = tk.LabelFrame(scroll_frame, text=f" {mat['titulo']} ", font=("Arial", 10, "bold"), fg=mat["color"], bg="white", bd=1, relief="solid", padx=10, pady=8)
-            card.pack(fill="x", pady=6)
-            for p in mat["puntos"]:
-                tk.Label(card, text=p, font=("Arial", 9), bg="white", anchor="w", justify="left").pack(fill="x", anchor="w", pady=2)
-
-        tk.Button(ventana_guia, text="Entendido 👍", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), relief="flat", command=ventana_guia.destroy, cursor="hand2", pady=6).pack(fill="x", padx=15, pady=8)
-
+     
     def obtener_rango_vecino(self, puntos):
         try:
             pts = int(float(puntos))

@@ -8,7 +8,7 @@ from datos.gestor import (
     obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin, cargar_entregas_reciclaje,
     UsuarioConHistorialError
 )
-from logica.modelos import Material
+
 
 # Importación de matplotlib para renderizar el gráfico estadístico global
 try:
@@ -28,7 +28,6 @@ COLOR_TEXTO_MAIN     = "#0F2537"  # Azul Marino Oscuro Profundo (Reemplazo de ne
 COLOR_AZUL_HEADER    = "#1A365D"  # Azul Noche / Ejecutivo (Header Principal)
 COLOR_PRIMARIO_AZUL  = "#2563EB"  # Azul Cobalto Vivo (Botones / Acciones Clave)
 COLOR_SECUNDARIO_AZUL= "#3B82F6"  # Azul Real / Bordes Activos
-COLOR_ACENTO_CIAN    = "#0891B2"  # Azul Cian / Resaltados
 COLOR_BLANCO         = "#FFFFFF"  # Blanco Puro para tarjetas e inputs
 COLOR_ROJO_ALERTA    = "#DC2626"  # Rojo para suspensiones y eliminaciones
 COLOR_GRIS_BOTON     = "#64748B"  # Gris Pizarra para cerrar sesión / cancelar
@@ -360,7 +359,7 @@ class VentanaAdmin:
                 ]
                 colores_usados = [colores_vivos[i % len(colores_vivos)] for i in range(len(materiales))]
 
-                wedges, texts, autotexts = ax.pie(
+                wedges, _, autotexts = ax.pie(
                     kilos, 
                     labels=None, 
                     autopct='%1.1f%%', 
@@ -680,19 +679,7 @@ class VentanaAdmin:
         style.configure("Treeview", background=COLOR_BLANCO, foreground=COLOR_TEXTO_MAIN, fieldbackground=COLOR_BLANCO, rowheight=25)
         style.configure("Treeview.Heading", background=COLOR_FONDO_APP, foreground=COLOR_TEXTO_MAIN, font=("Arial", 9, "bold"))
 
-    def verificar_estado_seleccionado(self, event):
-        widget_actual = event.widget
-        seleccion = widget_actual.selection()
-        if not seleccion: return
-
-        item_values = widget_actual.item(seleccion[0], "values")
-        if len(item_values) > 3:
-            estado_texto = str(item_values[3])
-            if "SUSPENDIDO" in estado_texto:
-                self.btn_suspender.config(bg="#7F1D1D", text="🛑 CUENTA SUSPENDIDA")
-            else:
-                self.btn_suspender.config(bg="#B91C1C", text="🛑 Suspender Cuenta")
-
+    
     def obtener_rango_vecino(self, puntos):
         try:
             pts = int(float(puntos))
@@ -1348,7 +1335,7 @@ class VentanaAdmin:
 
         # 2. Contenedor de tarjetas (frame_grid) con bg="#FFFFFF" en lugar de plomo
         frame_grid = tk.Frame(canvas, bg="#FFFFFF")
-        window_id = canvas.create_window((15, 15), window=frame_grid, anchor="nw")
+        canvas.create_window((15, 15), window=frame_grid, anchor="nw")
 
         def _actualizar_scrollregion(event):
             canvas.configure(scrollregion=canvas.bbox("all"))

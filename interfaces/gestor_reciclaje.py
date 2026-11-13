@@ -278,7 +278,7 @@ class VentanaGestorReciclaje:
                 ]
                 colores_usados = [colores_vivos[i % len(colores_vivos)] for i in range(len(materiales))]
 
-                wedges, texts, autotexts = ax.pie(
+                wedges, _, autotexts = ax.pie(
                     kilos, 
                     labels=None, 
                     autopct='%1.1f%%', 
@@ -1066,7 +1066,7 @@ class VentanaGestorReciclaje:
     
             # 2. Contenedor de tarjetas (frame_grid) con bg="#FFFFFF" en lugar de plomo
             frame_grid = tk.Frame(canvas, bg="#FFFFFF")
-            window_id = canvas.create_window((15, 15), window=frame_grid, anchor="nw")
+            canvas.create_window((15, 15), window=frame_grid, anchor="nw")
     
             def _actualizar_scrollregion(event):
                 canvas.configure(scrollregion=canvas.bbox("all"))

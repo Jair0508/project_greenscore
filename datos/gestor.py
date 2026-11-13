@@ -249,20 +249,7 @@ def guardar_promociones(lista_promos):
         conn.close()
 
 
-def eliminar_promocion(id_promo, id_tienda, nombre_tienda):
-    """Elimina una promoción perteneciendo al comercio especificado."""
-    conn = _conectar()
-    try:
-        cur = conn.cursor()
-        cur.execute("SELECT tienda_id FROM promociones WHERE id = %s", (id_promo,))
-        fila = cur.fetchone()
-        if fila and str(fila[0]) == str(id_tienda):
-            cur.execute("DELETE FROM promociones WHERE id = %s", (id_promo,))
-            conn.commit()
-            return True
-        return False
-    finally:
-        conn.close()
+
 
 
 def eliminar_promocion_admin(id_promo, id_tienda, motivo, autor_admin):
