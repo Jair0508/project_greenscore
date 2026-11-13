@@ -9,7 +9,6 @@ from datos.gestor import (
     registrar_accion_cliente,
     cargar_promociones, 
     guardar_promociones,
-    eliminar_promocion,
     cargar_log_tiendas,
     cargar_log_clientes,
     registrar_entrega_reciclaje,
@@ -35,7 +34,6 @@ COLOR_PRIMARIO       = "#40916C"  # Verde Hoja
 COLOR_SECUNDARIO     = "#52B788"  # Verde Claro Fresco
 COLOR_ACENTO_CANJE   = "#E76F51"  # Terracota Suave
 COLOR_BLANCO         = "#FFFFFF"  # Blanco puro
-COLOR_ROJO_ELIMINAR  = "#C62828"  # Rojo para eliminar
 
 # Categorías específicas e independientes para Bodega
 CATEGORIAS_BODEGA = [
@@ -410,7 +408,7 @@ class VentanaNegocio:
                         ]
                         colores_usados = [colores_vivos[i % len(colores_vivos)] for i in range(len(materiales))]
 
-                        wedges, texts, autotexts = ax.pie(
+                        wedges, _, autotexts = ax.pie(
                             kilos, 
                             labels=None, 
                             autopct='%1.1f%%', 
@@ -1203,7 +1201,7 @@ class VentanaNegocio:
 
         # 3. Contenedor principal para las ofertas
         frame_grid = tk.Frame(canvas, bg=COLOR_BLANCO)
-        window_id = canvas.create_window((15, 15), window=frame_grid, anchor="nw")
+        canvas.create_window((15, 15), window=frame_grid, anchor="nw")
 
         def _actualizar_scrollregion(event):
             canvas.configure(scrollregion=canvas.bbox("all"))
