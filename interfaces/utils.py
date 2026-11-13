@@ -1,8 +1,9 @@
 import os
 import tkinter as tk
 
+"""
 def obtener_imagen_miniatura(ruta_img, ancho=70, alto=70):
-    """Carga y muestra imágenes nativas con Tkinter sin depender de PIL/Pillow."""
+    "Carga y muestra imágenes nativas con Tkinter sin depender de PIL/Pillow."
     if ruta_img and os.path.exists(ruta_img):
         try:
             # Soporta formatos nativos PNG, GIF, PPM/PGM
@@ -18,3 +19,4 @@ def obtener_imagen_miniatura(ruta_img, ancho=70, alto=70):
         except Exception as e:
             print(f"Error procesando imagen {ruta_img}: {e}")
     return None
+"""
