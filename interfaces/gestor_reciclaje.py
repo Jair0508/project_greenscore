@@ -5,7 +5,7 @@ from datos.gestor import (
     cargar_usuarios, guardar_usuarios, registrar_accion_dev, 
     cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente,
     cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido, 
-    obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin, cargar_entregas_reciclaje
+    obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin, cargar_entregas_reciclaje, registrar_entrega_reciclaje
 )
 from logica.modelos import Material
 
@@ -228,6 +228,8 @@ class VentanaGestorReciclaje:
         def actualizar_panel_estadisticas_globales():
             for w in frame_grafico_container.winfo_children():
                 w.destroy()
+            if MATPLOTLIB_DISPONIBLE:
+                plt.close("all")
 
             todas_entregas = cargar_entregas_reciclaje()
             totales_material = {}
@@ -410,6 +412,7 @@ class VentanaGestorReciclaje:
                 ).pack(fill="x", pady=2)
 
         actualizar_panel_estadisticas_globales()
+        self.actualizar_panel_estadisticas_globales = actualizar_panel_estadisticas_globales
 
         cols_tnd = ("fecha", "tienda_id", "tienda_nombre", "dni_cliente", "puntos")
         config_tnd = [
@@ -655,37 +658,88 @@ class VentanaGestorReciclaje:
         win = tk.Toplevel(self.root)
         win.config(bg=COLOR_FONDO_APP)
         win.title(titulo)
-        win.geometry("380x180")
+        win.geometry("290x185")
         win.resizable(False, False)
         win.grab_set()
 
-        if hasattr(self.root, 'icon_img'): win.iconphoto(False, self.root.icon_img)
+        if hasattr(self.root, 'icon_img'):
+            win.iconphoto(False, self.root.icon_img)
 
-        container = tk.Frame(win, bg=COLOR_FONDO_APP, padx=15, pady=15)
+        container = tk.Frame(win, bg=COLOR_FONDO_APP, padx=20, pady=15)
         container.pack(fill="both", expand=True)
 
-        lbl_msg = tk.Label(container, text=mensaje, font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, wraplength=340, justify="center")
-        lbl_msg.pack(pady=(0, 10))
+        lbl_msg = tk.Label(
+            container,
+            text=mensaje,
+            font=("Arial", 10, "bold"),
+            fg=COLOR_TEXTO_MAIN,
+            bg=COLOR_FONDO_APP,
+            wraplength=340,
+            justify="center"
+        )
+        lbl_msg.pack(pady=(5, 10))
 
         entry_var = tk.StringVar()
-        entry = tk.Entry(container, textvariable=entry_var, font=("Arial", 10), width=35, bd=1, relief="solid")
-        entry.pack(pady=5)
+        entry = tk.Entry(
+            container,
+            textvariable=entry_var,
+            font=("Arial", 11),
+            width=30,
+            bd=1,
+            relief="solid",
+            justify="center"
+        )
+        entry.pack(pady=5, ipady=3)
         entry.focus_set()
 
         resultado = {"texto": None}
+
         def confirmar():
             txt = entry_var.get().strip()
             if txt:
                 resultado["texto"] = txt
                 win.destroy()
+            else:
+                messagebox.showwarning("Atención", "Por favor, complete el campo antes de continuar.", parent=win)
 
-        def cancelar(): win.destroy()
+        def cancelar():
+            win.destroy()
+
+        # Contenedor de botones Aceptar y Cancelar
+        frame_botones = tk.Frame(container, bg=COLOR_FONDO_APP)
+        frame_botones.pack(pady=(15, 0))
+
+        btn_aceptar = tk.Button(
+            frame_botones,
+            text="✔ Aceptar",
+            bg="#10B981",
+            fg="white",
+            font=("Arial", 9, "bold"),
+            relief="flat",
+            width=12,
+            cursor="hand2",
+            command=confirmar
+        )
+        btn_aceptar.pack(side="left", padx=8, ipady=4)
+
+        btn_cancelar = tk.Button(
+            frame_botones,
+            text="✖ Cancelar",
+            bg="#EF4444",
+            fg="white",
+            font=("Arial", 9, "bold"),
+            relief="flat",
+            width=12,
+            cursor="hand2",
+            command=cancelar
+        )
+        btn_cancelar.pack(side="left", padx=8, ipady=4)
 
         win.bind("<Return>", lambda e: confirmar())
         win.bind("<Escape>", lambda e: cancelar())
         self.root.wait_window(win)
         return resultado["texto"]
-
+ 
     def toggle_reciclaje_negocio(self):
         """Activa o desactiva el módulo de recepción de reciclaje y estadísticas para una bodega."""
         uid = self.pedir_texto_custom("Toggle Reciclaje", "Ingrese ID/DNI del negocio:")
@@ -776,6 +830,8 @@ class VentanaGestorReciclaje:
             elif tipo in ["CANJE_OFERTA", "CANJE_TIENDA", "REDUCCION_ADMIN"]: self.tabla_cli_canjes.insert("", "end", values=valores)
             elif tipo in ["ENTREGA_OFERTA"]: self.tabla_cli_entregas.insert("", "end", values=valores)
             elif tipo in ["RESEÑA_TIENDA"]: self.tabla_cli_resenas.insert("", "end", values=(fecha, dni, "⭐ Reseña", detalle))
+        if hasattr(self, "actualizar_panel_estadisticas_globales"):
+                self.actualizar_panel_estadisticas_globales()
 
     def dialogo_crear_cuenta(self):
         win_modal = tk.Toplevel(self.root)
@@ -875,13 +931,22 @@ class VentanaGestorReciclaje:
                 
                 usuarios[dni]["puntos"] = puntos_actuales_user + puntos
                 guardar_usuarios(usuarios)
-                
+
+                # 1. Guardar en la tabla de entregas (de aquí lee el gráfico Matplotlib)
+                registrar_entrega_reciclaje(self.id_usuario, dni, mat, float(peso), puntos)
+
+                # 2. Guardar en los logs de historial
                 registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre"), "SUMAR_PUNTOS", f"Abonó {puntos} pts a {dni} por {mat}")
                 registrar_accion_cliente(dni, "ABONO_RECICLAJE", puntos, f"Reciclaje de {mat} ({peso} kg)")
-                
+
+                # 3. Actualizar tablas y redibujar el gráfico de estadísticas
                 self.actualizar_tablas()
+                if hasattr(self, "actualizar_panel_estadisticas_globales"):
+                    self.actualizar_panel_estadisticas_globales()
+
                 win_modal.destroy()
                 messagebox.showinfo("Éxito", f"Se sumaron {puntos} puntos.")
+
             except ValueError:
                 messagebox.showerror("Error", "Solamente números enteros", parent=win_modal)
 
