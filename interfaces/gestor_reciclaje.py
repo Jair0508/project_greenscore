@@ -930,7 +930,6 @@ class VentanaGestorReciclaje:
                 puntos_actuales_user = int(float(usuarios[dni].get("puntos", 0)))
                 
                 usuarios[dni]["puntos"] = puntos_actuales_user + puntos
-                usuarios[dni]["puntos"] = puntos_actuales_user + puntos
                 guardar_usuarios(usuarios)
 
                 # 1. Guardar en la tabla de entregas (de aquí lee el gráfico Matplotlib)
