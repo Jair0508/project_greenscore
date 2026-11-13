@@ -832,7 +832,7 @@ class VentanaAdmin:
         win = tk.Toplevel(self.root)
         win.config(bg=COLOR_FONDO_APP)
         win.title(titulo)
-        win.geometry("380x180")
+        win.geometry("290x160")
         win.resizable(False, False)
         win.grab_set()
 
