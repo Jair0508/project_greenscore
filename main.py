@@ -56,35 +56,35 @@ class AppPrincipal:
 
         # 2. MARCO CONTENEDOR (Tarjeta Blanca con Borde Verde Claro)
         frame_box = tk.Frame(
-            self.root, 
-            bg=COLOR_BLANCO, 
-            bd=1, 
-            relief="solid", 
+            self.root,
+            bg=COLOR_BLANCO,
+            bd=1,
+            relief="solid",
             highlightbackground=COLOR_SECUNDARIO,
             highlightthickness=1,
-            padx=20, 
+            padx=20,
             pady=20
         )
         frame_box.pack(pady=30, padx=30, fill="both")
 
         # Título "Acceso al Sistema"
         tk.Label(
-            frame_box, 
-            text="Acceso al Sistema", 
-            font=("Arial", 12, "bold"), 
-            fg=COLOR_TEXTO_MAIN, 
+            frame_box,
+            text="Acceso al Sistema",
+            font=("Arial", 12, "bold"),
+            fg=COLOR_TEXTO_MAIN,
             bg=COLOR_BLANCO
         ).pack(anchor="w", pady=(0, 10))
 
         # Usuario / DNI
         tk.Label(frame_box, text="Usuario / DNI:", font=("Arial", 10, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_BLANCO).pack(anchor="w", pady=(5, 2))
         self.ent_user = tk.Entry(
-            frame_box, 
-            font=("Arial", 11), 
-            bg=COLOR_FONDO_APP, 
+            frame_box,
+            font=("Arial", 11),
+            bg=COLOR_FONDO_APP,
             fg=COLOR_TEXTO_MAIN,
-            relief="flat", 
-            highlightthickness=1, 
+            relief="flat",
+            highlightthickness=1,
             highlightbackground=COLOR_SECUNDARIO
         )
         self.ent_user.pack(fill="x", pady=(0, 10), ipady=3)
@@ -93,13 +93,13 @@ class AppPrincipal:
         # Contraseña
         tk.Label(frame_box, text="Contraseña:", font=("Arial", 10, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_BLANCO).pack(anchor="w", pady=(5, 2))
         self.ent_pass = tk.Entry(
-            frame_box, 
-            show="*", 
-            font=("Arial", 11), 
-            bg=COLOR_FONDO_APP, 
+            frame_box,
+            show="*",
+            font=("Arial", 11),
+            bg=COLOR_FONDO_APP,
             fg=COLOR_TEXTO_MAIN,
-            relief="flat", 
-            highlightthickness=1, 
+            relief="flat",
+            highlightthickness=1,
             highlightbackground=COLOR_SECUNDARIO
         )
         self.ent_pass.pack(fill="x", pady=(0, 14), ipady=3)
@@ -112,13 +112,13 @@ class AppPrincipal:
 
         # Botón Ingresar (Verde Hoja Principal)
         btn_ingresar = tk.Button(
-            frame_box, 
-            text="🔑 Ingresar", 
-            bg=COLOR_PRIMARIO, 
-            fg=COLOR_BLANCO, 
+            frame_box,
+            text="🔑 Ingresar",
+            bg=COLOR_PRIMARIO,
+            fg=COLOR_BLANCO,
             activebackground=COLOR_PRIMARIO,
             activeforeground=COLOR_BLANCO,
-            font=("Arial", 10, "bold"), 
+            font=("Arial", 10, "bold"),
             command=self.validar_login,
             cursor="hand2",
             relief="flat",
@@ -128,13 +128,13 @@ class AppPrincipal:
 
         # Botón Registro (Terracota Suave)
         btn_registro = tk.Button(
-            frame_box, 
-            text="📝 ¿Eres nuevo vecino? Regístrate", 
-            bg=COLOR_ACENTO_REGISTRO, 
-            fg=COLOR_BLANCO, 
+            frame_box,
+            text="📝 ¿Eres nuevo vecino? Regístrate",
+            bg=COLOR_ACENTO_REGISTRO,
+            fg=COLOR_BLANCO,
             activebackground=COLOR_ACENTO_REGISTRO,
             activeforeground=COLOR_BLANCO,
-            font=("Arial", 9, "bold"), 
+            font=("Arial", 9, "bold"),
             command=self.registrar_nuevo_usuario,
             cursor="hand2",
             relief="flat",
@@ -160,7 +160,7 @@ class AppPrincipal:
     def registrar_nuevo_usuario(self):
         dni = simpledialog.askstring("Registro de Vecino", "Ingrese su DNI (Usuario):", parent=self.root)
         if not dni: return
-        
+
         usuarios = cargar_usuarios()
         if dni in usuarios:
             messagebox.showerror("Error", "Este DNI ya se encuentra registrado.")
@@ -213,7 +213,7 @@ class AppPrincipal:
 
         if not pregunta or not respuesta_correcta:
             messagebox.showwarning(
-                "Seguridad", 
+                "Seguridad",
                 "Su cuenta no tiene configurada una pregunta secreta.\nPor favor contacte al administrador a través del chat de soporte."
             )
             return
@@ -234,13 +234,13 @@ class AppPrincipal:
 
         tk.Label(win_rec, text="Su Respuesta:", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack()
         ent_resp = tk.Entry(
-            win_rec, 
-            font=("Arial", 10), 
-            width=30, 
-            bg=COLOR_BLANCO, 
-            fg=COLOR_TEXTO_MAIN, 
-            relief="flat", 
-            highlightthickness=1, 
+            win_rec,
+            font=("Arial", 10),
+            width=30,
+            bg=COLOR_BLANCO,
+            fg=COLOR_TEXTO_MAIN,
+            relief="flat",
+            highlightthickness=1,
             highlightbackground=COLOR_SECUNDARIO
         )
         ent_resp.pack(pady=4, ipady=2)
@@ -264,13 +264,13 @@ class AppPrincipal:
         ent_resp.bind("<Return>", lambda event: verificar_y_restablecer())
 
         tk.Button(
-            win_rec, 
-            text="Validar y Cambiar Clave", 
-            bg=COLOR_PRIMARIO, 
-            fg=COLOR_BLANCO, 
-            font=("Arial", 9, "bold"), 
-            command=verificar_y_restablecer, 
-            relief="flat", 
+            win_rec,
+            text="Validar y Cambiar Clave",
+            bg=COLOR_PRIMARIO,
+            fg=COLOR_BLANCO,
+            font=("Arial", 9, "bold"),
+            command=verificar_y_restablecer,
+            relief="flat",
             pady=4,
             cursor="hand2"
         ).pack(pady=15)
@@ -279,7 +279,7 @@ class AppPrincipal:
         usuario = self.ent_user.get().strip()
         clave = self.ent_pass.get().strip()
         usuarios = cargar_usuarios()
-        
+
         if usuario in usuarios and usuarios[usuario]["clave"] == clave:
             rol = str(usuarios[usuario].get("rol", "")).lower().strip()
             self.limpiar_pantalla()

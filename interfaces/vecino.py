@@ -34,7 +34,7 @@ class VentanaVecino:
         self.root = root
         self.id_usuario = id_usuario
         self.cerrar_sesion_cb = cerrar_sesion_cb
-        
+
         # --- 1. CARGAR DATOS Y VALIDAR ESTADO DE SUSPENSIÓN ---
         usuarios = cargar_usuarios()
         self.datos = usuarios.get(id_usuario, {})
@@ -64,13 +64,13 @@ class VentanaVecino:
         # Header Superior
         frame_top = tk.Frame(self.root, bg="#2E7D32")
         frame_top.pack(fill="x")
-        
+
         tk.Label(
-            frame_top, 
-            text=f"👤 Panel del Vecino: {self.datos.get('nombre', 'Cliente')} | DNI: {self.id_usuario}", 
-            font=("Arial", 12, "bold"), 
-            fg="white", 
-            bg="#2E7D32", 
+            frame_top,
+            text=f"👤 Panel del Vecino: {self.datos.get('nombre', 'Cliente')} | DNI: {self.id_usuario}",
+            font=("Arial", 12, "bold"),
+            fg="white",
+            bg="#2E7D32",
             pady=10
         ).pack()
 
@@ -83,21 +83,21 @@ class VentanaVecino:
         frame_izq.pack(side="left", fill="y", anchor="w")
 
         tk.Label(
-            frame_izq, 
-            text="Saldo Disponible (Máx. 2000 PTS):", 
-            font=("Arial", 8, "bold"), 
-            bg="white", 
+            frame_izq,
+            text="Saldo Disponible (Máx. 2000 PTS):",
+            font=("Arial", 8, "bold"),
+            bg="white",
             fg="#555555"
         ).pack(anchor="w")
 
         puntos_enteros = int(float(self.datos.get("puntos", 0)))
-        
+
         # Puntuación destacada arriba
         self.lbl_puntos = tk.Label(
-            frame_izq, 
-            text=f"{puntos_enteros} PTS", 
-            font=("Arial", 22, "bold"), 
-            fg="#2E7D32", 
+            frame_izq,
+            text=f"{puntos_enteros} PTS",
+            font=("Arial", 22, "bold"),
+            fg="#2E7D32",
             bg="white"
         )
         self.lbl_puntos.pack(anchor="w", pady=(1, 2))
@@ -105,14 +105,14 @@ class VentanaVecino:
         # Rango justo debajo de la puntuación (sin estorbar a la derecha)
         rango_actual = self.obtener_rango_vecino(puntos_enteros)
         self.lbl_rango = tk.Label(
-            frame_izq, 
-            text=f"Rango: {rango_actual}", 
-            font=("Arial", 8, "bold"), 
-            fg="#2C5282", 
-            bg="#EBF3F9", 
-            padx=8, 
+            frame_izq,
+            text=f"Rango: {rango_actual}",
+            font=("Arial", 8, "bold"),
+            fg="#2C5282",
+            bg="#EBF3F9",
+            padx=8,
             pady=3,
-            bd=0, 
+            bd=0,
             relief="flat"
         )
         self.lbl_rango.pack(anchor="w", pady=(0, 2))
@@ -126,11 +126,11 @@ class VentanaVecino:
         km_auto_evitados = round(co2_evitado * 4.5, 1)
 
         frame_co2 = tk.Frame(
-            frame_card, 
-            bg="#E8F5E9", 
-            bd=1, 
-            relief="solid", 
-            highlightbackground="#2E7D32", 
+            frame_card,
+            bg="#E8F5E9",
+            bd=1,
+            relief="solid",
+            highlightbackground="#2E7D32",
             highlightthickness=1,
             padx=10,
             pady=5
@@ -138,28 +138,28 @@ class VentanaVecino:
         frame_co2.pack(side="right", padx=(8, 0))
 
         lbl_co2_titulo = tk.Label(
-            frame_co2, 
-            text="🌱 Impacto Ambiental", 
-            font=("Arial", 8, "bold"), 
-            fg="#1B5E20", 
+            frame_co2,
+            text="🌱 Impacto Ambiental",
+            font=("Arial", 8, "bold"),
+            fg="#1B5E20",
             bg="#E8F5E9"
         )
         lbl_co2_titulo.pack(anchor="w")
 
         lbl_co2_val = tk.Label(
-            frame_co2, 
-            text=f"Has evitado {co2_evitado} kg de CO₂", 
-            font=("Arial", 9, "bold"), 
-            fg="#2E7D32", 
+            frame_co2,
+            text=f"Has evitado {co2_evitado} kg de CO₂",
+            font=("Arial", 9, "bold"),
+            fg="#2E7D32",
             bg="#E8F5E9"
         )
         lbl_co2_val.pack(anchor="w", pady=(1, 0))
 
         lbl_co2_eq = tk.Label(
-            frame_co2, 
-            text=f"🚗 Equivale a {km_auto_evitados} km sin usar auto", 
-            font=("Arial", 7, "italic"), 
-            fg="#33691E", 
+            frame_co2,
+            text=f"🚗 Equivale a {km_auto_evitados} km sin usar auto",
+            font=("Arial", 7, "italic"),
+            fg="#33691E",
             bg="#E8F5E9"
         )
         lbl_co2_eq.pack(anchor="w")
@@ -170,12 +170,12 @@ class VentanaVecino:
 
         # Botón 1: Actualizar
         tk.Button(
-            frame_botones, 
-            text="🔄 Actualizar", 
-            bg="#1976D2", 
-            fg="white", 
-            font=("Arial", 8, "bold"), 
-            relief="flat", 
+            frame_botones,
+            text="🔄 Actualizar",
+            bg="#1976D2",
+            fg="white",
+            font=("Arial", 8, "bold"),
+            relief="flat",
             padx=8,
             pady=4,
             cursor="hand2",
@@ -184,12 +184,12 @@ class VentanaVecino:
 
         # Botón 2: Términos y Condiciones
         tk.Button(
-            frame_botones, 
-            text="📄 Términos y Condiciones", 
-            bg="#388E3C", 
-            fg="white", 
-            font=("Arial", 8, "bold"), 
-            relief="flat", 
+            frame_botones,
+            text="📄 Términos y Condiciones",
+            bg="#388E3C",
+            fg="white",
+            font=("Arial", 8, "bold"),
+            relief="flat",
             padx=8,
             pady=4,
             cursor="hand2",
@@ -200,7 +200,7 @@ class VentanaVecino:
         cmd_guia = getattr(self, "mostrar_guia_entrega", getattr(self, "abrir_guia_entrega", None))
         if not cmd_guia:
             cmd_guia = lambda: messagebox.showinfo(
-                "Guía de Entrega", 
+                "Guía de Entrega",
                 "📋 Guía de Entrega de Materiales:\n\n"
                 "1. Entregue los materiales limpios y secos en la bodega autorizada.\n"
                 "2. Asegúrese de que las botellas PET estén aplastadas.\n"
@@ -208,12 +208,12 @@ class VentanaVecino:
             )
 
         tk.Button(
-            frame_botones, 
-            text="📘 Guía de Entrega", 
-            bg="#0288D1", 
-            fg="white", 
-            font=("Arial", 8, "bold"), 
-            relief="flat", 
+            frame_botones,
+            text="📘 Guía de Entrega",
+            bg="#0288D1",
+            fg="white",
+            font=("Arial", 8, "bold"),
+            relief="flat",
             padx=8,
             pady=4,
             cursor="hand2",
@@ -239,7 +239,7 @@ class VentanaVecino:
         # --- 1. CATÁLOGO DE PROMOCIONES (CON CANVAS Y SCROLLBAR CORREGIDOS) ---
         self.canvas_promos = tk.Canvas(tab_promos, bg="white", highlightthickness=0)
         self.scrollbar_promos = ttk.Scrollbar(tab_promos, orient="vertical", command=self.canvas_promos.yview)
-        
+
         self.scrollable_frame_promos = tk.Frame(self.canvas_promos, bg="white")
         self.scrollable_frame_promos.bind(
             "<Configure>",
@@ -258,14 +258,14 @@ class VentanaVecino:
         def crear_tabla_scroll(parent, cols, config):
             frame = ttk.Frame(parent)
             frame.pack(fill="both", expand=True, padx=5, pady=5)
-            
+
             sy = ttk.Scrollbar(frame, orient="vertical")
             sx = ttk.Scrollbar(frame, orient="horizontal")
-            
+
             tabla = ttk.Treeview(frame, columns=cols, show="headings", yscrollcommand=sy.set, xscrollcommand=sx.set)
             sy.config(command=tabla.yview)
             sx.config(command=tabla.xview)
-            
+
             sy.pack(side="right", fill="y")
             sx.pack(side="bottom", fill="x")
             tabla.pack(side="left", fill="both", expand=True)
@@ -332,12 +332,12 @@ class VentanaVecino:
 
         tk.Label(frame_seg_box, text="🔐 Configuración de Seguridad y Cuenta", font=("Arial", 12, "bold"), fg="#2E7D32", bg="white").pack(anchor="w", pady=(0, 10))
         tk.Label(frame_seg_box, text="Pregunta Secreta actual:", font=("Arial", 9, "bold"), bg="white").pack(anchor="w")
-        
+
         self.lbl_pregunta_actual = tk.Label(
-            frame_seg_box, 
-            text=f"\"{self.datos.get('pregunta_secreta', 'No configurada')}\"", 
-            font=("Arial", 10, "italic"), 
-            fg="#1976D2", 
+            frame_seg_box,
+            text=f"\"{self.datos.get('pregunta_secreta', 'No configurada')}\"",
+            font=("Arial", 10, "italic"),
+            fg="#1976D2",
             bg="white"
         )
         self.lbl_pregunta_actual.pack(anchor="w", pady=(2, 10))
@@ -370,11 +370,11 @@ class VentanaVecino:
                 messagebox.showinfo("Éxito", "¡Su contraseña de recuperación ha sido actualizada!")
 
         tk.Button(
-            frame_seg_box, 
-            text="💾 Guardar Pregunta", 
-            bg="#2E7D32", 
-            fg="white", 
-            font=("Arial", 9, "bold"), 
+            frame_seg_box,
+            text="💾 Guardar Pregunta",
+            bg="#2E7D32",
+            fg="white",
+            font=("Arial", 9, "bold"),
             relief="flat",
             command=guardar_seguridad_vecino,
             cursor="hand2"
@@ -384,8 +384,8 @@ class VentanaVecino:
         info_baja_frame.pack(fill="x", pady=10)
 
         tk.Label(
-            info_baja_frame, 
-            text="Si deseas dar de baja tu cuenta y solicitar tu devolución del 50% en efectivo de tus puntos acumulados, acércate de forma presencial con el administrador o tienda autorizada (Aplica límite de 2000 PTS). Puedes consultar los detalles en el botón de Términos y Condiciones superior.", 
+            info_baja_frame,
+            text="Si deseas dar de baja tu cuenta y solicitar tu devolución del 50% en efectivo de tus puntos acumulados, acércate de forma presencial con el administrador o tienda autorizada (Aplica límite de 2000 PTS). Puedes consultar los detalles en el botón de Términos y Condiciones superior.",
             font=("Arial", 9), fg="#444", bg="white", wraplength=800, justify="left"
         ).pack(anchor="w")
 
@@ -399,18 +399,18 @@ class VentanaVecino:
 
         # 2. Botón estandarizado centrado exactamente como en Admin
         self.btn_cerrar_sesion = tk.Button(
-            footer_frame, 
-            text="🚪 Cerrar Sesión", 
-            bg="#5C6B73",                   
-            fg="white", 
-            font=("Arial", 10, "bold"), 
-            relief="flat", 
+            footer_frame,
+            text="🚪 Cerrar Sesión",
+            bg="#5C6B73",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            relief="flat",
             cursor="hand2",
             padx=20,
             pady=6,
             command=self.cerrar_sesion_cb
         )
-        # 3. Alineación centrada 
+        # 3. Alineación centrada
         self.btn_cerrar_sesion.pack(anchor="center")
 
 
@@ -433,13 +433,13 @@ class VentanaVecino:
         scrollbar.pack(side="right", fill="y")
 
         txt_box = tk.Text(
-            frame_txt, 
-            wrap="word", 
-            yscrollcommand=scrollbar.set, 
-            font=("Arial", 10), 
-            bg="#FFFFFF", 
-            fg="#222222", 
-            padx=10, 
+            frame_txt,
+            wrap="word",
+            yscrollcommand=scrollbar.set,
+            font=("Arial", 10),
+            bg="#FFFFFF",
+            fg="#222222",
+            padx=10,
             pady=10
         )
         txt_box.pack(side="left", fill="both", expand=True)
@@ -460,7 +460,6 @@ class VentanaVecino:
         txt_box.config(state="disabled")
 
         tk.Button(win_tyc, text="Entendido 👍", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), command=win_tyc.destroy, padx=20, pady=8, cursor="hand2").pack(pady=12)
-     
     def obtener_rango_vecino(self, puntos):
         try:
             pts = int(float(puntos))
@@ -494,7 +493,7 @@ class VentanaVecino:
         tk.Label(frame_aviso, text="Redacta una justificación para el administrador:", font=("Arial", 10, "bold"), fg="#333333", bg="#F8D7DA").pack(anchor="w", padx=20, pady=(10, 0))
         txt_justificacion = tk.Text(frame_aviso, width=70, height=6, font=("Arial", 10))
         txt_justificacion.pack(pady=5)
-        
+
         if self.datos.get("justificacion_cliente", ""):
             txt_justificacion.insert("1.0", self.datos.get("justificacion_cliente", ""))
 
@@ -524,7 +523,6 @@ class VentanaVecino:
     def actualizar_todo(self):
         usuarios = cargar_usuarios()
         self.datos = usuarios.get(self.id_usuario, {})
-        
         puntos_actuales = int(float(self.datos.get('puntos', 0)))
         self.lbl_puntos.config(text=f"{puntos_actuales} PTS")
         self.lbl_rango.config(text=f"Rango: {self.obtener_rango_vecino(puntos_actuales)}")
@@ -547,11 +545,9 @@ class VentanaVecino:
 
             if tipo in ["ABONO_RECICLAJE", "RECICLAJE_RECIBIDO"]:
                 self.tabla_abonos.insert("", "end", values=(fecha, puntos, detalle))
-                
                 if "Entrega de" in detalle or "Reciclaje de" in detalle:
                     try:
                         texto_limpio = detalle.replace("Entrega de ", "").replace("Reciclaje de ", "")
-                        
                         if "kg de " in texto_limpio:
                             partes_peso = texto_limpio.split("kg de ")
                             peso_val = partes_peso[0].strip() + " kg"
@@ -618,10 +614,10 @@ class VentanaVecino:
 
         if not promociones:
             lbl_vacio = tk.Label(
-                self.scrollable_frame_promos, 
-                text="No hay ofertas registradas actualmente en el sistema.", 
-                font=("Arial", 10, "italic"), 
-                fg="#666666", 
+                self.scrollable_frame_promos,
+                text="No hay ofertas registradas actualmente en el sistema.",
+                font=("Arial", 10, "italic"),
+                fg="#666666",
                 bg="white",
                 bd=1,
                 relief="solid",
@@ -651,13 +647,13 @@ class VentanaVecino:
             frame_hdr_float.pack(fill="x", pady=(8, 4), padx=10)
 
             lbl_cat = tk.Label(
-                frame_hdr_float, 
-                text=f"📁 {cat_nombre}", 
-                font=("Arial", 9, "bold"), 
-                bg="#E8F5E9", 
-                fg="#1B5E20", 
-                anchor="w", 
-                padx=8, 
+                frame_hdr_float,
+                text=f"📁 {cat_nombre}",
+                font=("Arial", 9, "bold"),
+                bg="#E8F5E9",
+                fg="#1B5E20",
+                anchor="w",
+                padx=8,
                 pady=3
             )
             lbl_cat.pack(fill="x")
@@ -675,11 +671,11 @@ class VentanaVecino:
 
                 # Tarjeta Flotante (240px Ancho x 240px Alto)
                 card = tk.Frame(
-                    cell_container, 
-                    bg="white", 
-                    bd=2, 
-                    relief="solid", 
-                    highlightbackground="#2E7D32", 
+                    cell_container,
+                    bg="white",
+                    bd=2,
+                    relief="solid",
+                    highlightbackground="#2E7D32",
                     highlightthickness=1,
                     width=240,
                     height=240
@@ -700,11 +696,11 @@ class VentanaVecino:
 
                 # 1. Datos de la tienda
                 lbl_tienda = tk.Label(
-                    card, 
-                    text=f"🏪 {tienda_nom}\n(ID: {tienda_id}) | 📦 Stock: {stock}", 
-                    font=("Arial", 8, "bold"), 
-                    fg="#2E7D32", 
-                    bg="white", 
+                    card,
+                    text=f"🏪 {tienda_nom}\n(ID: {tienda_id}) | 📦 Stock: {stock}",
+                    font=("Arial", 8, "bold"),
+                    fg="#2E7D32",
+                    bg="white",
                     anchor="w",
                     justify="left"
                 )
@@ -712,11 +708,11 @@ class VentanaVecino:
 
                 # 2. Nombre del Producto (Título destacado)
                 lbl_titulo = tk.Label(
-                    card, 
-                    text=f"📌 {titulo}", 
-                    font=("Arial", 11, "bold"), 
-                    fg="#000000", 
-                    bg="white", 
+                    card,
+                    text=f"📌 {titulo}",
+                    font=("Arial", 11, "bold"),
+                    fg="#000000",
+                    bg="white",
                     anchor="w",
                     justify="left",
                     wraplength=215
@@ -725,11 +721,11 @@ class VentanaVecino:
 
                 # 3. ÚNICAMENTE COSTO EN PUNTOS (Sin valor en soles)
                 lbl_precios = tk.Label(
-                    card, 
-                    text=f"💰 {costo_p} PTS", 
-                    font=("Arial", 9, "bold"), 
-                    fg="#1565C0", 
-                    bg="white", 
+                    card,
+                    text=f"💰 {costo_p} PTS",
+                    font=("Arial", 9, "bold"),
+                    fg="#1565C0",
+                    bg="white",
                     anchor="w",
                     justify="left"
                 )
@@ -738,11 +734,11 @@ class VentanaVecino:
                 # 4. Descripción del Producto
                 if desc:
                     lbl_desc = tk.Label(
-                        card, 
-                        text=f"📝 {desc}", 
-                        font=("Arial", 8), 
-                        fg="#444444", 
-                        bg="white", 
+                        card,
+                        text=f"📝 {desc}",
+                        font=("Arial", 8),
+                        fg="#444444",
+                        bg="white",
                         anchor="w",
                         justify="left",
                         wraplength=215
@@ -751,12 +747,12 @@ class VentanaVecino:
 
                 # 5. Botón Informativo Verde
                 btn_canje = tk.Button(
-                    card, 
-                    text="🛒 Canje Presencial en Bodega", 
-                    bg="#2E7D32", 
-                    fg="white", 
-                    disabledforeground="white", 
-                    font=("Arial", 8, "bold"), 
+                    card,
+                    text="🛒 Canje Presencial en Bodega",
+                    bg="#2E7D32",
+                    fg="white",
+                    disabledforeground="white",
+                    font=("Arial", 8, "bold"),
                     relief="flat",
                     state="disabled"
                 )

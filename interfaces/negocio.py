@@ -3,11 +3,11 @@ from tkinter import ttk, messagebox
 import os
 from logica.modelos import Material
 from datos.gestor import (
-    cargar_usuarios, 
-    guardar_usuarios, 
-    registrar_accion_tienda, 
+    cargar_usuarios,
+    guardar_usuarios,
+    registrar_accion_tienda,
     registrar_accion_cliente,
-    cargar_promociones, 
+    cargar_promociones,
     guardar_promociones,
     cargar_log_tiendas,
     cargar_log_clientes,
@@ -52,7 +52,7 @@ class VentanaNegocio:
         self.id_usuario = id_usuario
         self.cerrar_sesion_cb = cerrar_sesion_cb
         self.vecino_actual = None
-        
+
         try:
             self.root.config(bg=COLOR_FONDO_APP)
             self.root.title("EcoPuntos - Terminal de Cobro Negocios")
@@ -80,13 +80,13 @@ class VentanaNegocio:
             # Header Principal
             frame_top = tk.Frame(self.root, bg=COLOR_PRIMARIO)
             frame_top.pack(fill="x")
-            
+
             tk.Label(
-                frame_top, 
-                text=f"🏪 Terminal de Bodega: {self.nombre_negocio}", 
-                font=("Arial", 14, "bold"), 
-                fg=COLOR_BLANCO, 
-                bg=COLOR_PRIMARIO, 
+                frame_top,
+                text=f"🏪 Terminal de Bodega: {self.nombre_negocio}",
+                font=("Arial", 14, "bold"),
+                fg=COLOR_BLANCO,
+                bg=COLOR_PRIMARIO,
                 pady=12
             ).pack(side="left", padx=20)
 
@@ -106,13 +106,13 @@ class VentanaNegocio:
 
             # BOTÓN CERRAR SESIÓN (Fijo Abajo)
             tk.Button(
-                self.root, 
-                text="🚪 Cerrar Sesión", 
-                bg="#757575", 
-                fg=COLOR_BLANCO, 
+                self.root,
+                text="🚪 Cerrar Sesión",
+                bg="#757575",
+                fg=COLOR_BLANCO,
                 activeforeground=COLOR_BLANCO,
                 font=("Arial", 10, "bold"),
-                relief="flat", 
+                relief="flat",
                 command=self.cerrar_sesion_cb,
                 pady=4,
                 padx=15,
@@ -157,7 +157,7 @@ class VentanaNegocio:
                 tk.Label(f_dni, text="DNI del Vecino:", font=("Arial", 10), width=15, anchor="w", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(side="left")
                 self.ent_dni_rec = tk.Entry(f_dni, font=("Arial", 11), width=15, bg=COLOR_FONDO_APP, fg=COLOR_TEXTO_MAIN, relief="flat", highlightthickness=1, highlightbackground=COLOR_SECUNDARIO)
                 self.ent_dni_rec.pack(side="left", padx=5, ipady=2)
-                
+
                 self.lbl_nombre_vecino_rec = tk.Label(f_dni, text="Vecino: No verificado", font=("Arial", 10, "bold"), bg=COLOR_BLANCO, fg=COLOR_PRIMARIO)
                 self.lbl_nombre_vecino_rec.pack(side="left", padx=15)
 
@@ -175,7 +175,7 @@ class VentanaNegocio:
                 f_mat = tk.Frame(frame_form_rec, bg=COLOR_BLANCO)
                 f_mat.pack(fill="x", pady=5)
                 tk.Label(f_mat, text="Material:", font=("Arial", 10), width=15, anchor="w", bg=COLOR_BLANCO, fg=COLOR_TEXTO_MAIN).pack(side="left")
-                
+
                 self.cb_material = ttk.Combobox(
                     f_mat,
                     values=list(Material.TASAS.keys()),
@@ -323,7 +323,7 @@ class VentanaNegocio:
                 def actualizar_tabla_entregas():
                     for item in self.tabla_entregas.get_children():
                         self.tabla_entregas.delete(item)
-                    
+
                     todas_entregas = cargar_entregas_reciclaje()
                     for ent in reversed(todas_entregas):
                         if str(ent.get("tienda_id")) == str(self.id_usuario):
@@ -385,10 +385,10 @@ class VentanaNegocio:
                     frame_grafico_izq.pack(side="left", fill="both", expand=True, padx=(5, 0))
 
                     frame_resena_der = tk.Frame(
-                        frame_grafico_container, 
-                        bg=COLOR_FONDO_APP, 
-                        bd=1, 
-                        relief="solid", 
+                        frame_grafico_container,
+                        bg=COLOR_FONDO_APP,
+                        bd=1,
+                        relief="solid",
                         highlightbackground=COLOR_SECUNDARIO
                     )
                     frame_resena_der.pack(side="right", fill="both", expand=False, padx=10, pady=10)
@@ -403,16 +403,16 @@ class VentanaNegocio:
                         kilos = list(totales_material.values())
 
                         colores_vivos = [
-                            "#E76F51", "#F4A261", "#E9C46A", "#2A9D8F", "#264653", 
+                            "#E76F51", "#F4A261", "#E9C46A", "#2A9D8F", "#264653",
                             "#E63946", "#457B9D", "#1D3557", "#9b5de5", "#f15bb5", "#00bbf9"
                         ]
                         colores_usados = [colores_vivos[i % len(colores_vivos)] for i in range(len(materiales))]
 
                         wedges, _, autotexts = ax.pie(
-                            kilos, 
-                            labels=None, 
-                            autopct='%1.1f%%', 
-                            startangle=140, 
+                            kilos,
+                            labels=None,
+                            autopct='%1.1f%%',
+                            startangle=140,
                             colors=colores_usados,
                             pctdistance=0.72,
                             textprops=dict(color="white", weight="bold", fontsize=8)
@@ -424,10 +424,10 @@ class VentanaNegocio:
                         ax.set_title("Proporción Recolectada por Material (%)", fontsize=10, fontweight="bold", color=COLOR_TEXTO_MAIN, pad=10)
 
                         ax.legend(
-                            wedges, 
-                            materiales, 
-                            title="Materiales", 
-                            loc="center left", 
+                            wedges,
+                            materiales,
+                            title="Materiales",
+                            loc="center left",
                             bbox_to_anchor=(-0.78, 0.5),
                             fontsize=7.5,
                             title_fontsize=8.5,
@@ -454,7 +454,7 @@ class VentanaNegocio:
                                         theta_rad = np.deg2rad(theta)
                                         wedge.set_center((0.35 * np.cos(theta_rad), 0.35 * np.sin(theta_rad)))
                                         wedge.set_zorder(10)
-                                        
+
                                         color_porcion = colores_usados[i]
                                         autotexts[i].set_fontsize(11)
                                         autotexts[i].set_color("#FFFFFF")
@@ -481,15 +481,15 @@ class VentanaNegocio:
                         canvas_grafico.mpl_connect("motion_notify_event", on_hover)
 
                     tk.Label(frame_resena_der, text="📋 Resumen Bodega", font=("Arial", 10, "bold"), bg=COLOR_PRIMARIO, fg=COLOR_BLANCO, pady=6).pack(fill="x")
-                    
+
                     box_resena = tk.Frame(frame_resena_der, bg=COLOR_FONDO_APP, padx=8, pady=8)
                     box_resena.pack(fill="both", expand=True)
 
                     tk.Label(box_resena, text=f"⚖️ Total: {total_general_kg:.2f} kg", font=("Arial", 9, "bold"), fg=COLOR_PRIMARIO, bg=COLOR_FONDO_APP, anchor="w").pack(fill="x", pady=(0, 4))
                     tk.Label(box_resena, text=f"📦 Operaciones: {len(mis_entregas)}", font=("Arial", 8, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, anchor="w").pack(fill="x", pady=(0, 8))
-                    
+
                     tk.Frame(box_resena, height=1, bg="#CBD5E1").pack(fill="x", pady=4)
-                    
+
                     for mat, kg in sorted(totales_material.items(), key=lambda x: x[1], reverse=True):
                         porcentaje = (kg / total_general_kg) * 100 if total_general_kg > 0 else 0
                         tk.Label(box_resena, text=f"• {mat}\n   └─ {kg:.2f} kg ({porcentaje:.1f}%)", font=("Arial", 8), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP, justify="left", anchor="w").pack(fill="x", pady=2)
@@ -505,11 +505,11 @@ class VentanaNegocio:
 
             # 1. Buscador de Vecino
             frame_busca = tk.LabelFrame(
-                frame_central, 
-                text=" 1. Consultar Cuenta del Vecino (Presencial) ", 
-                font=("Arial", 11, "bold"), 
-                padx=15, 
-                pady=10, 
+                frame_central,
+                text=" 1. Consultar Cuenta del Vecino (Presencial) ",
+                font=("Arial", 11, "bold"),
+                padx=15,
+                pady=10,
                 bg=COLOR_BLANCO,
                 fg=COLOR_TEXTO_MAIN
             )
@@ -521,13 +521,13 @@ class VentanaNegocio:
             self.ent_dni.bind("<Return>", lambda event: self.consultar_vecino())
 
             tk.Button(
-                frame_busca, 
-                text="🔍 Buscar Cuenta", 
-                bg=COLOR_PRIMARIO, 
-                fg=COLOR_BLANCO, 
+                frame_busca,
+                text="🔍 Buscar Cuenta",
+                bg=COLOR_PRIMARIO,
+                fg=COLOR_BLANCO,
                 activeforeground=COLOR_BLANCO,
                 font=("Arial", 10, "bold"),
-                relief="flat", 
+                relief="flat",
                 command=self.consultar_vecino,
                 padx=15,
                 pady=5,
@@ -536,45 +536,45 @@ class VentanaNegocio:
 
             # 2. Estado de Cuenta
             self.frame_info = tk.LabelFrame(
-                frame_central, 
-                text=" 2. Estado de Cuenta del Vecino ", 
-                font=("Arial", 11, "bold"), 
-                padx=15, 
-                pady=10, 
+                frame_central,
+                text=" 2. Estado de Cuenta del Vecino ",
+                font=("Arial", 11, "bold"),
+                padx=15,
+                pady=10,
                 bg=COLOR_BLANCO,
                 fg=COLOR_TEXTO_MAIN
             )
             self.frame_info.pack(fill="both", expand=True, pady=(0, 15))
 
             self.lbl_nombre = tk.Label(
-                self.frame_info, 
-                text="Vecino: Ninguno seleccionado", 
-                font=("Arial", 11, "bold"), 
+                self.frame_info,
+                text="Vecino: Ninguno seleccionado",
+                font=("Arial", 11, "bold"),
                 fg=COLOR_TEXTO_MAIN,
                 bg=COLOR_BLANCO
             )
             self.lbl_nombre.pack(anchor="w", pady=(2, 5))
 
             self.lbl_saldo = tk.Label(
-                self.frame_info, 
-                text="Saldo Disponible: 0 PTS", 
-                font=("Arial", 18, "bold"), 
-                fg=COLOR_ACENTO_CANJE, 
+                self.frame_info,
+                text="Saldo Disponible: 0 PTS",
+                font=("Arial", 18, "bold"),
+                fg=COLOR_ACENTO_CANJE,
                 bg=COLOR_BLANCO
             )
             self.lbl_saldo.pack(anchor="w", pady=5)
 
             # Botón único de Canje Presencial
             self.btn_canjear = tk.Button(
-                frame_central, 
-                text="💳 Canje de Ofertas en Caja", 
-                bg=COLOR_ACENTO_CANJE, 
-                fg=COLOR_BLANCO, 
+                frame_central,
+                text="💳 Canje de Ofertas en Caja",
+                bg=COLOR_ACENTO_CANJE,
+                fg=COLOR_BLANCO,
                 activeforeground=COLOR_BLANCO,
                 disabledforeground="#E0E0E0",
-                font=("Arial", 11, "bold"), 
-                state="disabled", 
-                relief="flat", 
+                font=("Arial", 11, "bold"),
+                state="disabled",
+                relief="flat",
                 command=self.abrir_cuadro_canje,
                 pady=10,
                 cursor="hand2"
@@ -583,13 +583,13 @@ class VentanaNegocio:
 
             # Botón Publicar Promoción
             tk.Button(
-                frame_central, 
-                text="📢 Publicar Nueva Oferta / Promoción", 
-                bg=COLOR_PRIMARIO, 
-                fg=COLOR_BLANCO, 
+                frame_central,
+                text="📢 Publicar Nueva Oferta / Promoción",
+                bg=COLOR_PRIMARIO,
+                fg=COLOR_BLANCO,
                 activeforeground=COLOR_BLANCO,
-                font=("Arial", 11, "bold"), 
-                relief="flat", 
+                font=("Arial", 11, "bold"),
+                relief="flat",
                 command=self.dialogo_publicar_promocion,
                 pady=8,
                 cursor="hand2"
@@ -600,13 +600,13 @@ class VentanaNegocio:
             frame_hist_box.pack(fill="both", expand=True, padx=15, pady=15)
 
             tk.Button(
-                frame_hist_box, 
-                text="📋 Ver, Gestionar y Eliminar Mis Ofertas Publicadas", 
-                bg=COLOR_PRIMARIO, 
-                fg=COLOR_BLANCO, 
+                frame_hist_box,
+                text="📋 Ver, Gestionar y Eliminar Mis Ofertas Publicadas",
+                bg=COLOR_PRIMARIO,
+                fg=COLOR_BLANCO,
                 activeforeground=COLOR_BLANCO,
-                font=("Arial", 10, "bold"), 
-                relief="flat", 
+                font=("Arial", 10, "bold"),
+                relief="flat",
                 command=self.dialogo_mis_ofertas,
                 padx=15,
                 pady=8,
@@ -614,9 +614,9 @@ class VentanaNegocio:
             ).pack(anchor="w", pady=(0, 15))
 
             tk.Label(
-                frame_hist_box, 
-                text="📜 Historial de Canjes y Entregas Presenciales Realizadas:", 
-                font=("Arial", 11, "bold"), 
+                frame_hist_box,
+                text="📜 Historial de Canjes y Entregas Presenciales Realizadas:",
+                font=("Arial", 11, "bold"),
                 bg=COLOR_BLANCO,
                 fg=COLOR_TEXTO_MAIN
             ).pack(anchor="w", pady=(0, 5))
@@ -635,10 +635,10 @@ class VentanaNegocio:
             sx = ttk.Scrollbar(frame_tabla, orient="horizontal")
 
             self.tabla_historial_tienda = ttk.Treeview(
-                frame_tabla, 
-                columns=cols_log, 
-                show="headings", 
-                yscrollcommand=sy.set, 
+                frame_tabla,
+                columns=cols_log,
+                show="headings",
+                yscrollcommand=sy.set,
                 xscrollcommand=sx.set
             )
             sy.config(command=self.tabla_historial_tienda.yview)
@@ -660,27 +660,27 @@ class VentanaNegocio:
             frame_stats.pack(fill="x", pady=(0, 15))
 
             self.lbl_promedio_estrellas = tk.Label(
-                frame_stats, 
-                text="⭐ Calificación Promedio: Calculando...", 
-                font=("Arial", 13, "bold"), 
-                fg=COLOR_TEXTO_MAIN, 
+                frame_stats,
+                text="⭐ Calificación Promedio: Calculando...",
+                font=("Arial", 13, "bold"),
+                fg=COLOR_TEXTO_MAIN,
                 bg=COLOR_FONDO_APP
             )
             self.lbl_promedio_estrellas.pack(anchor="w")
 
             self.lbl_total_resenas = tk.Label(
-                frame_stats, 
-                text="📊 Total de Opiniones Recibidas: 0", 
-                font=("Arial", 10), 
-                fg=COLOR_TEXTO_MAIN, 
+                frame_stats,
+                text="📊 Total de Opiniones Recibidas: 0",
+                font=("Arial", 10),
+                fg=COLOR_TEXTO_MAIN,
                 bg=COLOR_FONDO_APP
             )
             self.lbl_total_resenas.pack(anchor="w", pady=(3, 0))
 
             tk.Label(
-                frame_res_box, 
-                text="💬 Opiniones y Reseñas de los Vecinos:", 
-                font=("Arial", 11, "bold"), 
+                frame_res_box,
+                text="💬 Opiniones y Reseñas de los Vecinos:",
+                font=("Arial", 11, "bold"),
                 bg=COLOR_BLANCO,
                 fg=COLOR_TEXTO_MAIN
             ).pack(anchor="w", pady=(0, 5))
@@ -700,10 +700,10 @@ class VentanaNegocio:
             sx_res = ttk.Scrollbar(frame_tabla_res, orient="horizontal")
 
             self.tabla_resenas_negocio = ttk.Treeview(
-                frame_tabla_res, 
-                columns=cols_res, 
-                show="headings", 
-                yscrollcommand=sy_res.set, 
+                frame_tabla_res,
+                columns=cols_res,
+                show="headings",
+                yscrollcommand=sy_res.set,
                 xscrollcommand=sx_res.set
             )
             sy_res.config(command=self.tabla_resenas_negocio.yview)
@@ -730,7 +730,7 @@ class VentanaNegocio:
         style.configure("TNotebook", background=COLOR_FONDO_APP, borderwidth=0)
         style.configure("TNotebook.Tab", background=COLOR_FONDO_APP, foreground=COLOR_TEXTO_MAIN, font=("Arial", 10, "bold"), padding=[10, 5])
         style.map("TNotebook.Tab", background=[("selected", COLOR_BLANCO)], foreground=[("selected", COLOR_PRIMARIO)])
-        
+
         style.configure("Treeview", background=COLOR_BLANCO, foreground=COLOR_TEXTO_MAIN, fieldbackground=COLOR_BLANCO, rowheight=25)
         style.configure("Treeview.Heading", background=COLOR_FONDO_APP, foreground=COLOR_TEXTO_MAIN, font=("Arial", 9, "bold"))
 
@@ -789,16 +789,16 @@ class VentanaNegocio:
 
         nombre_vecino = usuarios.get(self.vecino_actual, {}).get("nombre", "Cliente")
         tk.Label(
-            win_cobro, 
-            text=f"Vecino: {nombre_vecino} | Saldo: {saldo_actual} PTS", 
-            font=("Arial", 11, "bold"), 
+            win_cobro,
+            text=f"Vecino: {nombre_vecino} | Saldo: {saldo_actual} PTS",
+            font=("Arial", 11, "bold"),
             fg=COLOR_TEXTO_MAIN,
             bg=COLOR_FONDO_APP
         ).pack(anchor="w", padx=20, pady=(15, 5))
 
         tk.Label(
-            win_cobro, 
-            text="Seleccione las ofertas y la cantidad a canjear:", 
+            win_cobro,
+            text="Seleccione las ofertas y la cantidad a canjear:",
             font=("Arial", 9, "bold"),
             fg=COLOR_TEXTO_MAIN,
             bg=COLOR_FONDO_APP
@@ -829,12 +829,12 @@ class VentanaNegocio:
             stock_max = int(p.get("stock", 0))
 
             chk = tk.Checkbutton(
-                row_frame, 
-                text=f"{titulo} ({costo} PTS) - Stock: {stock_max}", 
-                variable=var_chk, 
-                bg=COLOR_BLANCO, 
+                row_frame,
+                text=f"{titulo} ({costo} PTS) - Stock: {stock_max}",
+                variable=var_chk,
+                bg=COLOR_BLANCO,
                 fg=COLOR_TEXTO_MAIN,
-                font=("Arial", 9, "bold"), 
+                font=("Arial", 9, "bold"),
                 anchor="w"
             )
             chk.pack(side="left", fill="x", expand=True)
@@ -864,7 +864,7 @@ class VentanaNegocio:
                         if cant > stock_max:
                             messagebox.showerror("Error de Stock", f"La cantidad solicitada de '{titulo}' excede el stock disponible ({stock_max}).")
                             return
-                        
+
                         subtotal = costo * cant
                         puntos_totales += subtotal
                         ofertas_canjeadas.append(f"{cant}x {titulo}")
@@ -879,7 +879,7 @@ class VentanaNegocio:
 
             if puntos_totales > saldo_actual:
                 messagebox.showerror(
-                    "Error de Saldo", 
+                    "Error de Saldo",
                     f"El total seleccionado ({puntos_totales} PTS) supera el saldo disponible del vecino ({saldo_actual} PTS)."
                 )
                 return
@@ -890,7 +890,7 @@ class VentanaNegocio:
             # Actualizar stock o eliminar si llega a 0
             promos_actuales = cargar_promociones()
             operaciones_ordenadas = sorted(operaciones_stock, key=lambda x: x[0], reverse=True)
-            
+
             for idx_p, cant_descontar in operaciones_ordenadas:
                 if idx_p < len(promos_actuales):
                     stock_prev = int(promos_actuales[idx_p].get("stock", 0))
@@ -904,9 +904,9 @@ class VentanaNegocio:
             try:
                 registrar_accion_tienda(self.id_usuario, self.nombre_negocio, self.vecino_actual, puntos_totales)
                 registrar_accion_cliente(
-                    self.vecino_actual, 
-                    "CANJE_TIENDA", 
-                    -puntos_totales, 
+                    self.vecino_actual,
+                    "CANJE_TIENDA",
+                    -puntos_totales,
                     f"Canje de ofertas: {', '.join(ofertas_canjeadas)} en {self.nombre_negocio}"
                 )
             except Exception as e:
@@ -918,28 +918,28 @@ class VentanaNegocio:
             self.actualizar_historial_tienda()
 
         tk.Button(
-            frame_btns, 
-            text="Aceptar / Canjear Seleccionadas", 
-            bg=COLOR_ACENTO_CANJE, 
-            fg=COLOR_BLANCO, 
-            font=("Arial", 9, "bold"), 
-            command=procesar_canje_seleccionado, 
-            relief="flat", 
-            padx=10, 
-            pady=5, 
+            frame_btns,
+            text="Aceptar / Canjear Seleccionadas",
+            bg=COLOR_ACENTO_CANJE,
+            fg=COLOR_BLANCO,
+            font=("Arial", 9, "bold"),
+            command=procesar_canje_seleccionado,
+            relief="flat",
+            padx=10,
+            pady=5,
             cursor="hand2"
         ).pack(side="left", padx=5)
 
         tk.Button(
-            frame_btns, 
-            text="Cancelar", 
-            bg="#757575", 
-            fg=COLOR_BLANCO, 
-            font=("Arial", 9, "bold"), 
-            command=win_cobro.destroy, 
-            relief="flat", 
-            padx=10, 
-            pady=5, 
+            frame_btns,
+            text="Cancelar",
+            bg="#757575",
+            fg=COLOR_BLANCO,
+            font=("Arial", 9, "bold"),
+            command=win_cobro.destroy,
+            relief="flat",
+            padx=10,
+            pady=5,
             cursor="hand2"
         ).pack(side="left", padx=5)
 
@@ -960,9 +960,9 @@ class VentanaNegocio:
 
         tk.Label(win_promo, text="Categoría de la Oferta:", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(anchor="w", padx=20, pady=(10, 2))
         combo_categoria = ttk.Combobox(
-            win_promo, 
-            state="readonly", 
-            values=CATEGORIAS_BODEGA, 
+            win_promo,
+            state="readonly",
+            values=CATEGORIAS_BODEGA,
             font=("Arial", 10)
         )
         combo_categoria.pack(fill="x", padx=20)
@@ -1064,13 +1064,13 @@ class VentanaNegocio:
         scrollbar.pack(side="right", fill="y")
 
         txt_box = tk.Text(
-            frame_txt, 
-            wrap="word", 
-            yscrollcommand=scrollbar.set, 
-            font=("Arial", 10), 
-            bg=COLOR_BLANCO, 
-            fg=COLOR_TEXTO_MAIN, 
-            padx=10, 
+            frame_txt,
+            wrap="word",
+            yscrollcommand=scrollbar.set,
+            font=("Arial", 10),
+            bg=COLOR_BLANCO,
+            fg=COLOR_TEXTO_MAIN,
+            padx=10,
             pady=10
         )
         txt_box.pack(side="left", fill="both", expand=True)
@@ -1102,11 +1102,11 @@ class VentanaNegocio:
                 puntos_int = int(float(log.get('puntos_descontados', 0)))
                 puntos_txt = f"{puntos_int} PTS" if puntos_int == 0 else f"-{puntos_int} PTS"
                 self.tabla_historial_tienda.insert(
-                    "", 
-                    "end", 
+                    "",
+                    "end",
                     values=(
-                        log.get("fecha", "-"), 
-                        log.get("dni_cliente", "-"), 
+                        log.get("fecha", "-"),
+                        log.get("dni_cliente", "-"),
                         puntos_txt
                     )
                 )
@@ -1123,13 +1123,13 @@ class VentanaNegocio:
         for log in reversed(logs):
             tipo = log.get("tipo", "")
             detalle = log.get("detalle", "").strip()
-            
+
             if "RESEÑA" in tipo or "Reseña para" in detalle:
                 detalle_lower = detalle.lower()
                 if nombre_lower in detalle_lower:
                     fecha = log.get("fecha", "-")
                     dni = log.get("dni_cliente", "-")
-                    
+
                     estrellas_str = "⭐ (Sin calificación)"
                     comentario_str = detalle
                     valor_numerico = 5
@@ -1142,7 +1142,7 @@ class VentanaNegocio:
                                 estrellas_str = subpartes[0].strip()
                                 if len(subpartes) > 1:
                                     comentario_str = subpartes[1].replace("Reseña:", "").strip()
-                                
+
                                 if "(" in estrellas_str:
                                     num_extraido = estrellas_str.split("(")[1].split("/")[0].strip()
                                     valor_numerico = int(num_extraido)
@@ -1229,10 +1229,10 @@ class VentanaNegocio:
                 win_desc.iconphoto(False, self.root.icon_img)
 
             tk.Label(
-                win_desc, 
-                text=f"📌 {titulo}", 
-                font=("Arial", 11, "bold"), 
-                fg=COLOR_TEXTO_MAIN, 
+                win_desc,
+                text=f"📌 {titulo}",
+                font=("Arial", 11, "bold"),
+                fg=COLOR_TEXTO_MAIN,
                 bg=COLOR_FONDO_APP
             ).pack(anchor="w", padx=15, pady=(15, 5))
 
@@ -1245,14 +1245,14 @@ class VentanaNegocio:
             txt_box.config(state="disabled")
 
             tk.Button(
-                win_desc, 
-                text="Cerrar", 
-                bg=COLOR_PRIMARIO, 
-                fg=COLOR_BLANCO, 
-                font=("Arial", 9, "bold"), 
-                command=win_desc.destroy, 
-                relief="flat", 
-                padx=15, 
+                win_desc,
+                text="Cerrar",
+                bg=COLOR_PRIMARIO,
+                fg=COLOR_BLANCO,
+                font=("Arial", 9, "bold"),
+                command=win_desc.destroy,
+                relief="flat",
+                padx=15,
                 pady=3,
                 cursor="hand2"
             ).pack(pady=10)
@@ -1263,16 +1263,16 @@ class VentanaNegocio:
 
             todas_promos = cargar_promociones()
             promos_propias = [
-                (idx, p) for idx, p in enumerate(todas_promos) 
+                (idx, p) for idx, p in enumerate(todas_promos)
                 if str(p.get("tienda_id")) == str(self.id_usuario) and int(p.get("stock", 0)) > 0
             ]
 
             if not promos_propias:
                 tk.Label(
-                    frame_grid, 
-                    text="No tienes ofertas con stock disponible en este momento.", 
-                    font=("Arial", 11, "italic"), 
-                    fg="#64748B", 
+                    frame_grid,
+                    text="No tienes ofertas con stock disponible en este momento.",
+                    font=("Arial", 11, "italic"),
+                    fg="#64748B",
                     bg=COLOR_BLANCO
                 ).pack(pady=50, padx=20)
                 return
@@ -1282,18 +1282,18 @@ class VentanaNegocio:
 
             for i, (idx_global, p) in enumerate(promos_propias):
                 row, col = i // cols, i % cols
-                
+
                 # Rectángulo Vertical compacto (180x220px)
                 card = tk.Frame(
-                    frame_grid, 
-                    bg=COLOR_BLANCO, 
-                    bd=1, 
-                    relief="solid", 
-                    highlightbackground=COLOR_SECUNDARIO, 
-                    highlightthickness=1, 
-                    padx=10, 
-                    pady=10, 
-                    width=180, 
+                    frame_grid,
+                    bg=COLOR_BLANCO,
+                    bd=1,
+                    relief="solid",
+                    highlightbackground=COLOR_SECUNDARIO,
+                    highlightthickness=1,
+                    padx=10,
+                    pady=10,
+                    width=180,
                     height=220
                 )
                 card.grid(row=row, column=col, padx=8, pady=10, sticky="nw")
@@ -1309,12 +1309,12 @@ class VentanaNegocio:
 
                 # Nombre del Producto destacado
                 lbl_titulo = tk.Label(
-                    card, 
-                    text=f"📌 {titulo_oferta}", 
-                    font=("Arial", 10, "bold"), 
-                    fg=COLOR_TEXTO_MAIN, 
-                    bg=COLOR_BLANCO, 
-                    justify="left", 
+                    card,
+                    text=f"📌 {titulo_oferta}",
+                    font=("Arial", 10, "bold"),
+                    fg=COLOR_TEXTO_MAIN,
+                    bg=COLOR_BLANCO,
+                    justify="left",
                     anchor="nw",
                     wraplength=155
                 )
@@ -1327,12 +1327,12 @@ class VentanaNegocio:
                     f"💰 S/ {precio_soles:.2f} ➔ {pts_oferta} PTS"
                 )
                 lbl_detalles = tk.Label(
-                    card, 
-                    text=txt_detalles, 
-                    font=("Arial", 8, "bold"), 
-                    fg="#0284C7", 
-                    bg=COLOR_BLANCO, 
-                    justify="left", 
+                    card,
+                    text=txt_detalles,
+                    font=("Arial", 8, "bold"),
+                    fg="#0284C7",
+                    bg=COLOR_BLANCO,
+                    justify="left",
                     anchor="nw"
                 )
                 lbl_detalles.pack(anchor="w", fill="x", pady=(0, 4))
@@ -1349,12 +1349,12 @@ class VentanaNegocio:
                 frame_desc.pack_propagate(False)
 
                 lbl_desc = tk.Label(
-                    frame_desc, 
-                    text=f"📝 {desc_mostrar}", 
-                    font=("Arial", 8), 
-                    fg="#475569", 
-                    bg=COLOR_BLANCO, 
-                    justify="left", 
+                    frame_desc,
+                    text=f"📝 {desc_mostrar}",
+                    font=("Arial", 8),
+                    fg="#475569",
+                    bg=COLOR_BLANCO,
+                    justify="left",
                     anchor="nw",
                     wraplength=150
                 )
@@ -1362,13 +1362,13 @@ class VentanaNegocio:
 
                 if es_larga:
                     btn_ver_mas = tk.Button(
-                        frame_desc, 
-                        text="ver más", 
-                        font=("Arial", 7, "bold", "underline"), 
-                        fg="#0284C7", 
-                        bg=COLOR_BLANCO, 
-                        bd=0, 
-                        activebackground=COLOR_BLANCO, 
+                        frame_desc,
+                        text="ver más",
+                        font=("Arial", 7, "bold", "underline"),
+                        fg="#0284C7",
+                        bg=COLOR_BLANCO,
+                        bd=0,
+                        activebackground=COLOR_BLANCO,
                         activeforeground="#0369A1",
                         cursor="hand2",
                         command=lambda t=titulo_oferta, d=desc_original: mostrar_descripcion_completa(t, d)
@@ -1385,17 +1385,17 @@ class VentanaNegocio:
                             refrescar_grid()
 
                 btn_eliminar = tk.Button(
-                    card, 
-                    text="🗑️ Eliminar Oferta", 
-                    bg="#DC2626", 
-                    fg=COLOR_BLANCO, 
-                    font=("Arial", 8, "bold"), 
-                    relief="flat", 
-                    command=eliminar_propia, 
-                    cursor="hand2", 
+                    card,
+                    text="🗑️ Eliminar Oferta",
+                    bg="#DC2626",
+                    fg=COLOR_BLANCO,
+                    font=("Arial", 8, "bold"),
+                    relief="flat",
+                    command=eliminar_propia,
+                    cursor="hand2",
                     pady=2
                 )
                 btn_eliminar.pack(fill="x", side="bottom")
 
-        
+
         refrescar_grid()

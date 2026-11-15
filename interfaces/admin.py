@@ -37,7 +37,7 @@ class VentanaAdmin:
         self.root = root
         self.id_usuario = id_usuario
         self.cerrar_sesion_cb = cerrar_sesion_cb
-        
+
         usuarios = cargar_usuarios()
         self.datos_sesion = usuarios.get(id_usuario, {})
         self.es_admin_supremo = (self.datos_sesion.get("rol") == "admin")
@@ -65,23 +65,23 @@ class VentanaAdmin:
         color_header = COLOR_AZUL_HEADER if self.es_admin_supremo else "#1E3A8A"
         frame_header = tk.Frame(self.root, bg=color_header)
         frame_header.pack(fill="x")
-        
+
         tk.Label(
-            frame_header, 
-            text=f"👑 {titulo_rol}: {self.datos_sesion.get('nombre')} | Correo: {self.datos_sesion.get('correo', '-')}", 
-            font=("Arial", 11, "bold"), 
-            fg=COLOR_BLANCO, 
-            bg=color_header, 
+            frame_header,
+            text=f"👑 {titulo_rol}: {self.datos_sesion.get('nombre')} | Correo: {self.datos_sesion.get('correo', '-')}",
+            font=("Arial", 11, "bold"),
+            fg=COLOR_BLANCO,
+            bg=color_header,
             pady=10
         ).pack(side="left", padx=15)
 
         # 3. BOTONES DE ACCIÓN DE GESTIÓN
         frame_acciones = tk.LabelFrame(
-            self.root, 
-            text=" Acciones de Gestión ", 
-            font=("Arial", 10, "bold"), 
-            padx=5, 
-            pady=4, 
+            self.root,
+            text=" Acciones de Gestión ",
+            font=("Arial", 10, "bold"),
+            padx=5,
+            pady=4,
             bg=COLOR_BLANCO,
             fg=COLOR_TEXTO_MAIN
         )
@@ -89,7 +89,7 @@ class VentanaAdmin:
 
         canvas_btn = tk.Canvas(frame_acciones, bg=COLOR_BLANCO, height=38, highlightthickness=0)
         scroll_btn = ttk.Scrollbar(frame_acciones, orient="horizontal", command=canvas_btn.xview)
-        
+
         btn_box = tk.Frame(canvas_btn, bg=COLOR_BLANCO)
         btn_box.bind("<Configure>", lambda e: canvas_btn.configure(scrollregion=canvas_btn.bbox("all")))
 
@@ -102,7 +102,7 @@ class VentanaAdmin:
         # Botones de Acción en Tonos Azules y Alertas
         tk.Button(btn_box, text="➕ Crear Cuenta", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_crear_cuenta, cursor="hand2").pack(side="left", padx=3, pady=2)
         tk.Button(btn_box, text="❌ Eliminar Cuenta", bg=COLOR_ROJO_ALERTA, fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_eliminar_cuenta, cursor="hand2").pack(side="left", padx=3, pady=2)
-        
+
         self.btn_suspender = tk.Button(btn_box, text="🛑 Suspender Cuenta", bg="#B91C1C", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_suspender_cuenta, cursor="hand2")
         self.btn_suspender.pack(side="left", padx=3, pady=2)
 
@@ -111,24 +111,24 @@ class VentanaAdmin:
         tk.Button(btn_box, text="✏️ Editar Datos", bg="#0284C7", fg=COLOR_BLANCO, activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", command=self.dialogo_editar_datos, cursor="hand2").pack(side="left", padx=3, pady=2)
 
         tk.Button(
-            btn_box, 
-            text="🔄 Toggle Reciclaje", 
-            bg="#10B981", 
-            fg=COLOR_BLANCO, 
-            activeforeground=COLOR_BLANCO, 
-            font=("Arial", 9, "bold"), 
-            relief="flat", 
-            command=self.toggle_reciclaje_negocio, 
+            btn_box,
+            text="🔄 Toggle Reciclaje",
+            bg="#10B981",
+            fg=COLOR_BLANCO,
+            activeforeground=COLOR_BLANCO,
+            font=("Arial", 9, "bold"),
+            relief="flat",
+            command=self.toggle_reciclaje_negocio,
             cursor="hand2"
         ).pack(side="left", padx=3, pady=2)
-        
+
         # 4. CONTROL DE PESTAÑAS PRINCIPALES CON NAVEGACIÓN Y SCROLLBAR
         frame_nav = tk.Frame(self.root, bg=COLOR_FONDO_APP)
         frame_nav.pack(fill="x", padx=15, pady=(5, 2))
 
         canvas_tabs = tk.Canvas(frame_nav, bg=COLOR_FONDO_APP, height=38, highlightthickness=0)
         scroll_tabs = ttk.Scrollbar(frame_nav, orient="horizontal", command=canvas_tabs.xview)
-        
+
         box_tabs = tk.Frame(canvas_tabs, bg=COLOR_FONDO_APP)
         box_tabs.bind("<Configure>", lambda e: canvas_tabs.configure(scrollregion=canvas_tabs.bbox("all")))
 
@@ -174,14 +174,14 @@ class VentanaAdmin:
 
         for nombre in vistas.keys():
             btn = tk.Button(
-                box_tabs, 
-                text=nombre, 
-                font=("Arial", 9, "bold"), 
-                bg=COLOR_FONDO_APP, 
-                fg=COLOR_TEXTO_MAIN, 
-                relief="flat", 
-                padx=12, 
-                pady=5, 
+                box_tabs,
+                text=nombre,
+                font=("Arial", 9, "bold"),
+                bg=COLOR_FONDO_APP,
+                fg=COLOR_TEXTO_MAIN,
+                relief="flat",
+                padx=12,
+                pady=5,
                 cursor="hand2",
                 command=lambda n=nombre: cambiar_vista(n)
             )
@@ -198,8 +198,8 @@ class VentanaAdmin:
             scroll_x = ttk.Scrollbar(frame_tabla, orient="horizontal")
 
             tabla = ttk.Treeview(
-                frame_tabla, 
-                columns=columnas, 
+                frame_tabla,
+                columns=columnas,
                 show="headings",
                 yscrollcommand=scroll_y.set,
                 xscrollcommand=scroll_x.set
@@ -265,17 +265,17 @@ class VentanaAdmin:
         self.tabla_usr_negocios = crear_tabla_con_scroll(self.tab_usr_negocios, cols_usr_negocio, config_usr_negocio)
         self.tabla_usr_devs = crear_tabla_con_scroll(self.tab_usr_devs, cols_usr_vecino, config_usr_vecino)
 
-        
+
         # PROMOCIONES ACTIVAS
         tk.Button(
-            tab_promos, 
-            text="🖼️ Panel de promociones", 
-            bg=COLOR_PRIMARIO_AZUL, 
-            fg=COLOR_BLANCO, 
+            tab_promos,
+            text="🖼️ Panel de promociones",
+            bg=COLOR_PRIMARIO_AZUL,
+            fg=COLOR_BLANCO,
             activeforeground=COLOR_BLANCO,
-            font=("Arial", 9, "bold"), 
-            relief="flat", 
-            command=self.dialogo_ver_promociones_con_foto, 
+            font=("Arial", 9, "bold"),
+            relief="flat",
+            command=self.dialogo_ver_promociones_con_foto,
             cursor="hand2",
             padx=10,
             pady=4
@@ -335,10 +335,10 @@ class VentanaAdmin:
             frame_grafico_izq.pack(side="left", fill="both", expand=True, padx=(5, 0))
 
             frame_resena_der = tk.Frame(
-                frame_grafico_container, 
-                bg=COLOR_FONDO_APP, 
-                bd=1, 
-                relief="solid", 
+                frame_grafico_container,
+                bg=COLOR_FONDO_APP,
+                bd=1,
+                relief="solid",
                 highlightbackground=COLOR_SECUNDARIO_AZUL if hasattr(self, 'es_admin_supremo') else "#52B788"
             )
             frame_resena_der.pack(side="right", fill="both", expand=False, padx=10, pady=10)
@@ -354,16 +354,16 @@ class VentanaAdmin:
                 kilos = list(totales_material.values())
 
                 colores_vivos = [
-                    "#E76F51", "#F4A261", "#E9C46A", "#2A9D8F", "#264653", 
+                    "#E76F51", "#F4A261", "#E9C46A", "#2A9D8F", "#264653",
                     "#E63946", "#457B9D", "#1D3557", "#9b5de5", "#f15bb5", "#00bbf9"
                 ]
                 colores_usados = [colores_vivos[i % len(colores_vivos)] for i in range(len(materiales))]
 
                 wedges, _, autotexts = ax.pie(
-                    kilos, 
-                    labels=None, 
-                    autopct='%1.1f%%', 
-                    startangle=140, 
+                    kilos,
+                    labels=None,
+                    autopct='%1.1f%%',
+                    startangle=140,
                     colors=colores_usados,
                     pctdistance=0.72,
                     textprops=dict(color="white", weight="bold", fontsize=8)
@@ -377,10 +377,10 @@ class VentanaAdmin:
 
                 # LEYENDA A LA IZQUIERDA FUERA DEL GRÁFICO
                 ax.legend(
-                    wedges, 
-                    materiales, 
-                    title="Materiales", 
-                    loc="center left", 
+                    wedges,
+                    materiales,
+                    title="Materiales",
+                    loc="center left",
                     bbox_to_anchor=(-0.78, 0.5),
                     fontsize=7.5,
                     title_fontsize=8.5,
@@ -409,16 +409,16 @@ class VentanaAdmin:
                                 theta_rad = np.deg2rad(theta)
                                 wedge.set_center((0.35 * np.cos(theta_rad), 0.35 * np.sin(theta_rad)))
                                 wedge.set_zorder(10)
-                                
+
                                 # Eleva la capa zorder del texto y su recuadro por encima de todos los elementos
                                 color_porcion = colores_usados[i]
                                 autotexts[i].set_fontsize(11)
                                 autotexts[i].set_color("#FFFFFF")
                                 autotexts[i].set_zorder(20)
                                 autotexts[i].set_bbox(dict(
-                                    boxstyle="round,pad=0.35", 
-                                    fc=color_porcion, 
-                                    ec="#FFFFFF", 
+                                    boxstyle="round,pad=0.35",
+                                    fc=color_porcion,
+                                    ec="#FFFFFF",
                                     lw=1.5
                                 ))
                             else:
@@ -444,17 +444,17 @@ class VentanaAdmin:
             # --- PARTE 2: RESEÑA DERECHA ---
             lbl_header_color = COLOR_AZUL_HEADER if hasattr(self, 'es_admin_supremo') else COLOR_PRIMARIO_AZUL
             tk.Label(
-                frame_resena_der, 
-                text="📋 Resumen Operativo", 
-                font=("Arial", 10, "bold"), 
-                bg=lbl_header_color, 
-                fg=COLOR_BLANCO, 
+                frame_resena_der,
+                text="📋 Resumen Operativo",
+                font=("Arial", 10, "bold"),
+                bg=lbl_header_color,
+                fg=COLOR_BLANCO,
                 pady=6
             ).pack(fill="x")
 
             canvas_resena = tk.Canvas(frame_resena_der, bg=COLOR_FONDO_APP, width=250, highlightthickness=0)
             scroll_resena = ttk.Scrollbar(frame_resena_der, orient="vertical", command=canvas_resena.yview)
-            
+
             box_resena = tk.Frame(canvas_resena, bg=COLOR_FONDO_APP, padx=8, pady=8)
             box_resena.bind("<Configure>", lambda e: canvas_resena.configure(scrollregion=canvas_resena.bbox("all")))
 
@@ -466,19 +466,19 @@ class VentanaAdmin:
 
             p_color = COLOR_PRIMARIO_AZUL if hasattr(self, 'es_admin_supremo') else COLOR_PRIMARIO_AZUL
             tk.Label(
-                box_resena, 
-                text=f"⚖️ Total Recolectado: {total_general_kg:.2f} kg", 
-                font=("Arial", 9, "bold"), 
-                fg=p_color, 
+                box_resena,
+                text=f"⚖️ Total Recolectado: {total_general_kg:.2f} kg",
+                font=("Arial", 9, "bold"),
+                fg=p_color,
                 bg=COLOR_FONDO_APP,
                 anchor="w"
             ).pack(fill="x", pady=(0, 4))
 
             tk.Label(
-                box_resena, 
-                text=f"📦 Operaciones Registradas: {len(todas_entregas)}", 
-                font=("Arial", 8, "bold"), 
-                fg=COLOR_TEXTO_MAIN, 
+                box_resena,
+                text=f"📦 Operaciones Registradas: {len(todas_entregas)}",
+                font=("Arial", 8, "bold"),
+                fg=COLOR_TEXTO_MAIN,
                 bg=COLOR_FONDO_APP,
                 anchor="w"
             ).pack(fill="x", pady=(0, 8))
@@ -491,11 +491,11 @@ class VentanaAdmin:
                 porcentaje = (kg / total_general_kg) * 100 if total_general_kg > 0 else 0
                 txt_item = f"• {mat}\n   └─ {kg:.2f} kg ({porcentaje:.1f}%)"
                 tk.Label(
-                    box_resena, 
-                    text=txt_item, 
-                    font=("Arial", 8), 
-                    fg=COLOR_TEXTO_MAIN, 
-                    bg=COLOR_FONDO_APP, 
+                    box_resena,
+                    text=txt_item,
+                    font=("Arial", 8),
+                    fg=COLOR_TEXTO_MAIN,
+                    bg=COLOR_FONDO_APP,
                     justify="left",
                     anchor="w"
                 ).pack(fill="x", pady=2)
@@ -584,14 +584,14 @@ class VentanaAdmin:
             frame_top.pack(fill="x", pady=(0, 5))
 
             tk.Label(frame_top, text="✉️ Seleccionar:", font=("Arial", 9, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_BLANCO).pack(side="left", padx=5)
-            
+
             cb = ttk.Combobox(frame_top, font=("Arial", 10), width=38, state="readonly")
             cb.pack(side="left", padx=5)
             cb.bind("<<ComboboxSelected>>", lambda e, r=rol_tipo: self.cargar_chat_seleccionado(r))
 
             tk.Button(
-                frame_top, text="🔄 Actualizar", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, 
-                activeforeground=COLOR_BLANCO, font=("Arial", 8, "bold"), relief="flat", 
+                frame_top, text="🔄 Actualizar", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO,
+                activeforeground=COLOR_BLANCO, font=("Arial", 8, "bold"), relief="flat",
                 command=lambda r=rol_tipo: self.llenar_combo_chats_por_rol(r), cursor="hand2"
             ).pack(side="left", padx=5)
 
@@ -613,8 +613,8 @@ class VentanaAdmin:
             ent.bind("<Return>", lambda e, r=rol_tipo: self.responder_chat_por_rol(r))
 
             tk.Button(
-                frame_input, text="Responder ✉️", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, 
-                activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat", 
+                frame_input, text="Responder ✉️", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO,
+                activeforeground=COLOR_BLANCO, font=("Arial", 9, "bold"), relief="flat",
                 command=lambda r=rol_tipo: self.responder_chat_por_rol(r), cursor="hand2"
             ).pack(side="right")
 
@@ -626,15 +626,15 @@ class VentanaAdmin:
             }
 
         tk.Button(
-            self.root, 
-            text="🚪 Cerrar Sesión", 
-            bg=COLOR_GRIS_BOTON, 
-            fg=COLOR_BLANCO, 
+            self.root,
+            text="🚪 Cerrar Sesión",
+            bg=COLOR_GRIS_BOTON,
+            fg=COLOR_BLANCO,
             activeforeground=COLOR_BLANCO,
-            font=("Arial", 10, "bold"), 
-            relief="flat", 
-            command=self.cerrar_sesion_cb, 
-            cursor="hand2", 
+            font=("Arial", 10, "bold"),
+            relief="flat",
+            command=self.cerrar_sesion_cb,
+            cursor="hand2",
             pady=4,
             padx=15
         ).pack(side="bottom", pady=8)
@@ -660,9 +660,9 @@ class VentanaAdmin:
 
         txt_estado = "HABILITADO" if nuevo_estado else "DESHABILITADO"
         registrar_accion_dev(
-            self.id_usuario, 
-            self.datos_sesion.get("nombre", "Admin"), 
-            "TOGGLE_RECICLAJE", 
+            self.id_usuario,
+            self.datos_sesion.get("nombre", "Admin"),
+            "TOGGLE_RECICLAJE",
             f"Cambió punto de recepción a '{txt_estado}' para negocio {uid}"
         )
 
@@ -675,11 +675,11 @@ class VentanaAdmin:
         style.configure("TNotebook", background=COLOR_FONDO_APP, borderwidth=0)
         style.configure("TNotebook.Tab", background=COLOR_FONDO_APP, foreground=COLOR_TEXTO_MAIN, font=("Arial", 10, "bold"), padding=[10, 5])
         style.map("TNotebook.Tab", background=[("selected", COLOR_BLANCO)], foreground=[("selected", COLOR_PRIMARIO_AZUL)])
-        
+
         style.configure("Treeview", background=COLOR_BLANCO, foreground=COLOR_TEXTO_MAIN, fieldbackground=COLOR_BLANCO, rowheight=25)
         style.configure("Treeview.Heading", background=COLOR_FONDO_APP, foreground=COLOR_TEXTO_MAIN, font=("Arial", 9, "bold"))
 
-    
+
     def obtener_rango_vecino(self, puntos):
         try:
             pts = int(float(puntos))
@@ -702,28 +702,28 @@ class VentanaAdmin:
     def llenar_combo_chats_por_rol(self, rol_tipo):
         mensajes = cargar_mensajes_chat()
         usuarios = cargar_usuarios()
-        
+
         ui = self.chats_ui[rol_tipo]
         cb = ui["cb"]
         mapeo = ui["mapeo"]
-        
+
         opciones = []
         mapeo.clear()
 
         for uid, datos in usuarios.items():
             rol_usuario = datos.get("rol", "")
             es_match = (rol_usuario == rol_tipo) or (rol_tipo == "gestor de reciclaje" and rol_usuario in ["admin", "gestor de reciclaje", "desarrollador"])
-            
+
             if es_match:
                 if uid == self.id_usuario:
                     continue
 
                 nombre_usuario = datos.get("nombre", "Usuario")
                 tiene_pendientes = any(m.get("dni_cliente") == uid and m.get("rol") == rol_usuario and not m.get("leido", True) for m in mensajes)
-                
+
                 icono_alerta = "🔔 [NUEVO] " if tiene_pendientes else "💬 "
                 texto_item = f"{icono_alerta}{nombre_usuario} (ID: {uid})"
-                
+
                 opciones.append(texto_item)
                 mapeo[texto_item] = uid
 
@@ -742,7 +742,7 @@ class VentanaAdmin:
         ui = self.chats_ui[rol_tipo]
         seleccion = ui["cb"].get()
         if not seleccion or "No hay" in seleccion: return
-        
+
         dni = ui["mapeo"].get(seleccion)
         if not dni: return
 
@@ -802,7 +802,7 @@ class VentanaAdmin:
         hay_nuevos = any(m.get("rol") in ["vecino", "negocio"] and not m.get("leido", True) for m in mensajes)
         if hay_nuevos:
             messagebox.showwarning(
-                "💬 Nuevos Mensajes", 
+                "💬 Nuevos Mensajes",
                 "¡Tienes mensajes nuevos pendientes por leer y responder en la pestaña 'Soporte (Bandeja)'!"
             )
 
@@ -830,10 +830,10 @@ class VentanaAdmin:
         container.pack(fill="both", expand=True)
 
         lbl_msg = tk.Label(
-            container, 
-            text=mensaje, 
-            font=("Arial", 9, "bold"), 
-            fg=COLOR_TEXTO_MAIN, 
+            container,
+            text=mensaje,
+            font=("Arial", 9, "bold"),
+            fg=COLOR_TEXTO_MAIN,
             bg=COLOR_FONDO_APP,
             wraplength=340,
             justify="center"
@@ -860,12 +860,12 @@ class VentanaAdmin:
         frame_btn.pack(pady=10)
 
         tk.Button(
-            frame_btn, text="Aceptar", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO, 
+            frame_btn, text="Aceptar", bg=COLOR_PRIMARIO_AZUL, fg=COLOR_BLANCO,
             font=("Arial", 9, "bold"), width=10, relief="flat", cursor="hand2", command=confirmar
         ).pack(side="left", padx=5)
 
         tk.Button(
-            frame_btn, text="Cancelar", bg=COLOR_GRIS_BOTON, fg=COLOR_BLANCO, 
+            frame_btn, text="Cancelar", bg=COLOR_GRIS_BOTON, fg=COLOR_BLANCO,
             font=("Arial", 9, "bold"), width=10, relief="flat", cursor="hand2", command=cancelar
         ).pack(side="left", padx=5)
 
@@ -909,7 +909,7 @@ class VentanaAdmin:
             if rol == "vecino":
                 pts = datos.get("puntos", 0)
                 rango_txt = self.obtener_rango_vecino(pts) if hasattr(self, 'obtener_rango_vecino') else "Estándar"
-                
+
                 tupla_vecinos = (
                     uid,
                     datos.get("nombre", "-"),
@@ -927,7 +927,7 @@ class VentanaAdmin:
                     pts_reciclaje = float(obtener_puntos_recolectados_por_tienda(uid))
                 except (ValueError, TypeError):
                     pts_reciclaje = 0.0
-                
+
                 # 2. Obtener puntos por ventas / canjes realizados en la tienda
                 pts_ventas = 0.0
                 for log in logs_tiendas:
@@ -949,7 +949,7 @@ class VentanaAdmin:
                 # 5. Cálculo de Comisión (10%) y Total Pts
                 comision_10_pts = round(pts_recolectados * 0.10, 1)
                 total_pts = round(pts_recolectados + comision_10_pts, 1)
-                
+
                 # Convertir el Total Pts a Soles (multiplicando por 0.10 o tu factor de conversión)
                 total_soles = round(total_pts * 0.10, 2)
 
@@ -964,7 +964,7 @@ class VentanaAdmin:
                     estado_txt,
                     txt_reciclaje,
                     f"{pts_recolectados} PTS",
-                    f"{comision_10_pts} PTS", 
+                    f"{comision_10_pts} PTS",
                     f"{total_pts} PTS - (S/ {total_soles:.2f})",  # Total Pts con conversión a Soles
                     justif_txt
                 )
@@ -984,7 +984,7 @@ class VentanaAdmin:
                 )
                 self.tabla_usr_devs.insert("", "end", values=tupla_staff, tags=(tag_fila,))
 
-                
+
         # 4. Llenado de Promociones Activas
         for p in cargar_promociones():
             try:
@@ -993,29 +993,29 @@ class VentanaAdmin:
                 pts_oferta = 0
 
             self.tabla_promos.insert("", "end", values=(
-                p.get("tienda_nombre", "Tienda"), 
-                p.get("titulo", "-"), 
-                f"S/ {float(p.get('precio_soles', 0)):.2f}", 
-                f"{pts_oferta} PTS", 
+                p.get("tienda_nombre", "Tienda"),
+                p.get("titulo", "-"),
+                f"S/ {float(p.get('precio_soles', 0)):.2f}",
+                f"{pts_oferta} PTS",
                 p.get("descripcion", "-")
             ))
 
         # 5. Llenado del Log de Tiendas
         for log in reversed(logs_tiendas):
             self.tabla_tnd.insert("", "end", values=(
-                log.get("fecha"), 
-                log.get("tienda_id"), 
-                log.get("tienda_nombre"), 
-                log.get("dni_cliente"), 
+                log.get("fecha"),
+                log.get("tienda_id"),
+                log.get("tienda_nombre"),
+                log.get("dni_cliente"),
                 log.get("puntos_descontados")
             ))
 
         # 6. Llenado de Actividad de Clientes
         tablas_cli = [
-            self.tabla_cli_todos, 
-            self.tabla_cli_abonos, 
-            self.tabla_cli_canjes, 
-            self.tabla_cli_entregas, 
+            self.tabla_cli_todos,
+            self.tabla_cli_abonos,
+            self.tabla_cli_canjes,
+            self.tabla_cli_entregas,
             self.tabla_cli_resenas
         ]
         for t in tablas_cli:
@@ -1026,7 +1026,7 @@ class VentanaAdmin:
             fecha = log.get("fecha", "-")
             dni = log.get("dni_cliente", "-")
             tipo = log.get("tipo", "")
-            
+
             try:
                 puntos = int(float(log.get("puntos", 0)))
             except (ValueError, TypeError):
@@ -1062,7 +1062,7 @@ class VentanaAdmin:
             for item in self.tabla_dev.get_children(): self.tabla_dev.delete(item)
             for log in reversed(cargar_log_devs()):
                 self.tabla_dev.insert("", "end", values=(log.get("fecha"), log.get("autor_id"), log.get("autor_nombre"), log.get("accion"), log.get("objetivo")))
-                
+
     def dialogo_suspender_cuenta(self):
         uid = self.pedir_texto_custom("Suspender Cuenta", "Ingrese DNI / ID del usuario a suspender:")
         if not uid: return
@@ -1106,7 +1106,7 @@ class VentanaAdmin:
             return
 
         motivo_reactivacion = self.pedir_texto_custom(
-            "Motivo de Reactivación", 
+            "Motivo de Reactivación",
             f"Ingrese el motivo por el cual levanta la suspensión a {usuarios[uid]['nombre']}:"
         )
         if not motivo_reactivacion:
@@ -1127,9 +1127,9 @@ class VentanaAdmin:
         )
 
         registrar_accion_dev(
-            self.id_usuario, 
-            self.datos_sesion.get("nombre"), 
-            "ACTIVAR_CUENTA", 
+            self.id_usuario,
+            self.datos_sesion.get("nombre"),
+            "ACTIVAR_CUENTA",
             f"Levantó suspensión a {uid}. Motivo Admin: {motivo_reactivacion}"
         )
 
@@ -1149,7 +1149,7 @@ class VentanaAdmin:
             win_modal.iconphoto(False, self.root.icon_img)
 
         tk.Label(win_modal, text="Seleccione Tipo de Cuenta:", font=("Arial", 10, "bold"), fg=COLOR_TEXTO_MAIN, bg=COLOR_FONDO_APP).pack(pady=5)
-        
+
         roles_disponibles = ["vecino", "negocio","gestor de reciclaje"]
 
         cb_rol = ttk.Combobox(win_modal, values=roles_disponibles, state="readonly")
@@ -1210,16 +1210,16 @@ class VentanaAdmin:
                 "motivo_suspension": "",
                 "justificacion_cliente": ""
             }
-            
+
             guardar_usuarios(usuarios)
-            
+
             if hasattr(self, 'id_usuario'):
                 registrar_accion_dev(self.id_usuario, self.datos_sesion.get("nombre", "Admin"), "CREAR_CUENTA", f"Creó cuenta {uid} ({rol_final.upper()})")
 
             self.actualizar_tablas()
             if hasattr(self, 'llenar_todos_los_combos'):
                 self.llenar_todos_los_combos()
-                
+
             win_modal.destroy()
             messagebox.showinfo("Éxito", f"Cuenta de tipo '{rol_final.upper()}' creada correctamente.")
 
@@ -1276,7 +1276,7 @@ class VentanaAdmin:
 
         if usuarios[uid].get("suspendido", False):
             messagebox.showwarning(
-                "Cuenta Suspendida", 
+                "Cuenta Suspendida",
                 f"No se pueden editar los datos. La cuenta de {usuarios[uid]['nombre']} se encuentra SUSPENDIDA."
             )
             return
@@ -1284,7 +1284,7 @@ class VentanaAdmin:
         nuevo_nom = self.pedir_texto_custom("Editar", "Nuevo Nombre:")
         nuevo_correo = self.pedir_texto_custom("Editar", "Nuevo Correo:")
         nuevo_tel = self.pedir_texto_custom("Editar", "Nuevo Celular:")
-        
+
         if nuevo_nom: usuarios[uid]["nombre"] = nuevo_nom
         if nuevo_correo: usuarios[uid]["correo"] = nuevo_correo
         if nuevo_tel: usuarios[uid]["telefono"] = nuevo_tel
@@ -1314,7 +1314,7 @@ class VentanaAdmin:
                 from PIL import Image, ImageTk
                 img_pil = Image.open(ruta_encontrada).convert("RGBA").resize((720, 540), Image.Resampling.LANCZOS)
                 win_promos.bg_img = ImageTk.PhotoImage(img_pil)
-                
+
                 # Imagen fija pegada a la ventana con place
                 lbl_bg = tk.Label(win_promos, image=win_promos.bg_img, bd=0)
                 lbl_bg.place(x=0, y=0, relwidth=1, relheight=1)
@@ -1363,10 +1363,10 @@ class VentanaAdmin:
                 win_desc.iconphoto(False, self.root.icon_img)
 
             tk.Label(
-                win_desc, 
-                text=f"📌 {titulo}", 
-                font=("Arial", 11, "bold"), 
-                fg=COLOR_TEXTO_MAIN, 
+                win_desc,
+                text=f"📌 {titulo}",
+                font=("Arial", 11, "bold"),
+                fg=COLOR_TEXTO_MAIN,
                 bg=COLOR_FONDO_APP
             ).pack(anchor="w", padx=15, pady=(15, 5))
 
@@ -1380,14 +1380,14 @@ class VentanaAdmin:
 
             btn_color = COLOR_PRIMARIO_AZUL
             tk.Button(
-                win_desc, 
-                text="Cerrar", 
-                bg=btn_color, 
-                fg=COLOR_BLANCO, 
-                font=("Arial", 9, "bold"), 
-                command=win_desc.destroy, 
-                relief="flat", 
-                padx=15, 
+                win_desc,
+                text="Cerrar",
+                bg=btn_color,
+                fg=COLOR_BLANCO,
+                font=("Arial", 9, "bold"),
+                command=win_desc.destroy,
+                relief="flat",
+                padx=15,
                 pady=3,
                 cursor="hand2"
             ).pack(pady=10)
@@ -1399,9 +1399,9 @@ class VentanaAdmin:
             promos = cargar_promociones()
             if not promos:
                 tk.Label(
-                    frame_grid, 
-                    text="No hay promociones registradas actualmente.", 
-                    font=("Arial", 11, "italic"), 
+                    frame_grid,
+                    text="No hay promociones registradas actualmente.",
+                    font=("Arial", 11, "italic"),
                     fg=COLOR_GRIS_BOTON,
                     bg=COLOR_BLANCO
                 ).pack(pady=50, padx=20)
@@ -1413,10 +1413,10 @@ class VentanaAdmin:
                 t_nombre = p.get("tienda_nombre", "Comercio")
                 t_id = p.get("tienda_id", "Sin ID")
                 clave_tienda = (t_nombre, t_id)
-                
+
                 if clave_tienda not in tiendas_dict:
                     tiendas_dict[clave_tienda] = []
-                
+
                 # Guardamos el índice global (idx) para que el botón "Eliminar" funcione correctamente
                 tiendas_dict[clave_tienda].append((idx, p))
 
@@ -1431,13 +1431,13 @@ class VentanaAdmin:
 
                 # Encabezado separador por nombre de tienda
                 lbl_separador = tk.Label(
-                    frame_seccion_tienda, 
-                    text=f"🏪 {tienda_nom} (ID: {tienda_id})", 
-                    font=("Arial", 11, "bold"), 
-                    fg="#0F172A",          
-                    bg="#E0F2FE",          
-                    anchor="w", 
-                    padx=12, 
+                    frame_seccion_tienda,
+                    text=f"🏪 {tienda_nom} (ID: {tienda_id})",
+                    font=("Arial", 11, "bold"),
+                    fg="#0F172A",
+                    bg="#E0F2FE",
+                    anchor="w",
+                    padx=12,
                     pady=6,
                     bd=0,                  # Quita el marco/borde negro
                     relief="flat"          # Estilo plano sin bordes marcados
@@ -1454,13 +1454,13 @@ class VentanaAdmin:
 
                     # 1. Rectángulo Vertical (Ancho: 180px, Alto: 220px)
                     card = tk.Frame(
-                        frame_tarjetas, 
-                        bg=COLOR_BLANCO, 
-                        bd=1, 
-                        relief="solid", 
-                        highlightbackground="#CBD5E1", 
+                        frame_tarjetas,
+                        bg=COLOR_BLANCO,
+                        bd=1,
+                        relief="solid",
+                        highlightbackground="#CBD5E1",
                         highlightthickness=1,
-                        padx=10, 
+                        padx=10,
                         pady=10,
                         width=180,
                         height=220
@@ -1475,11 +1475,11 @@ class VentanaAdmin:
 
                     # 2. Nombre del Producto destacado (tamaño 10 entero)
                     lbl_titulo = tk.Label(
-                        card, 
-                        text=f"📌 {titulo_oferta}", 
-                        font=("Arial", 10, "bold"), 
-                        fg=COLOR_TEXTO_MAIN, 
-                        bg=COLOR_BLANCO, 
+                        card,
+                        text=f"📌 {titulo_oferta}",
+                        font=("Arial", 10, "bold"),
+                        fg=COLOR_TEXTO_MAIN,
+                        bg=COLOR_BLANCO,
                         justify="left",
                         anchor="nw",
                         wraplength=155
@@ -1488,11 +1488,11 @@ class VentanaAdmin:
 
                     # 3. Precio y Puntos (tamaño 8 entero)
                     lbl_precio = tk.Label(
-                        card, 
-                        text=f"💰 S/ {float(p.get('precio_soles', 0)):.2f} ➔ {pts_oferta} PTS", 
-                        font=("Arial", 8, "bold"), 
-                        fg="#0284C7", 
-                        bg=COLOR_BLANCO, 
+                        card,
+                        text=f"💰 S/ {float(p.get('precio_soles', 0)):.2f} ➔ {pts_oferta} PTS",
+                        font=("Arial", 8, "bold"),
+                        fg="#0284C7",
+                        bg=COLOR_BLANCO,
                         justify="left",
                         anchor="nw"
                     )
@@ -1511,12 +1511,12 @@ class VentanaAdmin:
                     frame_desc.pack_propagate(False)
 
                     lbl_desc = tk.Label(
-                        frame_desc, 
-                        text=f"📝 {desc_mostrar}", 
-                        font=("Arial", 8), 
-                        fg="#475569", 
-                        bg=COLOR_BLANCO, 
-                        justify="left", 
+                        frame_desc,
+                        text=f"📝 {desc_mostrar}",
+                        font=("Arial", 8),
+                        fg="#475569",
+                        bg=COLOR_BLANCO,
+                        justify="left",
                         anchor="nw",
                         wraplength=150
                     )
@@ -1524,13 +1524,13 @@ class VentanaAdmin:
 
                     if es_larga:
                         btn_ver_mas = tk.Button(
-                            frame_desc, 
-                            text="ver más", 
-                            font=("Arial", 7, "bold", "underline"), 
-                            fg="#0284C7", 
-                            bg=COLOR_BLANCO, 
-                            bd=0, 
-                            activebackground=COLOR_BLANCO, 
+                            frame_desc,
+                            text="ver más",
+                            font=("Arial", 7, "bold", "underline"),
+                            fg="#0284C7",
+                            bg=COLOR_BLANCO,
+                            bd=0,
+                            activebackground=COLOR_BLANCO,
                             activeforeground="#0369A1",
                             cursor="hand2",
                             command=lambda t=titulo_oferta, d=desc_original: mostrar_descripcion_completa(t, d)
@@ -1546,9 +1546,9 @@ class VentanaAdmin:
                         if messagebox.askyesno("Confirmar", f"¿Eliminar definitivamente la oferta '{titulo}'?"):
                             if eliminar_promocion_admin(i, tienda_id, motivo, self.datos_sesion.get("nombre", "Gestor")):
                                 registrar_accion_dev(
-                                    self.id_usuario, 
-                                    self.datos_sesion.get("nombre"), 
-                                    "ELIMINAR_OFERTA", 
+                                    self.id_usuario,
+                                    self.datos_sesion.get("nombre"),
+                                    "ELIMINAR_OFERTA",
                                     f"Eliminó oferta '{titulo}' de la tienda {tienda_id}. Motivo: {motivo}"
                                 )
                                 messagebox.showinfo("Éxito", "La oferta ha sido eliminada.")
@@ -1557,15 +1557,15 @@ class VentanaAdmin:
 
                     # 5. Botón eliminar (tamaño 8 entero)
                     btn_eliminar = tk.Button(
-                        card, 
-                        text="🗑️ Eliminar Oferta", 
-                        bg="#DC2626", 
-                        fg=COLOR_BLANCO, 
-                        activeforeground=COLOR_BLANCO, 
-                        font=("Arial", 8, "bold"), 
-                        relief="flat", 
-                        command=eliminar_con_motivo, 
-                        cursor="hand2", 
+                        card,
+                        text="🗑️ Eliminar Oferta",
+                        bg="#DC2626",
+                        fg=COLOR_BLANCO,
+                        activeforeground=COLOR_BLANCO,
+                        font=("Arial", 8, "bold"),
+                        relief="flat",
+                        command=eliminar_con_motivo,
+                        cursor="hand2",
                         pady=3
                     )
                     btn_eliminar.pack(fill="x", side="bottom")
