@@ -7,18 +7,13 @@ from datos.gestor import (
     cargar_log_clientes,
     cargar_mensajes_chat,
     guardar_mensaje_chat,
-    cargar_promociones,
-    guardar_promociones,
     guardar_usuarios,
     marcar_chat_como_leido,
-    registrar_accion_tienda,
-    registrar_accion_cliente,
     calcular_co2_evitado_vecino
 )
 
 COLOR_FONDO_VECINO = "#E8F5E9"
 
-# Categorías estándar de bodega
 CATEGORIAS_BODEGA = [
     "Abarrotes y Despensa",
     "Bebidas y Gaseosas",
@@ -43,7 +38,7 @@ class VentanaVecino:
             self.mostrar_pantalla_suspendido()
             return  # Detiene la carga normal si está suspendido
 
-        # --- 2. CONFIGURACIÓN NORMAL DE LA VENTANA ---
+        # --- 2. CONFIGURACIÓN DE LA VENTANA ---
         self.root.config(bg=COLOR_FONDO_VECINO)
         self.root.title("EcoPuntos - Mi Cuenta Vecinal")
         self.root.geometry("1020x740")
@@ -51,7 +46,7 @@ class VentanaVecino:
 
         self.aplicar_icono()
 
-        # Cargar Imagen de Fondo
+        # IMAGEN DE FONDO
         ruta_fondo = os.path.join("img", "fondo_vecino.png")
         if os.path.exists(ruta_fondo):
             try:
@@ -61,7 +56,7 @@ class VentanaVecino:
             except Exception as e:
                 print(f"Aviso fondo vecino: {e}")
 
-        # Header Superior
+        # HEADER
         frame_top = tk.Frame(self.root, bg="#2E7D32")
         frame_top.pack(fill="x")
         
@@ -92,7 +87,7 @@ class VentanaVecino:
 
         puntos_enteros = int(float(self.datos.get("puntos", 0)))
         
-        # Puntuación destacada arriba
+        # PUNTUACION DESTACADA LADO SUPERIOR
         self.lbl_puntos = tk.Label(
             frame_izq, 
             text=f"{puntos_enteros} PTS", 
@@ -102,7 +97,7 @@ class VentanaVecino:
         )
         self.lbl_puntos.pack(anchor="w", pady=(1, 2))
 
-        # Rango justo debajo de la puntuación (sin estorbar a la derecha)
+        # RANGO
         rango_actual = self.obtener_rango_vecino(puntos_enteros)
         self.lbl_rango = tk.Label(
             frame_izq, 

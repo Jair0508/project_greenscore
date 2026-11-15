@@ -9,7 +9,6 @@ from datos.gestor import (
 )
 from logica.modelos import Material
 
-# Importación de matplotlib para renderizar el gráfico estadístico global
 try:
     import matplotlib
     matplotlib.use("Agg")
@@ -20,7 +19,7 @@ except ImportError:
     MATPLOTLIB_DISPONIBLE = False
 
 # ==========================================
-# PALETA DE COLORES - GESTOR (CELESTE OSCURO / OCÉANO)
+# PALETA DE COLORES 
 # ==========================================
 COLOR_FONDO_APP        = "#F0F9FF"
 COLOR_TEXTO_MAIN       = "#0F172A"

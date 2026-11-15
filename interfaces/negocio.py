@@ -15,7 +15,6 @@ from datos.gestor import (
     cargar_entregas_reciclaje
 )
 
-# Importamos matplotlib para generar gráficos estadísticos profesionales
 try:
     import matplotlib
     matplotlib.use("Agg")
@@ -26,7 +25,7 @@ except ImportError:
     MATPLOTLIB_DISPONIBLE = False
 
 # ==========================================
-# PALETA DE COLORES "ECO-GESTIÓN" (SIN NEGRO)
+# PALETA DE COLORES 
 # ==========================================
 COLOR_FONDO_APP      = "#F4F9F4"  # Blanco Menta Suave
 COLOR_TEXTO_MAIN     = "#1B4332"  # Verde Bosque Profundo
@@ -35,7 +34,6 @@ COLOR_SECUNDARIO     = "#52B788"  # Verde Claro Fresco
 COLOR_ACENTO_CANJE   = "#E76F51"  # Terracota Suave
 COLOR_BLANCO         = "#FFFFFF"  # Blanco puro
 
-# Categorías específicas e independientes para Bodega
 CATEGORIAS_BODEGA = [
     "Abarrotes y Despensa",
     "Bebidas y Gaseosas",

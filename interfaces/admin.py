@@ -1,16 +1,14 @@
 import tkinter as tk
-from tkinter import ttk, messagebox, simpledialog
+from tkinter import ttk, messagebox
 import os
 from datos.gestor import (
     cargar_usuarios, guardar_usuarios, registrar_accion_dev,
-    cargar_log_devs, cargar_log_tiendas, cargar_log_clientes, registrar_accion_cliente,
-    cargar_promociones, guardar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido,
+    cargar_log_devs, cargar_log_tiendas, cargar_log_clientes,
+    cargar_promociones, cargar_mensajes_chat, guardar_mensaje_chat, marcar_chat_como_leido,
     obtener_puntos_recolectados_por_tienda, eliminar_promocion_admin, cargar_entregas_reciclaje,
     UsuarioConHistorialError
 )
 
-
-# Importación de matplotlib para renderizar el gráfico estadístico global
 try:
     import matplotlib
     matplotlib.use("Agg")
