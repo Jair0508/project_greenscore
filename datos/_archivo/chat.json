@@ -1,144 +1,42 @@
 [
     {
-        "fecha": "2026-10-22 17:53:25",
-        "dni_cliente": "68452135",
-        "autor": "Mario Herrera",
-        "rol": "vecino",
-        "mensaje": "Hola"
-    },
-    {
-        "fecha": "2026-10-22 18:31:36",
-        "dni_cliente": "68452135",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "Buenos días"
-    },
-    {
-        "fecha": "2026-10-23 01:04:06",
-        "dni_cliente": "68452135",
-        "autor": "Mario Herrera",
-        "rol": "vecino",
-        "mensaje": "waza",
+        "fecha": "2026-11-15 01:47:10.897079",
+        "dni_cliente": "sebas_vecino",
+        "autor": "sebas",
+        "rol": "gestor",
+        "mensaje": "buenas madrugadas, bienvenido a GreenScore!",
         "leido": true
     },
     {
-        "fecha": "2026-10-23 01:11:47",
-        "dni_cliente": "68452135",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: porque si bb",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-23 01:12:36",
-        "dni_cliente": "68452135",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: ya bb",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-23 02:02:20",
-        "dni_cliente": "952089997",
+        "fecha": "2026-11-15 01:47:43.726253",
+        "dni_cliente": "sebas_vecino",
         "autor": "sebas",
         "rol": "vecino",
-        "mensaje": "puto",
+        "mensaje": "muchas gracias",
         "leido": true
     },
     {
-        "fecha": "2026-10-23 02:02:51",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
+        "fecha": "2026-11-15 01:48:17.919815",
+        "dni_cliente": "sebas_vecino",
+        "autor": "Administrador",
         "rol": "admin",
-        "mensaje": "+999 puntos bro",
+        "mensaje": "bien",
         "leido": true
     },
     {
-        "fecha": "2026-10-24 00:34:46",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "hey bro, tranquilo con los puntos, pueden banearte los demas...",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-24 00:45:38",
-        "dni_cliente": "952089997",
+        "fecha": "2026-11-15 01:49:54.122132",
+        "dni_cliente": "sebas_tienda",
         "autor": "sebas",
-        "rol": "vecino",
-        "mensaje": "calla puto",
+        "rol": "gestor",
+        "mensaje": "buenas madrugadas, bienvenido a GreenScore!",
         "leido": true
     },
     {
-        "fecha": "2026-10-24 01:30:42",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
+        "fecha": "2026-11-15 02:07:19.395643",
+        "dni_cliente": "sebas_tienda",
+        "autor": "Administrador",
         "rol": "admin",
-        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: por gay",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-24 01:32:26",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "baneado",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-24 01:32:54",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: me la chupo",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-27 01:58:00",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-27 01:58:33",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: waza2",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-27 02:03:56",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza67",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-27 02:04:17",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: waza69",
-        "leido": true
-    },
-    {
-        "fecha": "2026-10-27 02:10:38",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "🚨 AVISO DE SISTEMA: Su cuenta ha sido SUSPENDIDA. Motivo: waza100",
-        "leido": true
-    },
-    {
-        "fecha": "2026-11-02 10:08:57",
-        "dni_cliente": "952089997",
-        "autor": "Administrador Desarrollador",
-        "rol": "admin",
-        "mensaje": "✅ AVISO DE SISTEMA: Se ha levantado la suspensión de su cuenta. Motivo de anulación: por rompe sillas",
+        "mensaje": "bien",
         "leido": true
     }
 ]

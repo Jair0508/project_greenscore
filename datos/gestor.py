@@ -1,3 +1,4 @@
+import json
 import os
 from datetime import datetime
 
@@ -5,6 +6,30 @@ import psycopg2
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# Detectar si estamos en modo local usando JSON o en producción con PostgreSQL
+MODO_LOCAL = os.getenv("MODO_LOCAL", "False").lower() in ("true", "1", "t", "yes")
+
+# Rutas para el modo local si está activado
+DIR_ARCHIVO = os.path.join(os.path.dirname(__file__), "_archivo")
+
+
+def _leer_json(nombre_archivo):
+    ruta = os.path.join(DIR_ARCHIVO, nombre_archivo)
+    if not os.path.exists(ruta):
+        return [] if "usuarios" not in nombre_archivo else {}
+    with open(ruta, "r", encoding="utf-8") as f:
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return [] if "usuarios" not in nombre_archivo else {}
+
+
+def _escribir_json(nombre_archivo, datos):
+    ruta = os.path.join(DIR_ARCHIVO, nombre_archivo)
+    os.makedirs(DIR_ARCHIVO, exist_ok=True)
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump(datos, f, ensure_ascii=False, indent=4)
 
 
 class UsuarioConHistorialError(Exception):
@@ -43,6 +68,9 @@ def _a_numero_o_none(valor):
 # --- USUARIOS ---
 
 def cargar_usuarios():
+    if MODO_LOCAL:
+        return _leer_json("usuarios.json")
+    
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -54,14 +82,10 @@ def cargar_usuarios():
 
 
 def guardar_usuarios(datos):
-    """Reemplaza el estado completo de usuarios: upsert de todos los presentes
-    en 'datos' y elimina los que ya no estan (igual que el guardado por
-    sobre-escritura total que se hacia antes con el .json).
+    if MODO_LOCAL:
+        _escribir_json("usuarios.json", datos)
+        return
 
-    Lanza UsuarioConHistorialError si se intenta eliminar un usuario que
-    todavia tiene filas asociadas en otras tablas (logs, chat, promociones,
-    entregas) — Postgres lo bloquea por llave foranea en vez de dejar
-    registros huerfanos sueltos como hacia el JSON."""
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -122,7 +146,12 @@ def guardar_usuarios(datos):
 # --- FUNCIONES DE REGISTRO / AUDITORÍA ---
 
 def registrar_accion_dev(id_dev, nombre_dev, accion, objetivo):
-    """Guarda acciones realizadas por administradores"""
+    if MODO_LOCAL:
+        logs = _leer_json("log_desarrolladores.json")
+        logs.append({"fecha": str(datetime.now()), "autor_id": id_dev, "autor_nombre": nombre_dev, "accion": accion, "objetivo": objetivo})
+        _escribir_json("log_desarrolladores.json", logs)
+        return
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -139,7 +168,12 @@ def registrar_accion_dev(id_dev, nombre_dev, accion, objetivo):
 
 
 def registrar_accion_tienda(id_tienda, nombre_tienda, dni_cliente, puntos_canjeados):
-    """Guarda canjes procesados por tiendas"""
+    if MODO_LOCAL:
+        logs = _leer_json("log_tiendas.json")
+        logs.append({"fecha": str(datetime.now()), "tienda_id": id_tienda, "tienda_nombre": nombre_tienda, "dni_cliente": dni_cliente, "puntos_descontados": puntos_canjeados})
+        _escribir_json("log_tiendas.json", logs)
+        return
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -156,7 +190,12 @@ def registrar_accion_tienda(id_tienda, nombre_tienda, dni_cliente, puntos_canjea
 
 
 def registrar_accion_cliente(dni_cliente, tipo_operacion, puntos, detalle):
-    """Guarda actividad de clientes/vecinos (Abonos por reciclaje, compras, etc)"""
+    if MODO_LOCAL:
+        logs = _leer_json("log_clientes.json")
+        logs.append({"fecha": str(datetime.now()), "dni_cliente": dni_cliente, "tipo": tipo_operacion, "puntos": puntos, "detalle": detalle})
+        _escribir_json("log_clientes.json", logs)
+        return
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -173,6 +212,9 @@ def registrar_accion_cliente(dni_cliente, tipo_operacion, puntos, detalle):
 
 
 def _cargar_tabla(nombre_tabla, orden="fecha"):
+    if MODO_LOCAL:
+        return _leer_json(f"{nombre_tabla}.json")
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -197,16 +239,14 @@ def cargar_log_clientes():
 # --- PROMOCIONES ---
 
 def cargar_promociones():
-    return _cargar_tabla("promociones", orden="id")
+    return _cargar_tabla("promociones")
 
 
 def guardar_promociones(lista_promos):
-    """Reemplaza el estado completo de promociones: upsert de cada item
-    presente (si trae 'id' se actualiza esa fila, si no, se inserta una
-    nueva) y elimina las que ya no estan en la lista — igual semantica de
-    sobre-escritura total que 'guardar_usuarios', necesaria porque
-    negocio.py depende de que una promo agotada o borrada desaparezca de
-    verdad de la tabla, no solo de la lista en memoria."""
+    if MODO_LOCAL:
+        _escribir_json("promociones.json", lista_promos)
+        return
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -249,11 +289,27 @@ def guardar_promociones(lista_promos):
         conn.close()
 
 
-
-
-
 def eliminar_promocion_admin(id_promo, id_tienda, motivo, autor_admin):
-    """Elimina una promoción desde el panel de administración y notifica a la tienda."""
+    if MODO_LOCAL:
+        promos = _leer_json("promociones.json")
+        encontrada = None
+        nuevas_promos = []
+        for p in promos:
+            if p.get("id") == id_promo:
+                encontrada = p
+            else:
+                nuevas_promos.append(p)
+        if not encontrada:
+            return False
+        _escribir_json("promociones.json", nuevas_promos)
+        guardar_mensaje_chat(
+            dni_cliente=str(id_tienda),
+            autor_nombre=autor_admin,
+            rol_autor="admin",
+            mensaje=f"🚨 AVISO DE SISTEMA: Su oferta '{encontrada.get('titulo')}' ha sido ELIMINADA por administración.\nMotivo: {motivo}"
+        )
+        return True
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -276,13 +332,26 @@ def eliminar_promocion_admin(id_promo, id_tienda, motivo, autor_admin):
         conn.close()
 
 
-# --- CHAT USUARIO A DESARROLLADORES/ADMINS ---
+# --- CHAT ---
 
 def cargar_mensajes_chat():
     return _cargar_tabla("chat")
 
 
 def guardar_mensaje_chat(dni_cliente, autor_nombre, rol_autor, mensaje):
+    if MODO_LOCAL:
+        chat = _leer_json("chat.json")
+        chat.append({
+            "fecha": str(datetime.now()),
+            "dni_cliente": dni_cliente,
+            "autor": autor_nombre,
+            "rol": rol_autor,
+            "mensaje": mensaje,
+            "leido": False
+        })
+        _escribir_json("chat.json", chat)
+        return
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -299,7 +368,17 @@ def guardar_mensaje_chat(dni_cliente, autor_nombre, rol_autor, mensaje):
 
 
 def marcar_chat_como_leido(dni_cliente, rol_lector):
-    """Marca como leídos los mensajes pendientes según quién los esté leyendo."""
+    if MODO_LOCAL:
+        chat = _leer_json("chat.json")
+        for m in chat:
+            if m.get("dni_cliente") == dni_cliente:
+                if rol_lector in ["admin", "desarrollador", "gestor de reciclaje", "gestor"] and m.get("rol") == "vecino":
+                    m["leido"] = True
+                elif rol_lector == "vecino" and m.get("rol") in ('admin', 'desarrollador', 'gestor de reciclaje', 'gestor'):
+                    m["leido"] = True
+        _escribir_json("chat.json", chat)
+        return
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -325,7 +404,11 @@ def marcar_chat_como_leido(dni_cliente, rol_lector):
 
 
 def obtener_puntos_recolectados_por_tienda(id_tienda):
-    """Calcula el total de puntos extraidos/canjeados por una tienda especifica."""
+    if MODO_LOCAL:
+        logs = _leer_json("log_tiendas.json")
+        total = sum(float(l.get("puntos_descontados", 0)) for l in logs if str(l.get("tienda_id")) == str(id_tienda))
+        return round(float(total), 1)
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -339,10 +422,22 @@ def obtener_puntos_recolectados_por_tienda(id_tienda):
         conn.close()
 
 
-# --- FUNCIONES DE REGISTRO DE ENTREGAS DE RECICLAJE ---
+# --- ENTREGAS DE RECICLAJE ---
 
 def registrar_entrega_reciclaje(tienda_id, dni_cliente, material, peso_kg, puntos):
-    """Registra una entrega física de reciclaje en la tabla entregas."""
+    if MODO_LOCAL:
+        entregas = _leer_json("entregas.json")
+        entregas.append({
+            "fecha": str(datetime.now()),
+            "tienda_id": str(tienda_id),
+            "dni_cliente": str(dni_cliente),
+            "material": str(material),
+            "peso_kg": float(peso_kg),
+            "puntos": int(puntos)
+        })
+        _escribir_json("entregas.json", entregas)
+        return
+
     conn = _conectar()
     try:
         cur = conn.cursor()
@@ -359,7 +454,6 @@ def registrar_entrega_reciclaje(tienda_id, dni_cliente, material, peso_kg, punto
 
 
 def cargar_entregas_reciclaje():
-    """Carga todas las entregas de reciclaje registradas."""
     return _cargar_tabla("entregas")
 
 
@@ -381,10 +475,6 @@ CO2_POR_KG = {
 
 
 def calcular_co2_evitado_vecino(id_usuario):
-    """
-    Calcula dinámicamente el total de CO2 evitado sumando las entregas registradas
-    del vecino según los factores WARM de la EPA.
-    """
     entregas = cargar_entregas_reciclaje()
     co2_total = 0.0
 

@@ -12,7 +12,10 @@ from datos.gestor import (
     cargar_log_tiendas,
     cargar_log_clientes,
     registrar_entrega_reciclaje,
-    cargar_entregas_reciclaje
+    cargar_entregas_reciclaje,
+    cargar_mensajes_chat,
+    guardar_mensaje_chat,
+    marcar_chat_como_leido
 )
 
 # Importamos matplotlib para generar gráficos estadísticos profesionales
@@ -90,7 +93,7 @@ class VentanaNegocio:
                 pady=12
             ).pack(side="left", padx=20)
 
-            # Botón de Términos y Condiciones
+            # Botón de Términos y Condiciones (va más a la derecha)
             tk.Button(
                 frame_top,
                 text="📄 Términos de Bodega",
@@ -102,7 +105,23 @@ class VentanaNegocio:
                 cursor="hand2",
                 padx=10,
                 pady=5
-            ).pack(side="right", padx=20)
+            ).pack(side="right", padx=(5, 20))
+
+            # Botón de Campanita / Avisos con Administración
+            self.btn_campana = tk.Button(
+                frame_top,
+                text="🔔 Avisos",
+                bg=COLOR_SECUNDARIO,
+                fg=COLOR_BLANCO,
+                font=("Arial", 9, "bold"),
+                relief="flat",
+                command=self.abrir_buzon_chat,
+                cursor="hand2",
+                padx=10,
+                pady=5
+            )
+            self.btn_campana.pack(side="right", padx=5)
+            self.actualizar_contador_campana()
 
             # BOTÓN CERRAR SESIÓN (Fijo Abajo)
             tk.Button(
@@ -202,7 +221,6 @@ class VentanaNegocio:
                         peso_val = float(self.ent_peso.get().strip())
                         if peso_val > 0:
                             pts_calc = Material.calcular_puntos(mat, peso_val)
-                            # Validar visualmente en vivo si excede el tope de 2000
                             dni_val = self.ent_dni_rec.get().strip()
                             usrs = cargar_usuarios()
                             if dni_val in usrs and usrs[dni_val].get("rol") == "vecino":
@@ -248,7 +266,6 @@ class VentanaNegocio:
                     except (ValueError, TypeError):
                         saldo_actual = 0.0
 
-                    # BLINDAJE ESTRICTO DE TOPE DE 2000 PUNTOS (EVITA PUNTOS FANTASMAS)
                     nuevo_total_tentativo = saldo_actual + puntos_calculados
                     if nuevo_total_tentativo > 2000:
                         puntos_ganados = max(0.0, 2000.0 - saldo_actual)
@@ -724,6 +741,136 @@ class VentanaNegocio:
         except Exception as e:
             messagebox.showerror("Error de Interfaz", f"Detalle al cargar Tienda: {str(e)}")
 
+    def actualizar_contador_campana(self):
+        """Actualiza el texto y color de la campanita según mensajes sin leer."""
+        try:
+            mensajes = cargar_mensajes_chat()
+            no_leidos = sum(
+                1 for m in mensajes
+                if str(m.get("dni_cliente")) == str(self.id_usuario)
+                and m.get("rol") in ("admin", "desarrollador", "gestor de reciclaje", "gestor")
+                and not m.get("leido", False)
+            )
+            if no_leidos > 0:
+                self.btn_campana.config(text=f"🔔 Avisos ({no_leidos})", bg=COLOR_ACENTO_CANJE)
+            else:
+                self.btn_campana.config(text="🔔 Avisos", bg=COLOR_SECUNDARIO)
+        except Exception:
+            pass
+
+    def abrir_buzon_chat(self):
+        """Abre la ventana emergente de avisos y chat directo con administración/gestores."""
+        win_chat = tk.Toplevel(self.root)
+        win_chat.config(bg=COLOR_FONDO_APP)
+        win_chat.title("Buzón de Avisos y Soporte — Administración")
+        win_chat.geometry("500x450")
+        win_chat.resizable(False, False)
+        win_chat.grab_set()
+
+        if hasattr(self.root, 'icon_img'):
+            win_chat.iconphoto(False, self.root.icon_img)
+
+        tk.Label(
+            win_chat,
+            text="💬 Comunicación y Avisos de Administración",
+            font=("Arial", 11, "bold"),
+            fg=COLOR_TEXTO_MAIN,
+            bg=COLOR_FONDO_APP
+        ).pack(anchor="w", padx=15, pady=(15, 5))
+
+        frame_msgs = tk.Frame(win_chat, bg=COLOR_BLANCO, bd=1, relief="solid")
+        frame_msgs.pack(fill="both", expand=True, padx=15, pady=5)
+
+        scrollbar_chat = ttk.Scrollbar(frame_msgs)
+        scrollbar_chat.pack(side="right", fill="y")
+
+        txt_chat = tk.Text(
+            frame_msgs,
+            wrap="word",
+            yscrollcommand=scrollbar_chat.set,
+            font=("Arial", 9),
+            bg=COLOR_BLANCO,
+            fg=COLOR_TEXTO_MAIN,
+            padx=10,
+            pady=10
+        )
+        txt_chat.pack(side="left", fill="both", expand=True)
+        scrollbar_chat.config(command=txt_chat.yview)
+
+        def cargar_conversacion():
+            txt_chat.config(state="normal")
+            txt_chat.delete("1.0", tk.END)
+            mensajes = cargar_mensajes_chat()
+            mis_mensajes = [m for m in mensajes if str(m.get("dni_cliente")) == str(self.id_usuario)]
+
+            if not mis_mensajes:
+                txt_chat.insert(tk.END, "No hay mensajes ni avisos registrados con administración.\n")
+            else:
+                for m in mis_mensajes:
+                    remitente = m.get("autor", "Administración")
+                    
+                    # Detectar y formatear el rol con el mismo estilo solicitado
+                    rol_crudo = str(m.get("rol", "admin")).upper()
+                    if "ADMIN" in rol_crudo:
+                        rol_fmt = "ADMIN"
+                    elif "GESTOR" in rol_crudo:
+                        rol_fmt = "GESTOR"
+                    else:
+                        rol_fmt = "TIENDA"
+
+                    fecha = str(m.get("fecha", ""))[:19]
+                    texto = m.get("mensaje", "")
+                    
+                    txt_chat.insert(tk.END, f"[{fecha}] {remitente} ({rol_fmt}):\n{texto}\n\n")
+
+            txt_chat.config(state="disabled")
+            txt_chat.see(tk.END)
+            marcar_chat_como_leido(str(self.id_usuario), rol_lector="vecino")
+            self.actualizar_contador_campana()
+
+        cargar_conversacion()
+
+        frame_envio = tk.Frame(win_chat, bg=COLOR_FONDO_APP, pady=10)
+        frame_envio.pack(fill="x", padx=15)
+
+        ent_msg = tk.Entry(
+            frame_envio,
+            font=("Arial", 10),
+            bg=COLOR_BLANCO,
+            fg=COLOR_TEXTO_MAIN,
+            relief="flat",
+            highlightthickness=1,
+            highlightbackground=COLOR_SECUNDARIO
+        )
+        ent_msg.pack(side="left", fill="x", expand=True, ipady=3, padx=(0, 5))
+
+        def enviar_respuesta():
+            texto_rta = ent_msg.get().strip()
+            if not texto_rta:
+                return
+            guardar_mensaje_chat(
+                dni_cliente=str(self.id_usuario),
+                autor_nombre=self.nombre_negocio,
+                rol_autor="vecino",
+                mensaje=texto_rta
+            )
+            ent_msg.delete(0, tk.END)
+            cargar_conversacion()
+
+        ent_msg.bind("<Return>", lambda e: enviar_respuesta())
+
+        tk.Button(
+            frame_envio,
+            text="Enviar",
+            bg=COLOR_PRIMARIO,
+            fg=COLOR_BLANCO,
+            font=("Arial", 9, "bold"),
+            command=enviar_respuesta,
+            relief="flat",
+            padx=12,
+            cursor="hand2"
+        ).pack(side="right")
+
     def aplicar_estilos_ttk(self):
         style = ttk.Style()
         style.theme_use('default')
@@ -887,7 +1034,6 @@ class VentanaNegocio:
             usuarios[self.vecino_actual]["puntos"] -= puntos_totales
             guardar_usuarios(usuarios)
 
-            # Actualizar stock o eliminar si llega a 0
             promos_actuales = cargar_promociones()
             operaciones_ordenadas = sorted(operaciones_stock, key=lambda x: x[0], reverse=True)
 
@@ -1173,7 +1319,6 @@ class VentanaNegocio:
         if hasattr(self.root, 'icon_img'):
             win_promos.iconphoto(False, self.root.icon_img)
 
-        # 1. Cargar la imagen de fondo estática
         nombres_archivos = ["fondo_ofertas_admin.png", "fondo_ofertas_admin.jpg"]
         ruta_encontrada = next((os.path.join("img", n) for n in nombres_archivos if os.path.exists(os.path.join("img", n))), None)
 
@@ -1187,19 +1332,16 @@ class VentanaNegocio:
             except Exception as e:
                 print(f"Aviso imagen de fondo: {e}")
 
-        # 2. Canvas y Scrollbar
         canvas = tk.Canvas(win_promos, bg=COLOR_BLANCO, highlightthickness=0, bd=0)
         scrollbar = ttk.Scrollbar(win_promos, orient="vertical", command=canvas.yview)
 
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
 
-        # Dibujar la imagen sobre el Canvas para congelar las coordenadas al desplazar scroll
         bg_canvas_id = None
         if hasattr(win_promos, 'bg_img'):
             bg_canvas_id = canvas.create_image(0, 0, image=win_promos.bg_img, anchor="nw")
 
-        # 3. Contenedor principal para las ofertas
         frame_grid = tk.Frame(canvas, bg=COLOR_BLANCO)
         canvas.create_window((15, 15), window=frame_grid, anchor="nw")
 
@@ -1208,7 +1350,6 @@ class VentanaNegocio:
 
         frame_grid.bind("<Configure>", _actualizar_scrollregion)
 
-        # Reposiciona dinámicamente el fondo para que no se mueva con el scroll
         def _al_hacer_scroll(*args):
             scrollbar.set(*args)
             if bg_canvas_id:
@@ -1283,7 +1424,6 @@ class VentanaNegocio:
             for i, (idx_global, p) in enumerate(promos_propias):
                 row, col = i // cols, i % cols
 
-                # Rectángulo Vertical compacto (180x220px)
                 card = tk.Frame(
                     frame_grid,
                     bg=COLOR_BLANCO,
@@ -1307,7 +1447,6 @@ class VentanaNegocio:
                 precio_soles = float(p.get('precio_soles', 0))
                 desc_original = str(p.get('descripcion', '-'))
 
-                # Nombre del Producto destacado
                 lbl_titulo = tk.Label(
                     card,
                     text=f"📌 {titulo_oferta}",
@@ -1320,7 +1459,6 @@ class VentanaNegocio:
                 )
                 lbl_titulo.pack(anchor="w", fill="x", pady=(0, 2))
 
-                # Información del negocio y stock
                 txt_detalles = (
                     f"🏪 {p.get('tienda_nombre', 'Mi Tienda')} | Stock: {stock_oferta}\n"
                     f"📂 {categoria_oferta}\n"
@@ -1337,10 +1475,8 @@ class VentanaNegocio:
                 )
                 lbl_detalles.pack(anchor="w", fill="x", pady=(0, 4))
 
-                # Separador horizontal sutil
                 tk.Frame(card, height=1, bg="#E2E8F0").pack(fill="x", pady=(0, 4))
 
-                # Descripción del producto
                 es_larga = len(desc_original) > LIMITE_CARACTERES
                 desc_mostrar = (desc_original[:LIMITE_CARACTERES].strip() + "...") if es_larga else desc_original
 
@@ -1396,6 +1532,5 @@ class VentanaNegocio:
                     pady=2
                 )
                 btn_eliminar.pack(fill="x", side="bottom")
-
 
         refrescar_grid()

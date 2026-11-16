@@ -1,6 +1,7 @@
 import os
 import tkinter as tk
 from tkinter import ttk, messagebox, simpledialog
+from datetime import datetime
 
 from datos.gestor import (
     cargar_usuarios,
@@ -308,6 +309,21 @@ class VentanaVecino:
         self.tabla_abonos = crear_tabla_scroll(sub_tab_abonos, cols_sub, config_abonos)
         self.tabla_entregas = crear_tabla_scroll(sub_tab_entregas, cols_sub, config_entregas)
         self.tabla_canjes = crear_tabla_scroll(sub_tab_canjes, cols_sub, config_canjes)
+        
+        # Botón para calificar bodega en la sub-pestaña de reseñas
+        tk.Button(
+            sub_tab_resenas,
+            text="⭐ Escribir Nueva Reseña o Calificar Bodega",
+            bg="#2E7D32",
+            fg="white",
+            font=("Arial", 9, "bold"),
+            relief="flat",
+            command=self.abrir_dialogo_resena,
+            cursor="hand2",
+            padx=10,
+            pady=5
+        ).pack(anchor="w", padx=5, pady=(5, 0))
+
         self.tabla_resenas = crear_tabla_scroll(sub_tab_resenas, cols_sub, config_resenas)
 
         # 4. CHAT
@@ -397,7 +413,6 @@ class VentanaVecino:
         footer_frame = tk.Frame(self.root, bg=COLOR_FONDO_VERDE)
         footer_frame.pack(side="bottom", fill="x", pady=10)
 
-        # 2. Botón estandarizado centrado exactamente como en Admin
         self.btn_cerrar_sesion = tk.Button(
             footer_frame,
             text="🚪 Cerrar Sesión",
@@ -410,9 +425,120 @@ class VentanaVecino:
             pady=6,
             command=self.cerrar_sesion_cb
         )
-        # 3. Alineación centrada
         self.btn_cerrar_sesion.pack(anchor="center")
 
+
+    def abrir_dialogo_resena(self):
+        """Permite al vecino calificar y dejar una reseña a una bodega (máximo una vez por día por bodega)."""
+        win_res = tk.Toplevel(self.root)
+        win_res.config(bg="#E8F5E9")
+        win_res.title("Calificar Bodega — EcoPuntos")
+        win_res.geometry("400x400")
+        win_res.resizable(False, False)
+        win_res.grab_set()
+
+        if hasattr(self.root, 'icon_img'):
+            win_res.iconphoto(False, self.root.icon_img)
+
+        tk.Label(
+            win_res,
+            text="⭐ Califica tu Experiencia en la Bodega",
+            font=("Arial", 11, "bold"),
+            fg="#1B5E20",
+            bg="#E8F5E9"
+        ).pack(anchor="w", padx=20, pady=(15, 5))
+
+        tk.Label(
+            win_res,
+            text="Nombre o ID de la Bodega:",
+            font=("Arial", 9, "bold"),
+            fg="#2E7D32",
+            bg="#E8F5E9"
+        ).pack(anchor="w", padx=20, pady=(10, 2))
+        
+        ent_bodega = tk.Entry(win_res, font=("Arial", 10), bg="white", relief="flat")
+        ent_bodega.pack(fill="x", padx=20, ipady=3)
+
+        tk.Label(
+            win_res,
+            text="Calificación (Estrellas de 1 a 5):",
+            font=("Arial", 9, "bold"),
+            fg="#2E7D32",
+            bg="#E8F5E9"
+        ).pack(anchor="w", padx=20, pady=(10, 2))
+        
+        combo_estrellas = ttk.Combobox(
+            win_res,
+            values=["⭐ (1/5) - Malo", "⭐⭐ (2/5) - Regular", "⭐⭐⭐ (3/5) - Bueno", "⭐⭐⭐⭐ (4/5) - Muy Bueno", "⭐⭐⭐⭐⭐ (5/5) - Excelente"],
+            state="readonly",
+            font=("Arial", 9)
+        )
+        combo_estrellas.pack(fill="x", padx=20)
+        combo_estrellas.set("⭐⭐⭐⭐⭐ (5/5) - Excelente")
+
+        tk.Label(
+            win_res,
+            text="Comentario / Reseña:",
+            font=("Arial", 9, "bold"),
+            fg="#2E7D32",
+            bg="#E8F5E9"
+        ).pack(anchor="w", padx=20, pady=(10, 2))
+
+        ent_comentario = tk.Entry(win_res, font=("Arial", 10), bg="white", relief="flat")
+        ent_comentario.pack(fill="x", padx=20, ipady=3)
+
+        def guardar_resena_cliente():
+            nombre_bodega = ent_bodega.get().strip()
+            estrellas_sel = combo_estrellas.get()
+            comentario = ent_comentario.get().strip()
+
+            if not nombre_bodega or not comentario:
+                messagebox.showwarning("Atención", "Debes ingresar el nombre de la bodega y un comentario.", parent=win_res)
+                return
+
+            # Validar límite de una vez por día para esta bodega
+            hoy_str = datetime.now().strftime("%Y-%m-%d")
+            logs_cliente = cargar_log_clientes()
+            
+            for log in logs_cliente:
+                if str(log.get("dni_cliente")) == str(self.id_usuario):
+                    tipo_log = log.get("tipo", "")
+                    fecha_log = str(log.get("fecha", ""))
+                    detalle_log_ant = log.get("detalle", "")
+                    
+                    if "RESEÑA" in tipo_log or "Reseña para" in detalle_log_ant:
+                        if hoy_str in fecha_log and nombre_bodega.lower() in detalle_log_ant.lower():
+                            messagebox.showerror(
+                                "Límite Excedido",
+                                f"Ya has enviado una reseña para la bodega '{nombre_bodega}' el día de hoy. Solo se permite una reseña por día.",
+                                parent=win_res
+                            )
+                            return
+
+            detalle_log = f"Reseña para {nombre_bodega} | Calificación: {estrellas_sel} | Reseña: {comentario}"
+
+            registrar_accion_cliente(
+                self.id_usuario,
+                "RESEÑA",
+                0,
+                detalle_log
+            )
+
+            messagebox.showinfo("Éxito", "¡Tu reseña y calificación han sido enviadas con éxito!", parent=win_res)
+            win_res.destroy()
+            self.actualizar_todo()
+
+        tk.Button(
+            win_res,
+            text="💾 Enviar Calificación",
+            bg="#2E7D32",
+            fg="white",
+            font=("Arial", 10, "bold"),
+            relief="flat",
+            command=guardar_resena_cliente,
+            cursor="hand2",
+            pady=6
+        ).pack(pady=20)
 
     def mostrar_terminos_vecino(self):
         win_tyc = tk.Toplevel(self.root)
@@ -460,6 +586,7 @@ class VentanaVecino:
         txt_box.config(state="disabled")
 
         tk.Button(win_tyc, text="Entendido 👍", bg="#2E7D32", fg="white", font=("Arial", 10, "bold"), command=win_tyc.destroy, padx=20, pady=8, cursor="hand2").pack(pady=12)
+
     def obtener_rango_vecino(self, puntos):
         try:
             pts = int(float(puntos))
@@ -586,11 +713,9 @@ class VentanaVecino:
         if not hasattr(self, "scrollable_frame_promos"):
             return
 
-        # 1. Limpiar el contenedor principal de ofertas
         for widget in self.scrollable_frame_promos.winfo_children():
             widget.destroy()
 
-        # 2. Cargar promociones de forma segura
         promociones = []
         try:
             from datos.gestor import cargar_promociones as gestor_cargar
@@ -607,7 +732,6 @@ class VentanaVecino:
                 print(f"Error cargando promociones: {e}")
                 promociones = []
 
-        # 3. Fondo ilustrado en el contenedor si aplica
         if hasattr(self, "bg_promos_img") and self.bg_promos_img:
             lbl_bg = tk.Label(self.scrollable_frame_promos, image=self.bg_promos_img)
             lbl_bg.place(x=0, y=0, relwidth=1, relheight=1)
@@ -627,7 +751,6 @@ class VentanaVecino:
             lbl_vacio.pack(pady=30)
             return
 
-        # 4. Agrupar promociones por categoría
         categorias = {}
         for p in promociones:
             cat = str(p.get("categoria", "OTRAS OFERTAS")).strip().upper()
@@ -637,12 +760,10 @@ class VentanaVecino:
                 categorias[cat] = []
             categorias[cat].append(p)
 
-        # 5. Renderizar cuadrícula
         for cat_nombre, lista_promos in categorias.items():
             if not lista_promos:
                 continue
 
-            # Banner de Categoría delgado
             frame_hdr_float = tk.Frame(self.scrollable_frame_promos, bg="#E8F5E9", bd=1, relief="solid")
             frame_hdr_float.pack(fill="x", pady=(8, 4), padx=10)
 
@@ -658,7 +779,6 @@ class VentanaVecino:
             )
             lbl_cat.pack(fill="x")
 
-            # Grid ordenado a la izquierda (3 columnas)
             frame_grid = tk.Frame(self.scrollable_frame_promos)
             frame_grid.pack(fill="x", padx=10, pady=2)
 
@@ -669,7 +789,6 @@ class VentanaVecino:
                 cell_container = tk.Frame(frame_grid)
                 cell_container.grid(row=row, column=col, padx=(0, 15), pady=8, sticky="w")
 
-                # Tarjeta Flotante (240px Ancho x 240px Alto)
                 card = tk.Frame(
                     cell_container,
                     bg="white",
@@ -694,7 +813,6 @@ class VentanaVecino:
                 except (ValueError, TypeError):
                     costo_p = 0
 
-                # 1. Datos de la tienda
                 lbl_tienda = tk.Label(
                     card,
                     text=f"🏪 {tienda_nom}\n(ID: {tienda_id}) | 📦 Stock: {stock}",
@@ -706,7 +824,6 @@ class VentanaVecino:
                 )
                 lbl_tienda.pack(fill="x", padx=10, pady=(8, 4))
 
-                # 2. Nombre del Producto (Título destacado)
                 lbl_titulo = tk.Label(
                     card,
                     text=f"📌 {titulo}",
@@ -719,7 +836,6 @@ class VentanaVecino:
                 )
                 lbl_titulo.pack(fill="x", padx=10, pady=(2, 4))
 
-                # 3. ÚNICAMENTE COSTO EN PUNTOS (Sin valor en soles)
                 lbl_precios = tk.Label(
                     card,
                     text=f"💰 {costo_p} PTS",
@@ -731,7 +847,6 @@ class VentanaVecino:
                 )
                 lbl_precios.pack(fill="x", padx=10, pady=(0, 4))
 
-                # 4. Descripción del Producto
                 if desc:
                     lbl_desc = tk.Label(
                         card,
@@ -745,7 +860,6 @@ class VentanaVecino:
                     )
                     lbl_desc.pack(fill="x", padx=10, pady=(0, 6))
 
-                # 5. Botón Informativo Verde
                 btn_canje = tk.Button(
                     card,
                     text="🛒 Canje Presencial en Bodega",
@@ -758,7 +872,6 @@ class VentanaVecino:
                 )
                 btn_canje.pack(fill="x", side="bottom", padx=4, pady=4)
 
-        # 6. Actualizar Scrollbar
         self.scrollable_frame_promos.update_idletasks()
         if hasattr(self, "canvas_promos"):
             self.canvas_promos.config(scrollregion=self.canvas_promos.bbox("all"))
